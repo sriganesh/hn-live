@@ -602,8 +602,8 @@ export default function HNLiveTerminal() {
           <div key={`${item.id}-${index}`}>
             <div className="py-1 flex items-start gap-4">
               <TimeStamp 
-                time={item.formatted?.timestamp.time}
-                fullDate={item.formatted?.timestamp.fullDate}
+                time={item.formatted?.timestamp.time || formatTimestamp(item.time).time}
+                fullDate={item.formatted?.timestamp.fullDate || formatTimestamp(item.time).fullDate}
               />
               <div className="flex-1">
                 <a 
