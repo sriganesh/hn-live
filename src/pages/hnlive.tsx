@@ -96,7 +96,6 @@ export default function HNLiveTerminal() {
       comments: ''
     };
     
-    // Use exact HN orange color for DOG mode
     const userLink = `<a href="https://news.ycombinator.com/user?id=${item.by}" 
       class="hn-username hover:underline"
       target="_blank"
@@ -106,6 +105,7 @@ export default function HNLiveTerminal() {
     if (item.type === 'comment') {
       text = `${userLink} > ${item.text?.replace(/<[^>]*>/g, '')}`;
       links.main = `https://news.ycombinator.com/item?id=${item.id}`;
+      links.comments = ''; // Empty string for comments since it's a comment
     } else if (item.type === 'story') {
       text = `${userLink}: ${item.title || '[untitled]'}`;
       links.main = item.url || `https://news.ycombinator.com/item?id=${item.id}`;
