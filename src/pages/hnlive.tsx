@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
-import { Link } from 'react-router-dom';
 
 interface HNItem {
   id: number;
@@ -14,6 +13,17 @@ interface HNItem {
   type: 'story' | 'comment' | 'job' | 'poll' | 'pollopt';
   parent?: number;
   dead?: boolean;
+  formatted?: {
+    timestamp: {
+      time: string;
+      fullDate: string;
+    };
+    text: string;
+    links: {
+      main: string;
+      comments: string;
+    };
+  };
 }
 
 interface TerminalOptions {
@@ -29,7 +39,6 @@ export default function HNLiveTerminal() {
   useDocumentTitle('Hacker News Live');
   
   const [items, setItems] = useState<HNItem[]>([]);
-  const [showSearch, setShowSearch] = useState(false);
   const [options, setOptions] = useState<TerminalOptions>({
     theme: 'og',
     autoscroll: true
@@ -252,14 +261,14 @@ export default function HNLiveTerminal() {
                 }
                 maxItemRef.current = newMaxItem;
               }
-            } catch (error) {
-              if (error.name === 'AbortError') return;
+            } catch (error: unknown) {
+              if (error instanceof Error && error.name === 'AbortError') return;
               console.error('Error in interval:', error);
             }
           }, 30000);
         }
-      } catch (error) {
-        if (error.name === 'AbortError') return;
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === 'AbortError') return;
         console.error('Error fetching items:', error);
       }
     };
