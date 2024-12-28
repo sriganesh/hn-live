@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { StoryView } from '../components/StoryView';
 
 interface HNItem {
   id: number;
@@ -29,6 +30,7 @@ interface HNItem {
 interface TerminalOptions {
   theme: 'green' | 'og' | 'dog';
   autoscroll: boolean;
+  directLinks: boolean;
 }
 
 interface SearchFilters {
@@ -48,13 +50,24 @@ const getStoredTheme = () => {
   return 'og'; // Default theme if nothing is stored
 };
 
+const getStoredDirectLinks = () => {
+  try {
+    const storedDirectLinks = localStorage.getItem('hn-live-direct');
+    return storedDirectLinks === 'true';
+  } catch (e) {
+    console.warn('Could not access localStorage');
+  }
+  return false; // Default to our site view
+};
+
 export default function HNLiveTerminal() {
   useDocumentTitle('Hacker News Live');
   
   const [items, setItems] = useState<HNItem[]>([]);
   const [options, setOptions] = useState<TerminalOptions>({
     theme: getStoredTheme(),
-    autoscroll: true
+    autoscroll: true,
+    directLinks: getStoredDirectLinks()
   });
   const [isRunning, setIsRunning] = useState(true);
   
@@ -355,6 +368,12 @@ export default function HNLiveTerminal() {
   // Add state for showing shortcuts
   const [showShortcuts, setShowShortcuts] = useState(false);
 
+  // Add new state for story view
+  const [viewingStory, setViewingStory] = useState<{
+    itemId: number;
+    scrollToId?: number;
+  } | null>(null);
+
   // Add keydown/keyup handlers for Cmd/Ctrl
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -494,6 +513,15 @@ export default function HNLiveTerminal() {
     }
   }, [options.theme]);
 
+  // Add an effect to save directLinks preference
+  useEffect(() => {
+    try {
+      localStorage.setItem('hn-live-direct', options.directLinks.toString());
+    } catch (e) {
+      console.warn('Could not save direct links preference');
+    }
+  }, [options.directLinks]);
+
   return (
     <div className={`fixed inset-0 ${themeBg} font-mono`} data-theme={options.theme}>
       {showAbout && <AboutOverlay />}
@@ -562,6 +590,12 @@ export default function HNLiveTerminal() {
                 className={`${themeColors} ${!options.autoscroll && 'opacity-50'}`}
               >
                 [{options.autoscroll ? '×' : ' '}] Auto-scroll
+              </button>
+              <button
+                onClick={() => setOptions(prev => ({...prev, directLinks: !prev.directLinks}))}
+                className={`${themeColors} ${!options.directLinks && 'opacity-50'}`}
+              >
+                [{options.directLinks ? '×' : ' '}] Direct
               </button>
             </div>
             {showGrep ? (
@@ -636,6 +670,12 @@ export default function HNLiveTerminal() {
             >
               [{options.autoscroll ? '×' : ' '}] Auto-scroll
             </button>
+            <button
+              onClick={() => setOptions(prev => ({...prev, directLinks: !prev.directLinks}))}
+              className={`${themeColors} ${!options.directLinks && 'opacity-50'}`}
+            >
+              [{options.directLinks ? '×' : ' '}] Direct
+            </button>
             <button 
               onClick={() => setShowAbout(true)}
               className={themeColors}
@@ -708,9 +748,18 @@ export default function HNLiveTerminal() {
                 />
                 <div className="flex-1">
                   <a 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (options.directLinks) {
+                        window.open(item.formatted?.links.main, '_blank');
+                      } else {
+                        setViewingStory({ 
+                          itemId: item.id,
+                          scrollToId: item.type === 'comment' ? item.id : undefined
+                        });
+                      }
+                    }}
                     href={item.formatted?.links.main}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className={`${themeColors} transition-colors cursor-pointer`}
                     dangerouslySetInnerHTML={{ __html: item.formatted?.text || '' }}
                   />
@@ -792,6 +841,16 @@ export default function HNLiveTerminal() {
           </div>
         </div>
       </div>
+
+      {/* Add the StoryView component to the render */}
+      {viewingStory && (
+        <StoryView
+          itemId={viewingStory.itemId}
+          scrollToId={viewingStory.scrollToId}
+          onClose={() => setViewingStory(null)}
+          theme={options.theme}
+        />
+      )}
     </div>
   );
 } 
