@@ -27,7 +27,7 @@ interface HNItem {
 }
 
 interface TerminalOptions {
-  theme: 'orange' | 'green' | 'og' | 'dog';
+  theme: 'green' | 'og' | 'dog';
   autoscroll: boolean;
 }
 
@@ -300,9 +300,7 @@ export default function HNLiveTerminal() {
     }
   }, [items, options.autoscroll]);
 
-  const themeColors = options.theme === 'orange' 
-    ? 'text-orange-400 hover:text-orange-300 border-orange-500/30'
-    : options.theme === 'green'
+  const themeColors = options.theme === 'green'
     ? 'text-green-400 hover:text-green-300 border-green-500/30'
     : options.theme === 'og'
     ? 'text-[#828282] hover:text-[#666666] border-[#ff6600]/30'
@@ -321,9 +319,7 @@ export default function HNLiveTerminal() {
     : 'bg-black/90';
 
   // Update header title color
-  const headerColor = options.theme === 'orange' 
-    ? 'text-orange-500' 
-    : options.theme === 'green'
+  const headerColor = options.theme === 'green'
     ? 'text-green-500'
     : 'text-[#ff6600]';
 
@@ -488,8 +484,7 @@ export default function HNLiveTerminal() {
               LIVE
               {queueSize >= 10 && (
                 <span className={`absolute -top-1 -right-6 min-w-[1.2rem] h-[1.2rem] 
-                  ${options.theme === 'orange' ? 'bg-orange-500 text-black' : 
-                    options.theme === 'green' ? 'bg-green-500 text-black' : 
+                  ${options.theme === 'green' ? 'bg-green-500 text-black' : 
                     'bg-[#ff6600] text-white'} 
                   rounded text-xs flex items-center justify-center font-bold`}
                 >
@@ -500,11 +495,18 @@ export default function HNLiveTerminal() {
           </div>
           <div className="flex items-center gap-4">
             <button 
-              onClick={() => setOptions(prev => ({...prev, theme: 'orange'}))}
-              className={`${options.theme === 'orange' ? 'text-orange-400' : 'text-orange-400/50'}`}
-              title="Terminal Orange"
+              onClick={() => setOptions(prev => ({...prev, theme: 'dog'}))}
+              className={`${options.theme === 'dog' ? 'text-[#ff6600]' : 'text-[#ff6600]/50'}`}
+              title="Dark HN"
             >
-              [{options.theme === 'orange' ? '×' : ' '}] O
+              [{options.theme === 'dog' ? '×' : ' '}] D
+            </button>
+            <button 
+              onClick={() => setOptions(prev => ({...prev, theme: 'og'}))}
+              className={`${options.theme === 'og' ? 'text-[#ff6600]' : 'text-[#ff6600]/50'}`}
+              title="Original HN"
+            >
+              [{options.theme === 'og' ? '×' : ' '}] O
             </button>
             <button 
               onClick={() => setOptions(prev => ({...prev, theme: 'green'}))}
@@ -512,20 +514,6 @@ export default function HNLiveTerminal() {
               title="Terminal Green"
             >
               [{options.theme === 'green' ? '×' : ' '}] G
-            </button>
-            <button 
-              onClick={() => setOptions(prev => ({...prev, theme: 'og'}))}
-              className={`${options.theme === 'og' ? 'text-[#ff6600]' : 'text-[#ff6600]/50'}`}
-              title="Original HN"
-            >
-              [{options.theme === 'og' ? '×' : ' '}] OG
-            </button>
-            <button 
-              onClick={() => setOptions(prev => ({...prev, theme: 'dog'}))}
-              className={`${options.theme === 'dog' ? 'text-[#ff6600]' : 'text-[#ff6600]/50'}`}
-              title="Dark HN"
-            >
-              [{options.theme === 'dog' ? '×' : ' '}] DOG
             </button>
             <button
               onClick={() => setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}))}
@@ -586,15 +574,11 @@ export default function HNLiveTerminal() {
       <div 
         ref={containerRef}
         className={`h-screen pt-20 pb-4 px-4 overflow-y-auto font-mono
-                   ${options.theme === 'orange' 
-                     ? 'text-orange-400' 
-                     : options.theme === 'green'
+                   ${options.theme === 'green'
                      ? 'text-green-400'
                      : 'text-[#828282]'}
                    scrollbar-thin scrollbar-track-transparent
-                   ${options.theme === 'orange' 
-                     ? 'scrollbar-thumb-orange-500/30' 
-                     : options.theme === 'green'
+                   ${options.theme === 'green'
                      ? 'scrollbar-thumb-green-500/30'
                      : 'scrollbar-thumb-[#ff6600]/30'}`}
       >
