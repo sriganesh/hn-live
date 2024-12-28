@@ -199,7 +199,11 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
     <div 
       key={comment.id}
       id={`comment-${comment.id}`}
-      className={`py-2 ${getIndentClass(comment.level)} ${
+      className={`py-2 ${
+        comment.level > 0 
+          ? `sm:${getIndentClass(comment.level)} pl-2` 
+          : 'pl-0'
+      } ${
         comment.id === scrollToId ? 'bg-yellow-500/10' : ''
       } ${
         comment.level > 0 ? 'border-l border-current/10' : ''
@@ -245,7 +249,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
     <div 
       className={`fixed inset-0 z-50 ${themeColors} overflow-hidden`}
     >
-      <div className="story-container h-full overflow-y-auto p-4">
+      <div className="story-container h-full overflow-y-auto p-4 sm:p-4">
         <div className="flex items-center justify-between mb-8">
           <button 
             onClick={onClose}
@@ -302,7 +306,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
             Loading...
           </div>
         ) : story ? (
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl mx-auto px-0 sm:px-4">
             <h1 className="text-xl font-bold mb-2">{story.title}</h1>
             <div className="text-sm opacity-75 mb-4">
               <a 
