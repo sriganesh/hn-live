@@ -37,6 +37,11 @@ interface SearchFilters {
   text: string;
 }
 
+const INITIAL_BUFFER_SIZE = 30;  // Number of items to fetch initially
+const UPDATE_INTERVAL = 30000;   // How often to fetch new items (30 seconds)
+const MIN_DISPLAY_INTERVAL = 800;  // Minimum time between displaying items
+const MAX_DISPLAY_INTERVAL = 2000; // Maximum time between displaying items
+
 const getStoredTheme = () => {
   try {
     const storedTheme = localStorage.getItem('hn-live-theme');
@@ -200,7 +205,22 @@ export default function HNLiveTerminal() {
       }
       setQueueSize(itemQueueRef.current.length);
 
-      setTimeout(processNext, 800 + Math.random() * 400);
+      // Calculate next update interval based on queue size
+      const queueSize = itemQueueRef.current.length;
+      let interval;
+      
+      if (queueSize > 20) {
+        // If queue is large, display faster
+        interval = MIN_DISPLAY_INTERVAL;
+      } else if (queueSize > 10) {
+        // Medium queue, moderate speed
+        interval = MIN_DISPLAY_INTERVAL + Math.random() * 500;
+      } else {
+        // Small queue, slower display to prevent empty periods
+        interval = MIN_DISPLAY_INTERVAL + Math.random() * (MAX_DISPLAY_INTERVAL - MIN_DISPLAY_INTERVAL);
+      }
+
+      setTimeout(processNext, interval);
     };
 
     processNext();
@@ -225,7 +245,6 @@ export default function HNLiveTerminal() {
   // Update polling logic
   useEffect(() => {
     const fetchMaxItem = async () => {
-      // Create new abort controller
       abortControllerRef.current = new AbortController();
       
       try {
@@ -234,13 +253,18 @@ export default function HNLiveTerminal() {
           intervalRef.current = undefined;
         }
 
+        // Initial fetch with larger buffer
         const response = await fetch('https://hacker-news.firebaseio.com/v0/maxitem.json', {
           signal: abortControllerRef.current.signal
         });
         const maxItem = await response.json();
         maxItemRef.current = maxItem;
         
-        const itemIds = Array.from({length: 15}, (_, i) => (maxItem - 14) + i);
+        // Fetch more items initially to build a buffer
+        const itemIds = Array.from(
+          {length: INITIAL_BUFFER_SIZE}, 
+          (_, i) => (maxItem - INITIAL_BUFFER_SIZE + 1) + i
+        );
         
         for (const id of itemIds) {
           if (!isRunning) return;
@@ -254,10 +278,11 @@ export default function HNLiveTerminal() {
               item.text !== '[deleted]' && 
               item.text !== '[dead]' &&
               !item.dead) {
-            await addItem(item);
+            addToQueue(item);
           }
         }
         
+        // Regular polling interval
         if (isRunning) {
           intervalRef.current = setInterval(async () => {
             try {
@@ -293,7 +318,7 @@ export default function HNLiveTerminal() {
               if (error instanceof Error && error.name === 'AbortError') return;
               console.error('Error in interval:', error);
             }
-          }, 30000);
+          }, UPDATE_INTERVAL);
         }
       } catch (error: unknown) {
         if (error instanceof Error && error.name === 'AbortError') return;
@@ -304,7 +329,6 @@ export default function HNLiveTerminal() {
     if (isRunning) {
       fetchMaxItem();
     } else {
-      // Abort any ongoing fetches when stopping
       abortControllerRef.current?.abort();
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -555,7 +579,7 @@ export default function HNLiveTerminal() {
                 <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
               </span>
               LIVE
-              {queueSize >= 10 && (
+              {queueSize >= 50 && (
                 <span className={`absolute -top-1 -right-6 min-w-[1.2rem] h-[1.2rem] 
                   ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
                   rounded text-xs flex items-center justify-center font-bold`}
@@ -671,7 +695,7 @@ export default function HNLiveTerminal() {
                 <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
               </span>
               LIVE
-              {queueSize >= 10 && (
+              {queueSize >= 50 && (
                 <span className={`absolute -top-1 -right-6 min-w-[1.2rem] h-[1.2rem] 
                   ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
                   rounded text-xs flex items-center justify-center font-bold`}
