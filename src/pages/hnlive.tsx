@@ -721,21 +721,21 @@ export default function HNLiveTerminal() {
                     {item.by}
                   </a>
                 </div>
-                <div>
+                <div className="break-words overflow-hidden">
                   <a 
                     href={item.formatted?.links.main}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`${themeColors} transition-colors cursor-pointer`}
+                    className={`${themeColors} transition-colors cursor-pointer break-all`}
                     dangerouslySetInnerHTML={{ 
                       __html: item.formatted?.text
-                        .replace(/<a[^>]*>.*?<\/a>\s*>\s*/, '') // Remove username and ">" prefix
-                        .replace(/^[^>]*>\s*/, '') // Alternative way to remove username and ">" prefix
+                        .replace(/<a[^>]*>.*?<\/a>\s*>\s*/, '')
+                        .replace(/^[^>]*>\s*/, '')
                         || '' 
                     }}
                   />
                   {item.type === 'story' && item.url && (
-                    <span className="ml-2">
+                    <span className="ml-2 inline-block">
                       <a 
                         href={item.formatted?.links.comments}
                         target="_blank"
