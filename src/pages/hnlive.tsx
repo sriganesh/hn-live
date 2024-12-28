@@ -794,9 +794,18 @@ export default function HNLiveTerminal() {
                 </div>
                 <div className="break-words overflow-hidden">
                   <a 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (options.directLinks) {
+                        window.open(item.formatted?.links.main, '_blank');
+                      } else {
+                        setViewingStory({ 
+                          itemId: item.id,
+                          scrollToId: item.type === 'comment' ? item.id : undefined
+                        });
+                      }
+                    }}
                     href={item.formatted?.links.main}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className={`${themeColors} transition-colors cursor-pointer`}
                     dangerouslySetInnerHTML={{ 
                       __html: item.formatted?.text
