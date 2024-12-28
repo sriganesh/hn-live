@@ -87,7 +87,18 @@ async function findCommentPath(commentId: number): Promise<number[]> {
   return path;
 }
 
-// Modify the fetchComments function
+// Add a helper to track loaded comment IDs
+const getCommentIds = (comments: HNComment[]): Set<number> => {
+  const ids = new Set<number>();
+  const addIds = (comment: HNComment) => {
+    ids.add(comment.id);
+    comment.comments?.forEach(addIds);
+  };
+  comments.forEach(addIds);
+  return ids;
+};
+
+// Simplify fetchComments back to its original version
 const fetchComments = async (ids: number[], level: number = 0, requiredIds?: Set<number>): Promise<HNComment[]> => {
   // If we've hit max depth and there are no required comments at this level, return empty
   if (level >= MAX_DEPTH && !ids.some(id => requiredIds?.has(id))) {
@@ -101,22 +112,64 @@ const fetchComments = async (ids: number[], level: number = 0, requiredIds?: Set
 
   const comments = await Promise.all(
     limitedIds.map(async (id) => {
-      const response = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
-      const comment = await response.json();
-      if (comment && comment.kids) {
-        comment.comments = await fetchComments(comment.kids, level + 1, requiredIds);
+      try {
+        const response = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
+        const comment = await response.json();
+        
+        if (!comment || comment.dead || comment.deleted) return null;
+
+        let replies: HNComment[] = [];
+        const hasDeepReplies = level === MAX_DEPTH - 1 && comment.kids?.length > 0;
+        
+        if (comment.kids && level < MAX_DEPTH) {
+          replies = await fetchComments(comment.kids, level + 1, requiredIds);
+        }
+        
+        return { 
+          ...comment, 
+          level,
+          comments: replies,
+          hasDeepReplies
+        };
+      } catch (error) {
+        console.error(`Error fetching comment ${id}:`, error);
+        return null;
       }
-      return { ...comment, level };
     })
   );
 
-  return comments.filter(c => c && !c.dead && !c.deleted);
+  return comments.filter((c): c is HNComment => c !== null);
 };
+
+// Add a helper function to count total comments including replies
+const countCommentsInTree = (comments: HNComment[]): number => {
+  return comments.reduce((count, comment) => {
+    return count + 1 + (comment.comments ? countCommentsInTree(comment.comments) : 0);
+  }, 0);
+};
+
+// Update the state interface to track loaded comments
+interface StoryViewState {
+  loadedComments: HNComment[];
+  loadedCount: number;
+  loadedTotal: number;  // New field to track total including replies
+  hasMore: boolean;
+  isLoadingMore: boolean;
+}
 
 export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps) {
   const [story, setStory] = useState<HNStory | null>(null);
   const [loading, setLoading] = useState(true);
   const [showBackButton, setShowBackButton] = useState(false);
+  
+  // Add new state for comment loading
+  const [commentState, setCommentState] = useState<StoryViewState>({
+    loadedComments: [],
+    loadedCount: 0,
+    loadedTotal: 0,
+    hasMore: false,
+    isLoadingMore: false
+  });
 
   // Add scroll handler
   useEffect(() => {
@@ -142,6 +195,29 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
+  // Add function to load more comments
+  const loadMoreComments = async () => {
+    if (!story?.kids || commentState.isLoadingMore) return;
+    
+    setCommentState(prev => ({ ...prev, isLoadingMore: true }));
+    
+    const startIndex = commentState.loadedCount;
+    const nextBatch = story.kids.slice(startIndex, startIndex + MAX_COMMENTS);
+    
+    const loadedIds = getCommentIds(commentState.loadedComments);
+    const newComments = await fetchComments(nextBatch, 0, undefined, loadedIds);
+    const newTotal = countCommentsInTree(newComments);
+    
+    setCommentState(prev => ({
+      loadedComments: [...prev.loadedComments, ...newComments],
+      loadedCount: prev.loadedCount + newComments.length,
+      loadedTotal: prev.loadedTotal + newTotal,
+      hasMore: startIndex + MAX_COMMENTS < (story.kids?.length || 0),
+      isLoadingMore: false
+    }));
+  };
+
+  // Modify the story fetching effect
   useEffect(() => {
     const fetchStory = async () => {
       try {
@@ -156,11 +232,22 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
           requiredIds = new Set(commentPath);
         }
 
+        let initialComments: HNComment[] = [];
         if (storyData.kids) {
-          storyData.comments = await fetchComments(storyData.kids, 0, requiredIds);
+          const initialBatch = storyData.kids.slice(0, MAX_COMMENTS);
+          initialComments = await fetchComments(initialBatch, 0, requiredIds);
         }
 
+        const initialTotal = countCommentsInTree(initialComments);
+
         setStory(storyData);
+        setCommentState({
+          loadedComments: initialComments,
+          loadedCount: initialComments.length,
+          loadedTotal: initialTotal,
+          hasMore: (storyData.kids?.length || 0) > MAX_COMMENTS,
+          isLoadingMore: false
+        });
         setLoading(false);
 
         // Scroll to comment if specified
@@ -242,6 +329,18 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
         dangerouslySetInnerHTML={{ __html: addTargetBlankToLinks(comment.text || '') }}
       />
       {comment.comments?.map(renderComment)}
+      {comment.hasDeepReplies && (
+        <div className="mt-2 text-sm opacity-50">
+          <a
+            href={`https://news.ycombinator.com/item?id=${story?.id}#${comment.id}`}
+            className="hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View more replies on HN →
+          </a>
+        </div>
+      )}
     </div>
   );
 
@@ -345,18 +444,34 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
             )}
             <div className="border-t border-current opacity-10 my-8" />
             <div className="space-y-4">
-              {story.comments?.map(renderComment)}
-              {(story.descendants ?? 0) > MAX_COMMENTS && (
-                <div className="text-sm opacity-50 mt-4">
-                  Showing first {MAX_COMMENTS} comments. 
-                  <a 
-                    href={`https://news.ycombinator.com/item?id=${story.id}`}
-                    className="ml-2 hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
+              {commentState.loadedComments.map(renderComment)}
+              
+              {/* Replace the existing "View all comments" with Load More button */}
+              {commentState.hasMore && (
+                <div className="text-center py-8">
+                  <button
+                    onClick={loadMoreComments}
+                    disabled={commentState.isLoadingMore}
+                    className={`${
+                      theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
+                    } opacity-75 hover:opacity-100 transition-opacity disabled:opacity-50`}
                   >
-                    View all {story.descendants} comments on HN →
-                  </a>
+                    {commentState.isLoadingMore ? (
+                      'Loading more comments...'
+                    ) : (
+                      `Viewing ${commentState.loadedTotal} of ${story.descendants} comments (${commentState.loadedCount} threads). Load ${Math.min(MAX_COMMENTS, (story.kids?.length || 0) - commentState.loadedCount)} more threads...`
+                    )}
+                  </button>
+                  <div className="mt-2 text-sm opacity-50">
+                    <a 
+                      href={`https://news.ycombinator.com/item?id=${story.id}`}
+                      className="hover:underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View all on HN →
+                    </a>
+                  </div>
                 </div>
               )}
             </div>
