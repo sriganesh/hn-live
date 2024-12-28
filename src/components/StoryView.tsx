@@ -116,8 +116,21 @@ const fetchComments = async (ids: number[], level: number = 0, requiredIds?: Set
 export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps) {
   const [story, setStory] = useState<HNStory | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showBackButton, setShowBackButton] = useState(false);
 
-  // Add keyboard handler for ESC
+  // Add scroll handler
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLDivElement;
+      setShowBackButton(target.scrollTop > 100);
+    };
+
+    const container = document.querySelector('.story-container');
+    container?.addEventListener('scroll', handleScroll);
+    return () => container?.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Keep the ESC key handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -223,7 +236,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
 
   return (
     <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden`}>
-      <div className="h-full overflow-y-auto p-4">
+      <div className="story-container h-full overflow-y-auto p-4">
         <div className="flex items-center justify-between mb-8">
           <button 
             onClick={onClose}
@@ -242,6 +255,36 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
             className="opacity-75 hover:opacity-100"
           >
             [ESC]
+          </button>
+        </div>
+
+        {/* Add floating back button */}
+        <div 
+          className={`fixed left-4 bottom-4 transition-opacity duration-200 ${
+            showBackButton ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+        >
+          <button
+            onClick={onClose}
+            className={`${
+              theme === 'green' ? 'bg-green-500' : 'bg-[#ff6600]'
+            } text-black rounded-full p-3 shadow-lg hover:opacity-90 transition-opacity`}
+            aria-label="Back to feed"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="h-6 w-6" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M10 19l-7-7m0 0l7-7m-7 7h18" 
+              />
+            </svg>
           </button>
         </div>
 
