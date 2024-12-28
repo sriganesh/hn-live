@@ -122,16 +122,18 @@ export default function HNLiveTerminal() {
       comments: ''
     };
     
+    // Always link username directly to HN
     const userLink = `<a href="https://news.ycombinator.com/user?id=${item.by}" 
       class="hn-username hover:underline"
       target="_blank"
       rel="noopener noreferrer"
+      onclick="event.stopPropagation()"
     >${item.by}</a>`;
     
     if (item.type === 'comment') {
       text = `${userLink} > ${item.text?.replace(/<[^>]*>/g, '')}`;
       links.main = `https://news.ycombinator.com/item?id=${item.id}`;
-      links.comments = ''; // Empty string for comments since it's a comment
+      links.comments = ''; 
     } else if (item.type === 'story') {
       text = `${userLink}: ${item.title || '[untitled]'}`;
       links.main = item.url || `https://news.ycombinator.com/item?id=${item.id}`;
