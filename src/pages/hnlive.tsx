@@ -704,7 +704,14 @@ export default function HNLiveTerminal() {
                 <div className="flex items-center gap-2 text-sm opacity-50">
                   <span>{item.formatted?.timestamp.time || formatTimestamp(item.time).time}</span>
                   <span>•</span>
-                  <span className="hn-username">{item.by}</span>
+                  <a 
+                    href={`https://news.ycombinator.com/user?id=${item.by}`}
+                    className="hn-username hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {item.by}
+                  </a>
                 </div>
                 <div>
                   <a 
@@ -712,7 +719,12 @@ export default function HNLiveTerminal() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`${themeColors} transition-colors cursor-pointer`}
-                    dangerouslySetInnerHTML={{ __html: item.formatted?.text.replace(/<a[^>]*>(.*?)<\/a>/, '$1') || '' }}
+                    dangerouslySetInnerHTML={{ 
+                      __html: item.formatted?.text
+                        .replace(/<a[^>]*>.*?<\/a>\s*>\s*/, '') // Remove username and ">" prefix
+                        .replace(/^[^>]*>\s*/, '') // Alternative way to remove username and ">" prefix
+                        || '' 
+                    }}
                   />
                   {item.type === 'story' && item.url && (
                     <span className="ml-2">
