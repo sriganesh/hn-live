@@ -293,10 +293,12 @@ export default function HNLiveTerminal() {
     };
   }, [isRunning]);
 
-  // Auto-scroll only when enabled
+  // Update the auto-scroll effect
   useEffect(() => {
     if (options.autoscroll && containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+      // For mobile, add extra padding to ensure visibility
+      const extraPadding = window.innerWidth < 640 ? 100 : 0;
+      containerRef.current.scrollTop = containerRef.current.scrollHeight + extraPadding;
     }
   }, [items, options.autoscroll]);
 
