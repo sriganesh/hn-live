@@ -117,6 +117,48 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
   const [story, setStory] = useState<HNStory | null>(null);
   const [loading, setLoading] = useState(true);
   const [showBackButton, setShowBackButton] = useState(false);
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
+  const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null);
+
+  // Constants for swipe detection
+  const SWIPE_THRESHOLD = 50;  // Minimum swipe distance
+  const EDGE_THRESHOLD = 20;   // Distance from left edge to start swipe
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    // Only track touches that start near the left edge
+    if (touch.clientX <= EDGE_THRESHOLD) {
+      setTouchEnd(null);
+      setTouchStart({
+        x: touch.clientX,
+        y: touch.clientY
+      });
+    }
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart) return;
+    
+    setTouchEnd({
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    });
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const deltaX = touchEnd.x - touchStart.x;
+    const deltaY = Math.abs(touchEnd.y - touchStart.y);
+
+    // Check if swipe is horizontal enough and long enough
+    if (deltaX > SWIPE_THRESHOLD && deltaY < deltaX) {
+      onClose();
+    }
+
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
 
   // Add scroll handler
   useEffect(() => {
@@ -235,7 +277,12 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
   );
 
   return (
-    <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden`}>
+    <div 
+      className={`fixed inset-0 z-50 ${themeColors} overflow-hidden`}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
       <div className="story-container h-full overflow-y-auto p-4">
         <div className="flex items-center justify-between mb-8">
           <button 
