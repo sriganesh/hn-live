@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { StoryView } from '../components/StoryView';
+import { Helmet } from 'react-helmet-async';
 
 interface HNItem {
   id: number;
@@ -567,30 +568,177 @@ export default function HNLiveTerminal() {
   }, [options.directLinks]);
 
   return (
-    <div className={`fixed inset-0 ${themeBg} font-mono`} data-theme={options.theme}>
-      {showAbout && <AboutOverlay />}
-      <div className={`fixed top-0 left-0 right-0 z-50 ${themeHeaderBg} border-b ${themeColors} py-2 px-3 sm:py-4 sm:px-4`}>
-        {/* Mobile Layout */}
-        <div className="sm:hidden">
-          <div className="flex items-center justify-between mb-2">
-            <span className={`${headerColor} font-bold tracking-wider flex items-center gap-2 relative`}>
-              HN
-              <span className="animate-pulse">
-                <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
-              </span>
-              LIVE
-              {queueSize >= 100 && (
-                <span className={`absolute -top-1 -right-6 min-w-[1.2rem] h-[1.2rem] 
-                  ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
-                  rounded text-xs flex items-center justify-center font-bold`}
-                >
-                  {queueSize}
+    <>
+      <Helmet>
+        <title>HN Live - Real-time Hacker News Feed</title>
+        <meta name="description" content="Live, real-time feed of Hacker News stories and discussions as they happen. Watch new posts and comments appear instantly from the HN community." />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "HN Live",
+            "description": "Real-time Hacker News feed",
+            "url": "https://hn.live",
+            "applicationCategory": "News",
+            "operatingSystem": "Any",
+            "offers": {
+              "@type": "Offer",
+              "availability": "https://schema.org/InStock",
+              "price": "0"
+            },
+            "featureList": [
+              "Real-time updates",
+              "Live comment feed",
+              "Instant story notifications"
+            ]
+          })}
+        </script>
+      </Helmet>
+      <div className={`fixed inset-0 ${themeBg} font-mono`} data-theme={options.theme}>
+        <noscript>
+          <div className="p-4">
+            <h1>HN Live - Real-time Hacker News Feed</h1>
+            <p>This is a real-time feed of Hacker News content. JavaScript is required to view the live updates.</p>
+          </div>
+        </noscript>
+        {showAbout && <AboutOverlay />}
+        <div className={`fixed top-0 left-0 right-0 z-50 ${themeHeaderBg} border-b ${themeColors} py-2 px-3 sm:py-4 sm:px-4`}>
+          {/* Mobile Layout */}
+          <div className="sm:hidden">
+            <div className="flex items-center justify-between mb-2">
+              <span className={`${headerColor} font-bold tracking-wider flex items-center gap-2 relative`}>
+                HN
+                <span className="animate-pulse">
+                  <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
                 </span>
-              )}
-            </span>
+                LIVE
+                {queueSize >= 100 && (
+                  <span className={`absolute -top-1 -right-6 min-w-[1.2rem] h-[1.2rem] 
+                    ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
+                    rounded text-xs flex items-center justify-center font-bold`}
+                  >
+                    {queueSize}
+                  </span>
+                )}
+              </span>
 
-            {/* Theme options in the middle */}
-            <div className="flex items-center gap-2">
+              {/* Theme options in the middle */}
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setOptions(prev => ({...prev, theme: 'dog'}))}
+                  className={`${options.theme === 'dog' ? 'text-[#ff6600]' : 'text-[#ff6600]/50'}`}
+                >
+                  [{options.theme === 'dog' ? '×' : ' '}] D
+                </button>
+                <button 
+                  onClick={() => setOptions(prev => ({...prev, theme: 'og'}))}
+                  className={`${options.theme === 'og' ? 'text-[#ff6600]' : 'text-[#ff6600]/50'}`}
+                >
+                  [{options.theme === 'og' ? '×' : ' '}] O
+                </button>
+                <button 
+                  onClick={() => setOptions(prev => ({...prev, theme: 'green'}))}
+                  className={`${
+                    options.theme === 'green' 
+                      ? 'text-green-600'
+                      : options.theme === 'og'
+                      ? 'text-green-700'
+                      : 'text-green-400/50'
+                  }`}
+                >
+                  [{options.theme === 'green' ? '×' : ' '}] G
+                </button>
+              </div>
+
+              {/* Controls on the right */}
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setShowAbout(true)}
+                  className={themeColors}
+                >
+                  [?]
+                </button>
+              </div>
+            </div>
+
+            {/* Second row for other controls */}
+            <div className="flex items-center justify-between gap-2 text-sm">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}))}
+                  className={`${themeColors} ${!options.autoscroll && 'opacity-50'}`}
+                >
+                  [{options.autoscroll ? '×' : ' '}] Auto-scroll
+                </button>
+                <button
+                  onClick={() => setOptions(prev => ({...prev, directLinks: !prev.directLinks}))}
+                  className={`${themeColors} ${!options.directLinks && 'opacity-50'}`}
+                >
+                  [{options.directLinks ? '×' : ' '}] Direct
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                {showGrep ? (
+                  <div className="flex items-center gap-2">
+                    <span>grep:</span>
+                    <input
+                      type="text"
+                      value={filters.text}
+                      onChange={(e) => setFilters(prev => ({...prev, text: e.target.value}))}
+                      className={`bg-transparent border-b border-current outline-none w-20 px-1 ${themeColors}`}
+                      placeholder="search..."
+                      autoFocus
+                      onBlur={() => {
+                        if (!filters.text) {
+                          setShowGrep(false);
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowGrep(true)}
+                    className={themeColors}
+                  >
+                    [GREP]
+                  </button>
+                )}
+                <button 
+                  onClick={toggleFeed}
+                  className={themeColors}
+                >
+                  [{isRunning ? 'STOP' : 'START'}]
+                </button>
+                <button 
+                  onClick={clearScreen}
+                  className={themeColors}
+                >
+                  [CLR]
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden sm:flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className={`${headerColor} font-bold tracking-wider flex items-center gap-2 relative`}>
+                HN
+                <span className="animate-pulse">
+                  <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
+                </span>
+                LIVE
+                {queueSize >= 100 && (
+                  <span className={`absolute -top-1 -right-6 min-w-[1.2rem] h-[1.2rem] 
+                    ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
+                    rounded text-xs flex items-center justify-center font-bold`}
+                  >
+                    {queueSize}
+                  </span>
+                )}
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
               <button 
                 onClick={() => setOptions(prev => ({...prev, theme: 'dog'}))}
                 className={`${options.theme === 'dog' ? 'text-[#ff6600]' : 'text-[#ff6600]/50'}`}
@@ -615,22 +763,6 @@ export default function HNLiveTerminal() {
               >
                 [{options.theme === 'green' ? '×' : ' '}] G
               </button>
-            </div>
-
-            {/* Controls on the right */}
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setShowAbout(true)}
-                className={themeColors}
-              >
-                [?]
-              </button>
-            </div>
-          </div>
-
-          {/* Second row for other controls */}
-          <div className="flex items-center justify-between gap-2 text-sm">
-            <div className="flex items-center gap-2">
               <button
                 onClick={() => setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}))}
                 className={`${themeColors} ${!options.autoscroll && 'opacity-50'}`}
@@ -643,8 +775,26 @@ export default function HNLiveTerminal() {
               >
                 [{options.directLinks ? '×' : ' '}] Direct
               </button>
-            </div>
-            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setShowAbout(true)}
+                className={themeColors}
+              >
+                [ABOUT]
+              </button>
+              <button 
+                onClick={toggleFeed}
+                className={themeColors}
+                title="Ctrl/Cmd + S"
+              >
+                [{isRunning ? 'STOP' : 'START'}]{showShortcuts && ' (⌘S)'}
+              </button>
+              <button 
+                onClick={clearScreen}
+                className={themeColors}
+                title="Ctrl/Cmd + L"
+              >
+                [CLEAR]{showShortcuts && ' (⌘L)'}
+              </button>
               {showGrep ? (
                 <div className="flex items-center gap-2">
                   <span>grep:</span>
@@ -652,7 +802,7 @@ export default function HNLiveTerminal() {
                     type="text"
                     value={filters.text}
                     onChange={(e) => setFilters(prev => ({...prev, text: e.target.value}))}
-                    className={`bg-transparent border-b border-current outline-none w-20 px-1 ${themeColors}`}
+                    className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
                     placeholder="search..."
                     autoFocus
                     onBlur={() => {
@@ -666,266 +816,150 @@ export default function HNLiveTerminal() {
                 <button
                   onClick={() => setShowGrep(true)}
                   className={themeColors}
+                  title="Ctrl/Cmd + F"
                 >
-                  [GREP]
+                  [GREP]{showShortcuts && ' (⌘F)'}
                 </button>
               )}
-              <button 
-                onClick={toggleFeed}
-                className={themeColors}
-              >
-                [{isRunning ? 'STOP' : 'START'}]
-              </button>
-              <button 
-                onClick={clearScreen}
-                className={themeColors}
-              >
-                [CLR]
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Desktop Layout */}
-        <div className="hidden sm:flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className={`${headerColor} font-bold tracking-wider flex items-center gap-2 relative`}>
-              HN
-              <span className="animate-pulse">
-                <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
-              </span>
-              LIVE
-              {queueSize >= 100 && (
-                <span className={`absolute -top-1 -right-6 min-w-[1.2rem] h-[1.2rem] 
-                  ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
-                  rounded text-xs flex items-center justify-center font-bold`}
-                >
-                  {queueSize}
-                </span>
-              )}
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setOptions(prev => ({...prev, theme: 'dog'}))}
-              className={`${options.theme === 'dog' ? 'text-[#ff6600]' : 'text-[#ff6600]/50'}`}
-            >
-              [{options.theme === 'dog' ? '×' : ' '}] D
-            </button>
-            <button 
-              onClick={() => setOptions(prev => ({...prev, theme: 'og'}))}
-              className={`${options.theme === 'og' ? 'text-[#ff6600]' : 'text-[#ff6600]/50'}`}
-            >
-              [{options.theme === 'og' ? '×' : ' '}] O
-            </button>
-            <button 
-              onClick={() => setOptions(prev => ({...prev, theme: 'green'}))}
-              className={`${
-                options.theme === 'green' 
-                  ? 'text-green-600'
-                  : options.theme === 'og'
-                  ? 'text-green-700'
-                  : 'text-green-400/50'
-              }`}
-            >
-              [{options.theme === 'green' ? '×' : ' '}] G
-            </button>
-            <button
-              onClick={() => setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}))}
-              className={`${themeColors} ${!options.autoscroll && 'opacity-50'}`}
-            >
-              [{options.autoscroll ? '×' : ' '}] Auto-scroll
-            </button>
-            <button
-              onClick={() => setOptions(prev => ({...prev, directLinks: !prev.directLinks}))}
-              className={`${themeColors} ${!options.directLinks && 'opacity-50'}`}
-            >
-              [{options.directLinks ? '×' : ' '}] Direct
-            </button>
-            <button 
-              onClick={() => setShowAbout(true)}
-              className={themeColors}
-            >
-              [ABOUT]
-            </button>
-            <button 
-              onClick={toggleFeed}
-              className={themeColors}
-              title="Ctrl/Cmd + S"
-            >
-              [{isRunning ? 'STOP' : 'START'}]{showShortcuts && ' (⌘S)'}
-            </button>
-            <button 
-              onClick={clearScreen}
-              className={themeColors}
-              title="Ctrl/Cmd + L"
-            >
-              [CLEAR]{showShortcuts && ' (⌘L)'}
-            </button>
-            {showGrep ? (
-              <div className="flex items-center gap-2">
-                <span>grep:</span>
-                <input
-                  type="text"
-                  value={filters.text}
-                  onChange={(e) => setFilters(prev => ({...prev, text: e.target.value}))}
-                  className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
-                  placeholder="search..."
-                  autoFocus
-                  onBlur={() => {
-                    if (!filters.text) {
-                      setShowGrep(false);
-                    }
-                  }}
-                />
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowGrep(true)}
-                className={themeColors}
-                title="Ctrl/Cmd + F"
-              >
-                [GREP]{showShortcuts && ' (⌘F)'}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div 
-        ref={containerRef}
-        className={`h-screen pt-24 sm:pt-20 pb-20 sm:pb-4 px-3 sm:px-4 overflow-y-auto font-mono
-                     ${options.theme === 'green'
-                       ? 'text-green-400'
-                       : 'text-[#828282]'}
-                     scrollbar-thin scrollbar-track-transparent
-                     ${options.theme === 'green'
-                       ? 'scrollbar-thumb-green-500/30'
-                       : 'scrollbar-thumb-[#ff6600]/30'}`}
-      >
-        {filteredItems.map((item, index) => (
-          <div key={`${item.id}-${index}`}>
-            <div className="py-1">
-              {/* Desktop view */}
-              <div className="hidden sm:flex items-start gap-4">
-                <TimeStamp 
-                  time={item.formatted?.timestamp.time || formatTimestamp(item.time).time}
-                  fullDate={item.formatted?.timestamp.fullDate || formatTimestamp(item.time).fullDate}
-                />
-                <div className="flex-1">
-                  <a 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (options.directLinks) {
-                        window.open(item.formatted?.links.main, '_blank');
-                      } else {
-                        setViewingStory({ 
-                          itemId: item.id,
-                          scrollToId: item.type === 'comment' ? item.id : undefined
-                        });
-                      }
-                    }}
-                    href={item.formatted?.links.main}
-                    className={`${themeColors} transition-colors cursor-pointer`}
-                    dangerouslySetInnerHTML={{ __html: item.formatted?.text || '' }}
+        <div 
+          ref={containerRef}
+          className={`h-screen pt-24 sm:pt-20 pb-20 sm:pb-4 px-3 sm:px-4 overflow-y-auto font-mono
+                       ${options.theme === 'green'
+                         ? 'text-green-400'
+                         : 'text-[#828282]'}
+                       scrollbar-thin scrollbar-track-transparent
+                       ${options.theme === 'green'
+                         ? 'scrollbar-thumb-green-500/30'
+                         : 'scrollbar-thumb-[#ff6600]/30'}`}
+        >
+          {filteredItems.map((item, index) => (
+            <div key={`${item.id}-${index}`}>
+              <div className="py-1">
+                {/* Desktop view */}
+                <div className="hidden sm:flex items-start gap-4">
+                  <TimeStamp 
+                    time={item.formatted?.timestamp.time || formatTimestamp(item.time).time}
+                    fullDate={item.formatted?.timestamp.fullDate || formatTimestamp(item.time).fullDate}
                   />
-                  {item.type === 'story' && item.url && (
-                    <span className="ml-2">
-                      <a 
-                        href={item.formatted?.links.comments}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
-                      >
-                        [comments]
-                      </a>
-                    </span>
-                  )}
+                  <div className="flex-1">
+                    <a 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (options.directLinks) {
+                          window.open(item.formatted?.links.main, '_blank');
+                        } else {
+                          setViewingStory({ 
+                            itemId: item.id,
+                            scrollToId: item.type === 'comment' ? item.id : undefined
+                          });
+                        }
+                      }}
+                      href={item.formatted?.links.main}
+                      className={`${themeColors} transition-colors cursor-pointer`}
+                      dangerouslySetInnerHTML={{ __html: item.formatted?.text || '' }}
+                    />
+                    {item.type === 'story' && item.url && (
+                      <span className="ml-2">
+                        <a 
+                          href={item.formatted?.links.comments}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
+                        >
+                          [comments]
+                        </a>
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              {/* Mobile view */}
-              <div className="sm:hidden space-y-1">
-                <div className="flex items-center gap-2 text-sm opacity-50">
-                  <span>{item.formatted?.timestamp.time || formatTimestamp(item.time).time}</span>
-                  <span>•</span>
-                  <a 
-                    href={`https://news.ycombinator.com/user?id=${item.by}`}
-                    className="hn-username hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {item.by}
-                  </a>
-                </div>
-                <div className="break-words whitespace-pre-wrap overflow-hidden">
-                  <a 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (options.directLinks) {
-                        window.open(item.formatted?.links.main, '_blank');
-                      } else {
-                        setViewingStory({ 
-                          itemId: item.id,
-                          scrollToId: item.type === 'comment' ? item.id : undefined
-                        });
-                      }
-                    }}
-                    href={item.formatted?.links.main}
-                    className={`${themeColors} transition-colors cursor-pointer`}
-                    dangerouslySetInnerHTML={{ 
-                      __html: item.formatted?.text
-                        .replace(/<a[^>]*>.*?<\/a>\s*>\s*/, '')
-                        .replace(/^[^>]*>\s*/, '')
-                        || '' 
-                    }}
-                  />
-                  {item.type === 'story' && item.url && (
-                    <span className="ml-2 inline-block">
-                      <a 
-                        href={item.formatted?.links.comments}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
-                      >
-                        [comments]
-                      </a>
-                    </span>
-                  )}
+                {/* Mobile view */}
+                <div className="sm:hidden space-y-1">
+                  <div className="flex items-center gap-2 text-sm opacity-50">
+                    <span>{item.formatted?.timestamp.time || formatTimestamp(item.time).time}</span>
+                    <span>•</span>
+                    <a 
+                      href={`https://news.ycombinator.com/user?id=${item.by}`}
+                      className="hn-username hover:underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {item.by}
+                    </a>
+                  </div>
+                  <div className="break-words whitespace-pre-wrap overflow-hidden">
+                    <a 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (options.directLinks) {
+                          window.open(item.formatted?.links.main, '_blank');
+                        } else {
+                          setViewingStory({ 
+                            itemId: item.id,
+                            scrollToId: item.type === 'comment' ? item.id : undefined
+                          });
+                        }
+                      }}
+                      href={item.formatted?.links.main}
+                      className={`${themeColors} transition-colors cursor-pointer`}
+                      dangerouslySetInnerHTML={{ 
+                        __html: item.formatted?.text
+                          .replace(/<a[^>]*>.*?<\/a>\s*>\s*/, '')
+                          .replace(/^[^>]*>\s*/, '')
+                          || '' 
+                      }}
+                    />
+                    {item.type === 'story' && item.url && (
+                      <span className="ml-2 inline-block">
+                        <a 
+                          href={item.formatted?.links.comments}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
+                        >
+                          [comments]
+                        </a>
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
+              <div className="border-b border-current opacity-5 my-2"></div>
             </div>
-            <div className="border-b border-current opacity-5 my-2"></div>
-          </div>
-        ))}
-        
-        {/* Update the cursor line for mobile too */}
-        <div className="py-1">
-          <div className="hidden sm:flex items-center gap-4">
-            <TimeStamp 
-              time={formatTimestamp(Date.now() / 1000).time}
-              fullDate={formatTimestamp(Date.now() / 1000).fullDate}
-            />
-            <span>{'>'}</span>
-            <span className="animate-pulse">█</span>
-          </div>
-          <div className="sm:hidden flex items-center gap-2 text-sm">
-            <span className="opacity-50">{formatTimestamp(Date.now() / 1000).time}</span>
-            <span>{'>'}</span>
-            <span className="animate-pulse">█</span>
+          ))}
+          
+          {/* Update the cursor line for mobile too */}
+          <div className="py-1">
+            <div className="hidden sm:flex items-center gap-4">
+              <TimeStamp 
+                time={formatTimestamp(Date.now() / 1000).time}
+                fullDate={formatTimestamp(Date.now() / 1000).fullDate}
+              />
+              <span>{'>'}</span>
+              <span className="animate-pulse">█</span>
+            </div>
+            <div className="sm:hidden flex items-center gap-2 text-sm">
+              <span className="opacity-50">{formatTimestamp(Date.now() / 1000).time}</span>
+              <span>{'>'}</span>
+              <span className="animate-pulse">█</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Add the StoryView component to the render */}
-      {viewingStory && (
-        <StoryView
-          itemId={viewingStory.itemId}
-          scrollToId={viewingStory.scrollToId}
-          onClose={() => setViewingStory(null)}
-          theme={options.theme}
-        />
-      )}
-    </div>
+        {/* Add the StoryView component to the render */}
+        {viewingStory && (
+          <StoryView
+            itemId={viewingStory.itemId}
+            scrollToId={viewingStory.scrollToId}
+            onClose={() => setViewingStory(null)}
+            theme={options.theme}
+          />
+        )}
+      </div>
+    </>
   );
 } 

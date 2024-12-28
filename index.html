@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hacker News Live</title>
+    
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-40GH9LE5W7"></script>
     <script>
@@ -18,8 +18,44 @@
 
       gtag('config', 'G-40GH9LE5W7');
     </script>
+    
+    <!-- Primary Meta Tags -->
+    <title>HN Live - Real-time Hacker News Feed</title>
+    <meta name="title" content="HN Live - Real-time Hacker News Feed">
+    <meta name="description" content="Live, real-time feed of Hacker News stories and discussions as they happen. Watch new posts and comments appear instantly from the HN community.">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://hn.live/">
+    <meta property="og:title" content="HN Live - Real-time Hacker News Feed">
+    <meta property="og:description" content="Live, real-time feed of Hacker News stories and discussions as they happen. Watch new posts and comments appear instantly from the HN community.">
+    <meta property="og:image" content="https://hn.live/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://hn.live/">
+    <meta property="twitter:title" content="HN Live - Real-time Hacker News Feed">
+    <meta property="twitter:description" content="Live, real-time feed of Hacker News stories and discussions as they happen. Watch new posts and comments appear instantly from the HN community.">
+    <meta property="twitter:image" content="https://hn.live/og-image.png">
+
+    <!-- Additional SEO tags -->
+    <meta name="keywords" content="hacker news, live feed, tech news, programming, technology, startup news, real-time">
+    <meta name="author" content="sri.xyz">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://hn.live/">
+
+    <!-- PWA tags -->
+    <meta name="theme-color" content="#ff6600">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
   </head>
   <body>
+    <noscript>
+      <div class="p-4">
+        <h1>HN Live - Real-time Hacker News Feed</h1>
+        <p>This is a real-time feed of Hacker News content. JavaScript is required to view the live updates.</p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
