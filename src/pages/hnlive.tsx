@@ -814,7 +814,7 @@ export default function HNLiveTerminal() {
                     {item.by}
                   </a>
                 </div>
-                <div className="break-words overflow-hidden">
+                <div className="break-words whitespace-pre-wrap overflow-hidden">
                   <a 
                     onClick={(e) => {
                       e.preventDefault();

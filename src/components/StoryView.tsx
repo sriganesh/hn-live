@@ -227,7 +227,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
         </a>
       </div>
       <div 
-        className="prose prose-sm max-w-none break-words"
+        className="prose prose-sm max-w-none break-words whitespace-pre-wrap overflow-hidden"
         dangerouslySetInnerHTML={{ __html: addTargetBlankToLinks(comment.text || '') }}
       />
       {comment.comments?.map(renderComment)}
