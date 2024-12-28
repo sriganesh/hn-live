@@ -214,7 +214,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
         </a>
       </div>
       <div 
-        className="prose prose-sm max-w-none"
+        className="prose prose-sm max-w-none break-words"
         dangerouslySetInnerHTML={{ __html: addTargetBlankToLinks(comment.text || '') }}
       />
       {comment.comments?.map(renderComment)}
@@ -274,7 +274,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
             {story.url && (
               <a 
                 href={story.url}
-                className="block mb-4 opacity-75 hover:opacity-100"
+                className="block mb-4 opacity-75 hover:opacity-100 break-words"
                 target="_blank"
                 rel="noopener noreferrer"
               >
