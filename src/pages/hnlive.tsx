@@ -726,7 +726,7 @@ export default function HNLiveTerminal() {
                     href={item.formatted?.links.main}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`${themeColors} transition-colors cursor-pointer break-all`}
+                    className={`${themeColors} transition-colors cursor-pointer`}
                     dangerouslySetInnerHTML={{ 
                       __html: item.formatted?.text
                         .replace(/<a[^>]*>.*?<\/a>\s*>\s*/, '')
