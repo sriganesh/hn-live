@@ -35,12 +35,25 @@ interface SearchFilters {
   text: string;
 }
 
+const getStoredTheme = () => {
+  try {
+    const storedTheme = localStorage.getItem('hn-live-theme');
+    if (storedTheme && ['green', 'og', 'dog'].includes(storedTheme)) {
+      return storedTheme as 'green' | 'og' | 'dog';
+    }
+  } catch (e) {
+    // Handle cases where localStorage might be unavailable
+    console.warn('Could not access localStorage');
+  }
+  return 'og'; // Default theme if nothing is stored
+};
+
 export default function HNLiveTerminal() {
   useDocumentTitle('Hacker News Live');
   
   const [items, setItems] = useState<HNItem[]>([]);
   const [options, setOptions] = useState<TerminalOptions>({
-    theme: 'og',
+    theme: getStoredTheme(),
     autoscroll: true
   });
   const [isRunning, setIsRunning] = useState(true);
@@ -471,6 +484,15 @@ export default function HNLiveTerminal() {
       </div>
     );
   };
+
+  // Add an effect to save theme changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('hn-live-theme', options.theme);
+    } catch (e) {
+      console.warn('Could not save theme preference');
+    }
+  }, [options.theme]);
 
   return (
     <div className={`fixed inset-0 ${themeBg} font-mono`} data-theme={options.theme}>
