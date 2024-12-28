@@ -658,7 +658,7 @@ export default function HNLiveTerminal() {
 
       <div 
         ref={containerRef}
-        className={`h-screen pt-24 sm:pt-20 pb-4 px-3 sm:px-4 overflow-y-auto font-mono
+        className={`h-screen pt-24 sm:pt-20 pb-20 sm:pb-4 px-3 sm:px-4 overflow-y-auto font-mono
                      ${options.theme === 'green'
                        ? 'text-green-400'
                        : 'text-[#828282]'}
