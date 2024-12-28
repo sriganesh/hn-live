@@ -669,44 +669,85 @@ export default function HNLiveTerminal() {
       >
         {filteredItems.map((item, index) => (
           <div key={`${item.id}-${index}`}>
-            <div className="py-1 flex items-start gap-4">
-              <TimeStamp 
-                time={item.formatted?.timestamp.time || formatTimestamp(item.time).time}
-                fullDate={item.formatted?.timestamp.fullDate || formatTimestamp(item.time).fullDate}
-              />
-              <div className="flex-1">
-                <a 
-                  href={item.formatted?.links.main}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`${themeColors} transition-colors cursor-pointer`}
-                  dangerouslySetInnerHTML={{ __html: item.formatted?.text || '' }}
+            <div className="py-1">
+              {/* Desktop view */}
+              <div className="hidden sm:flex items-start gap-4">
+                <TimeStamp 
+                  time={item.formatted?.timestamp.time || formatTimestamp(item.time).time}
+                  fullDate={item.formatted?.timestamp.fullDate || formatTimestamp(item.time).fullDate}
                 />
-                {item.type === 'story' && item.url && (
-                  <span className="ml-2">
-                    <a 
-                      href={item.formatted?.links.comments}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
-                    >
-                      [comments]
-                    </a>
-                  </span>
-                )}
+                <div className="flex-1">
+                  <a 
+                    href={item.formatted?.links.main}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`${themeColors} transition-colors cursor-pointer`}
+                    dangerouslySetInnerHTML={{ __html: item.formatted?.text || '' }}
+                  />
+                  {item.type === 'story' && item.url && (
+                    <span className="ml-2">
+                      <a 
+                        href={item.formatted?.links.comments}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
+                      >
+                        [comments]
+                      </a>
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Mobile view */}
+              <div className="sm:hidden space-y-1">
+                <div className="flex items-center gap-2 text-sm opacity-50">
+                  <span>{item.formatted?.timestamp.time || formatTimestamp(item.time).time}</span>
+                  <span>•</span>
+                  <span className="hn-username">{item.by}</span>
+                </div>
+                <div>
+                  <a 
+                    href={item.formatted?.links.main}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`${themeColors} transition-colors cursor-pointer`}
+                    dangerouslySetInnerHTML={{ __html: item.formatted?.text.replace(/<a[^>]*>(.*?)<\/a>/, '$1') || '' }}
+                  />
+                  {item.type === 'story' && item.url && (
+                    <span className="ml-2">
+                      <a 
+                        href={item.formatted?.links.comments}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
+                      >
+                        [comments]
+                      </a>
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             <div className="border-b border-current opacity-5 my-2"></div>
           </div>
         ))}
         
-        <div className="py-1 flex items-center gap-4">
-          <TimeStamp 
-            time={formatTimestamp(Date.now() / 1000).time}
-            fullDate={formatTimestamp(Date.now() / 1000).fullDate}
-          />
-          <span>{'>'}</span>
-          <span className="animate-pulse">█</span>
+        {/* Update the cursor line for mobile too */}
+        <div className="py-1">
+          <div className="hidden sm:flex items-center gap-4">
+            <TimeStamp 
+              time={formatTimestamp(Date.now() / 1000).time}
+              fullDate={formatTimestamp(Date.now() / 1000).fullDate}
+            />
+            <span>{'>'}</span>
+            <span className="animate-pulse">█</span>
+          </div>
+          <div className="sm:hidden flex items-center gap-2 text-sm">
+            <span className="opacity-50">{formatTimestamp(Date.now() / 1000).time}</span>
+            <span>{'>'}</span>
+            <span className="animate-pulse">█</span>
+          </div>
         </div>
       </div>
     </div>
