@@ -494,6 +494,12 @@ export default function HNLiveTerminal() {
             </span>
             <div className="flex items-center gap-2">
               <button 
+                onClick={() => setShowAbout(true)}
+                className={themeColors}
+              >
+                [?]
+              </button>
+              <button 
                 onClick={toggleFeed}
                 className={themeColors}
               >
