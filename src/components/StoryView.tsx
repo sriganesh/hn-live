@@ -182,6 +182,13 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
     fetchStory();
   }, [itemId, scrollToId]);
 
+  useEffect(() => {
+    // Track story view
+    window.gtag?.('event', 'view_story', {
+      story_id: itemId
+    });
+  }, [itemId]);
+
   const themeColors = theme === 'green'
     ? 'text-green-400 bg-black'
     : theme === 'og'
