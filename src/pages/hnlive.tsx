@@ -37,7 +37,7 @@ interface SearchFilters {
   text: string;
 }
 
-const INITIAL_BUFFER_SIZE = 30;  // Number of items to fetch initially
+const INITIAL_BUFFER_SIZE = 60;  // Number of items to fetch initially
 const UPDATE_INTERVAL = 30000;   // How often to fetch new items (30 seconds)
 const MIN_DISPLAY_INTERVAL = 800;  // Minimum time between displaying items
 const MAX_DISPLAY_INTERVAL = 2000; // Maximum time between displaying items
@@ -579,7 +579,7 @@ export default function HNLiveTerminal() {
                 <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
               </span>
               LIVE
-              {queueSize >= 50 && (
+              {queueSize >= 100 && (
                 <span className={`absolute -top-1 -right-6 min-w-[1.2rem] h-[1.2rem] 
                   ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
                   rounded text-xs flex items-center justify-center font-bold`}
@@ -695,7 +695,7 @@ export default function HNLiveTerminal() {
                 <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
               </span>
               LIVE
-              {queueSize >= 50 && (
+              {queueSize >= 100 && (
                 <span className={`absolute -top-1 -right-6 min-w-[1.2rem] h-[1.2rem] 
                   ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
                   rounded text-xs flex items-center justify-center font-bold`}
