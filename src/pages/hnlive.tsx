@@ -41,6 +41,10 @@ const INITIAL_BUFFER_SIZE = 30;  // Number of items to fetch initially
 const UPDATE_INTERVAL = 30000;   // How often to fetch new items (30 seconds)
 const MIN_DISPLAY_INTERVAL = 800;  // Minimum time between displaying items
 const MAX_DISPLAY_INTERVAL = 2000; // Maximum time between displaying items
+const MAX_QUEUE_SIZE = 1000;  // Maximum queue size before refresh
+const MAX_INACTIVE_TIME = 15 * 60 * 1000;  // 15 minutes in milliseconds
+const WARNING_QUEUE_SIZE = 800;  // Show warning when queue gets large
+const WARNING_INACTIVE_TIME = 10 * 60 * 1000;  // Warning after 10 minutes
 
 const getStoredTheme = () => {
   try {
@@ -80,17 +84,16 @@ export default function HNLiveTerminal() {
     text: ''
   });
 
+  // All refs should be grouped together
   const containerRef = useRef<HTMLDivElement>(null);
   const processedIds = useRef<Set<number>>(new Set());
   const maxItemRef = useRef<number>(0);
   const intervalRef = useRef<NodeJS.Timeout>();
   const itemQueueRef = useRef<HNItem[]>([]);
-
-  // Add a continuous processing flag
   const isProcessingRef = useRef(false);
-
-  // Add abort controller ref
   const abortControllerRef = useRef<AbortController>();
+  const lastActiveTimestamp = useRef<number>(Date.now());
+  const visibilityChangeHandler = useRef<(() => void) | undefined>();
 
   // Format timestamp
   const formatTimestamp = (timestamp: number) => {
@@ -179,6 +182,24 @@ export default function HNLiveTerminal() {
 
   // Simplify addToQueue
   const addToQueue = (item: HNItem) => {
+    const inactiveTime = Date.now() - lastActiveTimestamp.current;
+    
+    // Show warning when approaching limits
+    if (!showWarning && (
+      inactiveTime > WARNING_INACTIVE_TIME || 
+      itemQueueRef.current.length >= WARNING_QUEUE_SIZE
+    )) {
+      setShowWarning(true);
+      console.warn('Tab may refresh soon due to inactivity or large queue');
+    }
+
+    // Refresh if limits exceeded
+    if (inactiveTime > MAX_INACTIVE_TIME || itemQueueRef.current.length >= MAX_QUEUE_SIZE) {
+      console.log('Tab was inactive too long or queue too large. Refreshing...');
+      window.location.reload();
+      return;
+    }
+    
     itemQueueRef.current.push(item);
     setQueueSize(itemQueueRef.current.length);
     if (!isProcessingRef.current) {
@@ -248,6 +269,14 @@ export default function HNLiveTerminal() {
       abortControllerRef.current = new AbortController();
       
       try {
+        // Check if we've been inactive for too long
+        const inactiveTime = Date.now() - lastActiveTimestamp.current;
+        if (inactiveTime > MAX_INACTIVE_TIME) {
+          console.log('Tab was inactive too long. Refreshing...');
+          window.location.reload();
+          return;
+        }
+
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
           intervalRef.current = undefined;
@@ -565,6 +594,43 @@ export default function HNLiveTerminal() {
       console.warn('Could not save direct links preference');
     }
   }, [options.directLinks]);
+
+  // Add these states after other state declarations
+  const [showWarning, setShowWarning] = useState(false);
+
+  // Add this effect for tracking activity
+  useEffect(() => {
+    // Update timestamp when tab becomes visible
+    visibilityChangeHandler.current = () => {
+      if (document.visibilityState === 'visible') {
+        lastActiveTimestamp.current = Date.now();
+      }
+    };
+
+    // Add visibility change listener
+    document.addEventListener('visibilitychange', visibilityChangeHandler.current);
+
+    // Update timestamp on user interaction
+    const updateTimestamp = () => {
+      lastActiveTimestamp.current = Date.now();
+    };
+
+    // Listen for user interactions
+    window.addEventListener('mousemove', updateTimestamp);
+    window.addEventListener('keydown', updateTimestamp);
+    window.addEventListener('scroll', updateTimestamp);
+    window.addEventListener('click', updateTimestamp);
+
+    return () => {
+      if (visibilityChangeHandler.current) {
+        document.removeEventListener('visibilitychange', visibilityChangeHandler.current);
+      }
+      window.removeEventListener('mousemove', updateTimestamp);
+      window.removeEventListener('keydown', updateTimestamp);
+      window.removeEventListener('scroll', updateTimestamp);
+      window.removeEventListener('click', updateTimestamp);
+    };
+  }, []);
 
   return (
     <div className={`fixed inset-0 ${themeBg} font-mono`} data-theme={options.theme}>
