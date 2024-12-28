@@ -53,19 +53,19 @@ function addTargetBlankToLinks(html: string): string {
 
 // First, let's create a helper function for indentation
 const getIndentClass = (level: number) => {
-  // Create an array of possible indent classes
+  // Create an array of possible indent classes with smaller increments
   const indentClasses = [
     'pl-0',
-    'pl-4',
-    'pl-8',
-    'pl-12',
-    'pl-16',
-    'pl-20',
-    'pl-24',
-    'pl-28',
-    'pl-32',
-    'pl-36',
-    'pl-40'
+    'pl-3',  // reduced from pl-4
+    'pl-6',  // reduced from pl-8
+    'pl-9',  // reduced from pl-12
+    'pl-12', // reduced from pl-16
+    'pl-15', // reduced from pl-20
+    'pl-18', // reduced from pl-24
+    'pl-21', // reduced from pl-28
+    'pl-24', // reduced from pl-32
+    'pl-27', // reduced from pl-36
+    'pl-30'  // reduced from pl-40
   ];
   // Return the appropriate class based on level, max out at the last defined level
   return indentClasses[Math.min(level, indentClasses.length - 1)];
@@ -225,15 +225,18 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
     <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden`}>
       <div className="h-full overflow-y-auto p-4">
         <div className="flex items-center justify-between mb-8">
-          <span className={`${
-            theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
-          } font-bold tracking-wider flex items-center gap-2`}>
+          <button 
+            onClick={onClose}
+            className={`${
+              theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
+            } font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
+          >
             HN
             <span className="animate-pulse">
               <span className={`inline-block w-2 h-2 rounded-full bg-current opacity-50`}></span>
             </span>
             LIVE
-          </span>
+          </button>
           <button 
             onClick={onClose}
             className="opacity-75 hover:opacity-100"
