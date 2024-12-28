@@ -14,11 +14,6 @@ body {
   height: 100vh;
 }
 
-[data-theme="og"] .hn-username,
-[data-theme="dog"] .hn-username {
-  color: #ff6600 !important;
-}
-
 .hn-username {
-  color: rgb(250 204 21);
+  color: #ff6600 !important;
 }
