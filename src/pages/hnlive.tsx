@@ -473,8 +473,97 @@ export default function HNLiveTerminal() {
   return (
     <div className={`fixed inset-0 ${themeBg} font-mono`} data-theme={options.theme}>
       {showAbout && <AboutOverlay />}
-      <div className={`fixed top-0 left-0 right-0 z-50 ${themeHeaderBg} border-b ${themeColors} py-4 px-4`}>
-        <div className="flex items-center justify-between">
+      <div className={`fixed top-0 left-0 right-0 z-50 ${themeHeaderBg} border-b ${themeColors} py-2 px-3 sm:py-4 sm:px-4`}>
+        {/* Mobile Layout */}
+        <div className="block sm:hidden">
+          <div className="flex items-center justify-between mb-2">
+            <span className={`${headerColor} font-bold tracking-wider flex items-center gap-2 relative`}>
+              HN
+              <span className="animate-pulse">
+                <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
+              </span>
+              LIVE
+              {queueSize >= 10 && (
+                <span className={`absolute -top-1 -right-6 min-w-[1.2rem] h-[1.2rem] 
+                  ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
+                  rounded text-xs flex items-center justify-center font-bold`}
+                >
+                  {queueSize}
+                </span>
+              )}
+            </span>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={toggleFeed}
+                className={themeColors}
+              >
+                [{isRunning ? 'STOP' : 'START'}]
+              </button>
+              <button 
+                onClick={clearScreen}
+                className={themeColors}
+              >
+                [CLR]
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-2 text-sm overflow-x-auto">
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <button 
+                onClick={() => setOptions(prev => ({...prev, theme: 'dog'}))}
+                className={`${options.theme === 'dog' ? 'text-[#ff6600]' : 'text-[#ff6600]/50'}`}
+              >
+                [{options.theme === 'dog' ? '×' : ' '}] D
+              </button>
+              <button 
+                onClick={() => setOptions(prev => ({...prev, theme: 'og'}))}
+                className={`${options.theme === 'og' ? 'text-[#ff6600]' : 'text-[#ff6600]/50'}`}
+              >
+                [{options.theme === 'og' ? '×' : ' '}] O
+              </button>
+              <button 
+                onClick={() => setOptions(prev => ({...prev, theme: 'green'}))}
+                className={`${options.theme === 'green' ? 'text-green-400' : 'text-green-400/50'}`}
+              >
+                [{options.theme === 'green' ? '×' : ' '}] G
+              </button>
+              <button
+                onClick={() => setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}))}
+                className={`${themeColors} ${!options.autoscroll && 'opacity-50'}`}
+              >
+                [{options.autoscroll ? '×' : ' '}] Auto-scroll
+              </button>
+            </div>
+            {showGrep ? (
+              <div className="flex items-center gap-2">
+                <span>grep:</span>
+                <input
+                  type="text"
+                  value={filters.text}
+                  onChange={(e) => setFilters(prev => ({...prev, text: e.target.value}))}
+                  className={`bg-transparent border-b border-current outline-none w-20 px-1 ${themeColors}`}
+                  placeholder="search..."
+                  autoFocus
+                  onBlur={() => {
+                    if (!filters.text) {
+                      setShowGrep(false);
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowGrep(true)}
+                className={themeColors}
+              >
+                [GREP]
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop Layout */}
+        <div className="hidden sm:flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className={`${headerColor} font-bold tracking-wider flex items-center gap-2 relative`}>
               HN
@@ -484,8 +573,7 @@ export default function HNLiveTerminal() {
               LIVE
               {queueSize >= 10 && (
                 <span className={`absolute -top-1 -right-6 min-w-[1.2rem] h-[1.2rem] 
-                  ${options.theme === 'green' ? 'bg-green-500 text-black' : 
-                    'bg-[#ff6600] text-white'} 
+                  ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
                   rounded text-xs flex items-center justify-center font-bold`}
                 >
                   {queueSize}
@@ -497,21 +585,18 @@ export default function HNLiveTerminal() {
             <button 
               onClick={() => setOptions(prev => ({...prev, theme: 'dog'}))}
               className={`${options.theme === 'dog' ? 'text-[#ff6600]' : 'text-[#ff6600]/50'}`}
-              title="Dark HN"
             >
               [{options.theme === 'dog' ? '×' : ' '}] D
             </button>
             <button 
               onClick={() => setOptions(prev => ({...prev, theme: 'og'}))}
               className={`${options.theme === 'og' ? 'text-[#ff6600]' : 'text-[#ff6600]/50'}`}
-              title="Original HN"
             >
               [{options.theme === 'og' ? '×' : ' '}] O
             </button>
             <button 
               onClick={() => setOptions(prev => ({...prev, theme: 'green'}))}
               className={`${options.theme === 'green' ? 'text-green-400' : 'text-green-400/50'}`}
-              title="Terminal Green"
             >
               [{options.theme === 'green' ? '×' : ' '}] G
             </button>
@@ -549,7 +634,7 @@ export default function HNLiveTerminal() {
                   value={filters.text}
                   onChange={(e) => setFilters(prev => ({...prev, text: e.target.value}))}
                   className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
-                  placeholder="search term..."
+                  placeholder="search..."
                   autoFocus
                   onBlur={() => {
                     if (!filters.text) {
@@ -573,14 +658,14 @@ export default function HNLiveTerminal() {
 
       <div 
         ref={containerRef}
-        className={`h-screen pt-20 pb-4 px-4 overflow-y-auto font-mono
-                   ${options.theme === 'green'
-                     ? 'text-green-400'
-                     : 'text-[#828282]'}
-                   scrollbar-thin scrollbar-track-transparent
-                   ${options.theme === 'green'
-                     ? 'scrollbar-thumb-green-500/30'
-                     : 'scrollbar-thumb-[#ff6600]/30'}`}
+        className={`h-screen pt-24 sm:pt-20 pb-4 px-3 sm:px-4 overflow-y-auto font-mono
+                     ${options.theme === 'green'
+                       ? 'text-green-400'
+                       : 'text-[#828282]'}
+                     scrollbar-thin scrollbar-track-transparent
+                     ${options.theme === 'green'
+                       ? 'scrollbar-thumb-green-500/30'
+                       : 'scrollbar-thumb-[#ff6600]/30'}`}
       >
         {filteredItems.map((item, index) => (
           <div key={`${item.id}-${index}`}>
