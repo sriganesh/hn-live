@@ -69,7 +69,8 @@ const getStoredDirectLinks = () => {
 const getStoredAutoscroll = () => {
   try {
     const storedAutoscroll = localStorage.getItem('hn-live-autoscroll');
-    return storedAutoscroll === 'true';
+    // Return true if no value is stored (first visit) or if the stored value is 'true'
+    return storedAutoscroll === null ? true : storedAutoscroll === 'true';
   } catch (e) {
     console.warn('Could not access localStorage');
   }
