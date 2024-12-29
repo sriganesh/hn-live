@@ -4,6 +4,7 @@ import HNLiveTerminal from "./pages/hnlive";
 import { FrontPage } from "./components/FrontPage";
 import { ShowPage } from "./components/ShowPage";
 import { AskPage } from "./components/AskPage";
+import { JobsPage } from "./components/JobsPage";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
             <Route path="item/:itemId/comment/:commentId" element={null} />
             <Route path="show" element={null} />
             <Route path="ask" element={null} />
+            <Route path="jobs" element={null} />
           </Route>
         </Routes>
       </Router>
