@@ -600,6 +600,12 @@ export default function HNLiveTerminal() {
     setTimeout(() => setIsRunning(true), 0);
   };
 
+  // Add this near the top of the file with other state declarations
+  const [headerText] = useState<string>(
+    // Access the environment variable
+    import.meta.env.VITE_HEADER_TEXT || ''
+  );
+
   return (
     <>
       <Helmet>
@@ -648,6 +654,11 @@ export default function HNLiveTerminal() {
                   <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
                 </span>
                 LIVE
+                {headerText && (
+                  <span className="ml-4 text-sm opacity-75">
+                    {headerText}
+                  </span>
+                )}
                 {queueSize >= 100 && (
                   <span className={`absolute -top-1 -right-6 min-w-[1.2rem] h-[1.2rem] 
                     ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
@@ -767,6 +778,11 @@ export default function HNLiveTerminal() {
                   <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
                 </span>
                 LIVE
+                {headerText && (
+                  <span className="ml-4 text-sm opacity-75">
+                    {headerText}
+                  </span>
+                )}
                 {queueSize >= 100 && (
                   <span className={`absolute -top-1 -right-6 min-w-[1.2rem] h-[1.2rem] 
                     ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
