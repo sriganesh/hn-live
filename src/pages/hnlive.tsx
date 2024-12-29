@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { StoryView } from '../components/StoryView';
 import { Helmet } from 'react-helmet-async';
+import { useNavigate, useParams, useLocation, Outlet } from 'react-router-dom';
 
 interface HNItem {
   id: number;
@@ -103,6 +104,10 @@ export default function HNLiveTerminal() {
 
   // Add abort controller ref
   const abortControllerRef = useRef<AbortController>();
+
+  const navigate = useNavigate();
+  const { itemId, commentId } = useParams();
+  const location = useLocation();
 
   // Format timestamp
   const formatTimestamp = (timestamp: number) => {
@@ -412,6 +417,9 @@ export default function HNLiveTerminal() {
     scrollToId?: number;
   } | null>(null);
 
+  // Add loading state for initial story load
+  const [isLoadingStory, setIsLoadingStory] = useState(false);
+
   // Add keydown/keyup handlers for Cmd/Ctrl
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -607,6 +615,58 @@ export default function HNLiveTerminal() {
   const [headerLink] = useState<string>(
     import.meta.env.VITE_HEADER_LINK || ''
   );
+
+  // Update the viewingStory state to use URL params
+  useEffect(() => {
+    if (itemId) {
+      const id = parseInt(itemId);
+      if (isNaN(id)) {
+        // Invalid ID in URL, redirect to home
+        navigate('/');
+        return;
+      }
+      setIsLoadingStory(true);
+      // Verify the item exists before setting viewingStory
+      fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
+        .then(res => res.json())
+        .then(item => {
+          if (!item) {
+            navigate('/');
+            return;
+          }
+          setViewingStory({
+            itemId: id,
+            scrollToId: commentId ? parseInt(commentId) : undefined
+          });
+        })
+        .catch(() => {
+          navigate('/');
+        })
+        .finally(() => {
+          setIsLoadingStory(false);
+        });
+    } else {
+      setViewingStory(null);
+    }
+  }, [itemId, commentId, navigate]);
+
+  // Update the story click handler
+  const handleStoryClick = (item: HNItem) => {
+    if (options.directLinks) {
+      window.open(item.formatted?.links.main, '_blank');
+    } else {
+      if (item.type === 'comment') {
+        navigate(`/item/${item.parent}/comment/${item.id}`);
+      } else {
+        navigate(`/item/${item.id}`);
+      }
+    }
+  };
+
+  // Update the StoryView close handler
+  const handleStoryClose = () => {
+    navigate('/');
+  };
 
   return (
     <>
@@ -912,14 +972,7 @@ export default function HNLiveTerminal() {
                     <a 
                       onClick={(e) => {
                         e.preventDefault();
-                        if (options.directLinks) {
-                          window.open(item.formatted?.links.main, '_blank');
-                        } else {
-                          setViewingStory({ 
-                            itemId: item.id,
-                            scrollToId: item.type === 'comment' ? item.id : undefined
-                          });
-                        }
+                        handleStoryClick(item);
                       }}
                       href={item.formatted?.links.main}
                       className={`${themeColors} transition-colors cursor-pointer`}
@@ -958,14 +1011,7 @@ export default function HNLiveTerminal() {
                     <a 
                       onClick={(e) => {
                         e.preventDefault();
-                        if (options.directLinks) {
-                          window.open(item.formatted?.links.main, '_blank');
-                        } else {
-                          setViewingStory({ 
-                            itemId: item.id,
-                            scrollToId: item.type === 'comment' ? item.id : undefined
-                          });
-                        }
+                        handleStoryClick(item);
                       }}
                       href={item.formatted?.links.main}
                       className={`${themeColors} transition-colors cursor-pointer`}
@@ -1018,11 +1064,20 @@ export default function HNLiveTerminal() {
           <StoryView
             itemId={viewingStory.itemId}
             scrollToId={viewingStory.scrollToId}
-            onClose={() => setViewingStory(null)}
+            onClose={handleStoryClose}
             theme={options.theme}
           />
         )}
+
+        {/* Add loading indicator to the UI if needed */}
+        {isLoadingStory && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="text-white">Loading story...</div>
+          </div>
+        )}
       </div>
+
+      <Outlet />
     </>
   );
 } 

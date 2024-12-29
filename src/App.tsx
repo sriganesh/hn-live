@@ -7,7 +7,10 @@ function App() {
     <HelmetProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<HNLiveTerminal />} />
+          <Route path="/" element={<HNLiveTerminal />}>
+            <Route path="item/:itemId" element={null} />
+            <Route path="item/:itemId/comment/:commentId" element={null} />
+          </Route>
         </Routes>
       </Router>
     </HelmetProvider>
