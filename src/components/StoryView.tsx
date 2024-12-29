@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 
 interface StoryViewProps {
   itemId: number;
@@ -158,6 +160,7 @@ interface StoryViewState {
 }
 
 export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps) {
+  const navigate = useNavigate();
   const [story, setStory] = useState<HNStory | null>(null);
   const [loading, setLoading] = useState(true);
   const [showBackButton, setShowBackButton] = useState(false);
@@ -187,13 +190,13 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        navigate('/');
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [navigate]);
 
   // Add function to load more comments
   const loadMoreComments = async () => {
@@ -344,144 +347,159 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
     </div>
   );
 
+  const handleClose = () => {
+    navigate('/');
+  };
+
   return (
-    <div 
-      className={`fixed inset-0 z-50 ${themeColors} overflow-hidden`}
-    >
-      <div className="story-container h-full overflow-y-auto p-4 sm:p-4">
-        <div className="flex items-center justify-between mb-8">
-          <button 
-            onClick={onClose}
-            className={`${
-              theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
-            } font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
-          >
-            HN
-            <span className="animate-pulse">
-              <span className={`inline-block w-2 h-2 rounded-full bg-current opacity-50`}></span>
-            </span>
-            LIVE
-          </button>
-          <button 
-            onClick={onClose}
-            className="opacity-75 hover:opacity-100"
-          >
-            [ESC]
-          </button>
-        </div>
-
-        {/* Add floating back button */}
-        <div 
-          className={`fixed left-4 bottom-4 transition-opacity duration-200 ${
-            showBackButton ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
-        >
-          <button
-            onClick={onClose}
-            className={`${
-              theme === 'green' ? 'bg-green-500' : 'bg-[#ff6600]'
-            } text-black rounded-full p-3 shadow-lg hover:opacity-90 transition-opacity`}
-            aria-label="Back to feed"
-          >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-6 w-6" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
+    <>
+      {story && (
+        <Helmet>
+          <title>{`${story.title} | HN Live`}</title>
+          <meta 
+            name="description" 
+            content={`${story.text?.slice(0, 155).replace(/<[^>]*>/g, '')}...` || 
+              `Discussion of "${story.title}" on Hacker News Live`} 
+          />
+          <link rel="canonical" href={`https://hn.live/item/${story.id}`} />
+        </Helmet>
+      )}
+      <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden`}>
+        <div className="story-container h-full overflow-y-auto p-4 sm:p-4">
+          <div className="flex items-center justify-between mb-8">
+            <button 
+              onClick={handleClose}
+              className={`${
+                theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
+              } font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M10 19l-7-7m0 0l7-7m-7 7h18" 
-              />
-            </svg>
-          </button>
-        </div>
+              HN
+              <span className="animate-pulse">
+                <span className={`inline-block w-2 h-2 rounded-full bg-current opacity-50`}></span>
+              </span>
+              LIVE
+            </button>
+            <button 
+              onClick={handleClose}
+              className="opacity-75 hover:opacity-100"
+            >
+              [ESC]
+            </button>
+          </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center h-full">
-            Loading...
+          {/* Add floating back button */}
+          <div 
+            className={`fixed left-4 bottom-4 transition-opacity duration-200 ${
+              showBackButton ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+          >
+            <button
+              onClick={handleClose}
+              className={`${
+                theme === 'green' ? 'bg-green-500' : 'bg-[#ff6600]'
+              } text-black rounded-full p-3 shadow-lg hover:opacity-90 transition-opacity`}
+              aria-label="Back to feed"
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-6 w-6" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18" 
+                />
+              </svg>
+            </button>
           </div>
-        ) : story ? (
-          <div className="max-w-3xl mx-auto px-0 sm:px-4">
-            <h1 className="text-xl font-bold mb-2">{story.title}</h1>
-            <div className="text-sm opacity-75 mb-4">
-              <a 
-                href={`https://news.ycombinator.com/user?id=${story.by}`}
-                className="hn-username hover:underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {story.by}
-              </a>
-              {' • '}
-              <a
-                href={`https://news.ycombinator.com/item?id=${story.id}`}
-                className="hover:underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {new Date(story.time * 1000).toLocaleString()}
-              </a>
+
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              Loading...
             </div>
-            {story.url && (
-              <a 
-                href={story.url}
-                className="block mb-4 opacity-75 hover:opacity-100 break-words"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {story.url}
-              </a>
-            )}
-            {story.text && (
-              <div 
-                className="prose max-w-none mb-8"
-                dangerouslySetInnerHTML={{ __html: addTargetBlankToLinks(story.text) }}
-              />
-            )}
-            <div className="border-t border-current opacity-10 my-8" />
-            <div className="space-y-4">
-              {commentState.loadedComments.map(renderComment)}
-              
-              {/* Replace the existing "View all comments" with Load More button */}
-              {commentState.hasMore && (
-                <div className="text-center py-8">
-                  <button
-                    onClick={loadMoreComments}
-                    disabled={commentState.isLoadingMore}
-                    className={`${
-                      theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
-                    } opacity-75 hover:opacity-100 transition-opacity disabled:opacity-50`}
-                  >
-                    {commentState.isLoadingMore ? (
-                      'Loading more comments...'
-                    ) : (
-                      `Viewing ${commentState.loadedTotal} of ${story.descendants} comments (${commentState.loadedCount} threads). Load ${Math.min(MAX_COMMENTS, (story.kids?.length || 0) - commentState.loadedCount)} more threads...`
-                    )}
-                  </button>
-                  <div className="mt-2 text-sm opacity-50">
-                    <a 
-                      href={`https://news.ycombinator.com/item?id=${story.id}`}
-                      className="hover:underline"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      View all on HN →
-                    </a>
-                  </div>
-                </div>
+          ) : story ? (
+            <div className="max-w-3xl mx-auto px-0 sm:px-4">
+              <h1 className="text-xl font-bold mb-2">{story.title}</h1>
+              <div className="text-sm opacity-75 mb-4">
+                <a 
+                  href={`https://news.ycombinator.com/user?id=${story.by}`}
+                  className="hn-username hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {story.by}
+                </a>
+                {' • '}
+                <a
+                  href={`https://news.ycombinator.com/item?id=${story.id}`}
+                  className="hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {new Date(story.time * 1000).toLocaleString()}
+                </a>
+              </div>
+              {story.url && (
+                <a 
+                  href={story.url}
+                  className="block mb-4 opacity-75 hover:opacity-100 break-words"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {story.url}
+                </a>
               )}
+              {story.text && (
+                <div 
+                  className="prose max-w-none mb-8"
+                  dangerouslySetInnerHTML={{ __html: addTargetBlankToLinks(story.text) }}
+                />
+              )}
+              <div className="border-t border-current opacity-10 my-8" />
+              <div className="space-y-4">
+                {commentState.loadedComments.map(renderComment)}
+                
+                {/* Replace the existing "View all comments" with Load More button */}
+                {commentState.hasMore && (
+                  <div className="text-center py-8">
+                    <button
+                      onClick={loadMoreComments}
+                      disabled={commentState.isLoadingMore}
+                      className={`${
+                        theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
+                      } opacity-75 hover:opacity-100 transition-opacity disabled:opacity-50`}
+                    >
+                      {commentState.isLoadingMore ? (
+                        'Loading more comments...'
+                      ) : (
+                        `Viewing ${commentState.loadedTotal} of ${story.descendants} comments (${commentState.loadedCount} threads). Load ${Math.min(MAX_COMMENTS, (story.kids?.length || 0) - commentState.loadedCount)} more threads...`
+                      )}
+                    </button>
+                    <div className="mt-2 text-sm opacity-50">
+                      <a 
+                        href={`https://news.ycombinator.com/item?id=${story.id}`}
+                        className="hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        View all on HN →
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            Story not found
-          </div>
-        )}
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              Story not found
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 } 

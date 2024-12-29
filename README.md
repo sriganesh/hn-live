@@ -52,3 +52,13 @@ Built using the [official Hacker News API](https://github.com/HackerNews/API). N
 ## License
 
 MIT
+
+## URL Structure
+
+The site supports direct links to stories and comments:
+
+- Home feed: `/`
+- Story view: `/item/123`
+- Comment view: `/item/123/comment/456`
+
+You can share these URLs directly and they will load the appropriate content.
