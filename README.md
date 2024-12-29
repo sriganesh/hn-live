@@ -40,6 +40,18 @@ You can share these URLs directly and they will load the appropriate content.
 - `⌘/Ctrl + K` - Search all HN content
 - `ESC` - Close story view or return to feed
 
+## Development Notes
+
+Hey! I'm primarily a backend developer who loves building things. This project started as a way to browse HN the way I personally enjoy - with a clean, terminal-like interface and real-time updates.
+
+The design is intentionally minimalist, inspired by both HN's simplicity and old-school terminal UIs. Since I'm not a designer by trade, I built it based on how I like to browse HN - but I'm always open to suggestions for improvements!
+
+What made this project possible was the amazing AI tooling available today. As someone more comfortable with backend work, tools like Claude and ChatGPT were invaluable in helping me debug frontend issues and implement UI features. They really helped bridge the gap between my backend expertise and frontend needs.
+
+These AI tools have been game-changing for someone like me - they complement my existing skills and help me ship full-stack projects that I wouldn't have attempted before. While they don't replace proper engineering knowledge, they're incredible at helping you learn and implement things outside your core expertise.
+
+The implementation here reflects my current understanding of frontend development and the solutions I've learned along the way - both through AI assistance and general research. There might be more efficient or elegant ways to accomplish some things, but I've focused on making it work reliably with the knowledge and tools at hand. I'm always learning and open to better approaches!
+
 ## Development
 
 ```bash
@@ -60,9 +72,9 @@ This project is deployed on [Cloudflare Pages](https://pages.cloudflare.com/).
 
 ## Contributing
 
-Hey! I'm primarily a backend developer and built this project with the help of some amazing AI tools. 
-If you find any bugs (especially with different screen sizes - I've only tested on my laptop and phone), 
-please let me know in the issues! Would love to fix them and make this better for everyone.
+If you find any bugs (especially with different screen sizes - I've only tested on my laptop and phone), please let me know in the issues! Would love to fix them and make this better for everyone.
+
+Also welcome suggestions on the UI/UX - while I built it for my personal browsing style, I'm sure there are ways to make it work better for everyone while keeping the minimal aesthetic.
 
 ## Credits
 
@@ -79,7 +91,7 @@ Special thanks to:
 - [Claude](https://anthropic.com/claude) & [ChatGPT](https://chat.openai.com) - Sometimes I had to jump directly to them to brainstorm ideas or debug tricky errors.
 - [Cloudflare Pages](https://pages.cloudflare.com/) - For making deployment super easy.
 
-Yeah, these tools helped me build and debug this way faster than I could have imagined. They made building something complex (at least for my skill level!) feel totally doable as a weekend project.
+Yeah, these tools helped me build and debug this way faster than I could have imagined. They turned what could have been weeks of debugging and learning into a fun weekend project. It's amazing how they can help you quickly turn ideas into working products!
 
 ## License
 
