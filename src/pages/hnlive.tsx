@@ -5,6 +5,7 @@ import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams, useLocation, Outlet } from 'react-router-dom';
 import SearchModal from '../components/SearchModal';
 import { FrontPage } from '../components/FrontPage';
+import { ShowPage } from '../components/ShowPage';
 
 interface HNItem {
   id: number;
@@ -780,6 +781,12 @@ export default function HNLiveTerminal() {
                   [FP]
                 </button>
                 <button 
+                  onClick={() => navigate('/show')}
+                  className={themeColors}
+                >
+                  [SH]
+                </button>
+                <button 
                   onClick={() => setShowAbout(true)}
                   className={themeColors}
                 >
@@ -935,10 +942,10 @@ export default function HNLiveTerminal() {
                 [FRONT]
               </button>
               <button 
-                onClick={() => navigate('/front')}
-                className={`sm:hidden ${themeColors}`}
+                onClick={() => navigate('/show')}
+                className={`hidden sm:inline ${themeColors}`}
               >
-                [FP]
+                [SHOW]
               </button>
               <button 
                 onClick={() => setShowAbout(true)}
@@ -1150,6 +1157,11 @@ export default function HNLiveTerminal() {
           onClose={() => setShowSearch(false)}
           theme={options.theme}
         />
+
+        {/* Add the ShowPage component to the render */}
+        {location.pathname === '/show' && (
+          <ShowPage theme={options.theme} />
+        )}
       </div>
 
       <Outlet />
