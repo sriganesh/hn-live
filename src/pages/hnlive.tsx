@@ -4,6 +4,7 @@ import { StoryView } from '../components/StoryView';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams, useLocation, Outlet } from 'react-router-dom';
 import SearchModal from '../components/SearchModal';
+import { FrontPage } from '../components/FrontPage';
 
 interface HNItem {
   id: number;
@@ -658,12 +659,20 @@ export default function HNLiveTerminal() {
   // Update the story click handler
   const handleStoryClick = (item: HNItem) => {
     if (options.directLinks) {
+      // If direct links enabled, always use external links
       window.open(item.formatted?.links.main, '_blank');
     } else {
-      if (item.type === 'comment') {
-        navigate(`/item/${item.parent}/comment/${item.id}`);
+      // Otherwise follow HN pattern
+      if (item.type === 'story' && item.url) {
+        // External link for stories with URLs
+        window.open(item.url, '_blank');
       } else {
-        navigate(`/item/${item.id}`);
+        // Internal view for comments and text posts
+        if (item.type === 'comment') {
+          navigate(`/item/${item.parent}/comment/${item.id}`);
+        } else {
+          navigate(`/item/${item.id}`);
+        }
       }
     }
   };
@@ -764,6 +773,12 @@ export default function HNLiveTerminal() {
 
               {/* Controls on the right */}
               <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => navigate('/front')}
+                  className={themeColors}
+                >
+                  [FP]
+                </button>
                 <button 
                   onClick={() => setShowAbout(true)}
                   className={themeColors}
@@ -914,6 +929,18 @@ export default function HNLiveTerminal() {
                 [{options.directLinks ? '×' : ' '}] Direct
               </button>
               <button 
+                onClick={() => navigate('/front')}
+                className={`hidden sm:inline ${themeColors}`}
+              >
+                [FRONT]
+              </button>
+              <button 
+                onClick={() => navigate('/front')}
+                className={`sm:hidden ${themeColors}`}
+              >
+                [FP]
+              </button>
+              <button 
                 onClick={() => setShowAbout(true)}
                 className={themeColors}
               >
@@ -1030,31 +1057,46 @@ export default function HNLiveTerminal() {
                     </a>
                   </div>
                   <div className="break-words whitespace-pre-wrap overflow-hidden">
-                    <a 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleStoryClick(item);
-                      }}
-                      href={item.formatted?.links.main}
-                      className={`${themeColors} transition-colors cursor-pointer`}
-                      dangerouslySetInnerHTML={{ 
-                        __html: item.formatted?.text
-                          .replace(/<a[^>]*>.*?<\/a>\s*>\s*/, '')
-                          .replace(/^[^>]*>\s*/, '')
-                          || '' 
-                      }}
-                    />
-                    {item.type === 'story' && item.url && (
-                      <span className="ml-2 inline-block">
+                    {item.type === 'story' ? (
+                      <>
                         <a 
-                          href={item.formatted?.links.comments}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
-                        >
-                          [comments]
-                        </a>
-                      </span>
+                          href={item.url || `https://news.ycombinator.com/item?id=${item.id}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleStoryClick(item);
+                          }}
+                          className={`${themeColors} transition-colors cursor-pointer`}
+                          dangerouslySetInnerHTML={{ 
+                            __html: item.formatted?.text || ''
+                          }}
+                        />
+                        <span className="ml-2 inline-block">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/item/${item.id}`);
+                            }}
+                            className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
+                          >
+                            [comments]
+                          </button>
+                        </span>
+                      </>
+                    ) : (
+                      <a 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleStoryClick(item);
+                        }}
+                        href={item.formatted?.links.main}
+                        className={`${themeColors} transition-colors cursor-pointer`}
+                        dangerouslySetInnerHTML={{ 
+                          __html: item.formatted?.text
+                            .replace(/<a[^>]*>.*?<\/a>\s*>\s*/, '')
+                            .replace(/^[^>]*>\s*/, '')
+                            || '' 
+                        }}
+                      />
                     )}
                   </div>
                 </div>
@@ -1080,6 +1122,10 @@ export default function HNLiveTerminal() {
             </div>
           </div>
         </div>
+
+        {location.pathname === '/front' && (
+          <FrontPage theme={options.theme} />
+        )}
 
         {/* Add the StoryView component to the render */}
         {viewingStory && (
