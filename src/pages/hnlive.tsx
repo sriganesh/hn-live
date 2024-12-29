@@ -537,6 +537,10 @@ export default function HNLiveTerminal() {
             e.preventDefault();
             setShowGrep(true);
             break;
+          case 'k':
+            e.preventDefault();
+            setShowSearch(true);
+            break;
         }
       }
     };
@@ -789,8 +793,9 @@ export default function HNLiveTerminal() {
                 <button
                   onClick={() => setShowSearch(true)}
                   className={themeColors}
+                  title="Ctrl/Cmd + K"
                 >
-                  [SEARCH]
+                  [SEARCH]{showShortcuts && ' (⌘K)'}
                 </button>
                 {showGrep ? (
                   <div className="flex items-center gap-2">
@@ -931,8 +936,9 @@ export default function HNLiveTerminal() {
               <button
                 onClick={() => setShowSearch(true)}
                 className={themeColors}
+                title="Ctrl/Cmd + K"
               >
-                [SEARCH]
+                [SEARCH]{showShortcuts && ' (⌘K)'}
               </button>
               {showGrep ? (
                 <div className="flex items-center gap-2">

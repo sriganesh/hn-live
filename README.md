@@ -34,7 +34,8 @@ You can share these URLs directly and they will load the appropriate content.
 
 - `⌘/Ctrl + S` - Start/Stop the feed
 - `⌘/Ctrl + L` - Clear the screen
-- `⌘/Ctrl + F` - Search/Filter content
+- `⌘/Ctrl + F` - Filter live feed (grep)
+- `⌘/Ctrl + K` - Search all HN content
 - `ESC` - Close story view
 
 ## Development
