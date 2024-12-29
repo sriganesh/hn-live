@@ -29,6 +29,7 @@ interface HNComment {
   kids?: number[];
   comments?: HNComment[];
   level: number;
+  hasDeepReplies?: boolean;
 }
 
 const MAX_COMMENTS = 10;  // Maximum number of top-level comments to load
@@ -241,7 +242,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
     const nextBatch = story.kids.slice(startIndex, startIndex + MAX_COMMENTS);
     
     const loadedIds = getCommentIds(commentState.loadedComments);
-    const newComments = await fetchComments(nextBatch, 0, undefined, loadedIds);
+    const newComments = await fetchComments(nextBatch, 0, requiredIds);
     const newTotal = countCommentsInTree(newComments);
     
     setCommentState(prev => ({
