@@ -1,65 +1,54 @@
-# Hacker News Live
+# HN Live
 
-A real-time feed of Hacker News stories and comments. Watch the HN community discussions unfold live.
+A real-time terminal interface for Hacker News. Watch stories and discussions unfold live as they happen.
+
+## What is this?
+
+HN Live shows you what's happening on Hacker News right now. Instead of refreshing the homepage every few minutes, you can see new stories and comments appear instantly in a clean terminal-like interface.
 
 ## Features
 
-- 🔴 Live updates from Hacker News
-- 🎨 Multiple themes (Classic Orange, Dark, and Terminal Green)
-- 📱 Responsive design for mobile and desktop
-- 🔍 Live search/grep functionality
-- 📜 Auto-scrolling feed
-- 📖 Integrated story view with nested comments
-- ⌨️ Keyboard shortcuts
-- 🔗 Direct/Indirect link mode
+- Live feed of new stories and comments
+- Three themes to choose from:
+  - Classic HN orange
+  - Dark mode
+  - Terminal green (for that retro feel)
+- Works great on mobile and desktop
+- Live search (grep) to filter content
+- Auto-scrolling (can be toggled)
+- Click on stories to view them without leaving the site
+- Keyboard shortcuts for power users
+- Choose between viewing stories in our UI or going straight to HN
 
-## Tech Stack
+## Keyboard Shortcuts
 
-- React 18
-- TypeScript
-- Vite
-- Tailwind CSS
-- Hacker News API
+- `⌘/Ctrl + S` - Start/Stop the feed
+- `⌘/Ctrl + L` - Clear the screen
+- `⌘/Ctrl + F` - Search/Filter content
+- `ESC` - Close story view
 
 ## Development
 
 ```bash
-# Install dependencies
+# Get it running
 npm install
-
-# Start development server
 npm run dev
 
-# Build for production
+# Build it
 npm run build
 
-# Preview production build
+# Try the production build
 npm run preview
 ```
 
-## Keyboard Shortcuts
-
-- `Cmd/Ctrl + S`: Start/Stop feed
-- `Cmd/Ctrl + L`: Clear screen
-- `Cmd/Ctrl + F`: Search/Grep
-- `ESC`: Close story view
-
-## Configuration
-
-The app includes several configurable options:
-- Theme selection (Classic Orange, Dark, Terminal Green)
-- Auto-scroll toggle
-- Direct/Indirect link mode
-- Comment display limits
-
 ## Contributing
 
-Feel free to open issues or submit pull requests if you have suggestions for improvements.
+Found a bug? Have a feature idea? PRs are welcome! Feel free to open an issue first to discuss what you'd like to change.
+
+## Credits
+
+Built using the [official Hacker News API](https://github.com/HackerNews/API). Not affiliated with HN/YC.
 
 ## License
 
 MIT
-
-## Credits
-
-Built with ❤️ using the [Hacker News API](https://github.com/HackerNews/API)
