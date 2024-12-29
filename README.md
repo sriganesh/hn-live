@@ -57,7 +57,11 @@ Found a bug? Have a feature idea? PRs are welcome! Feel free to open an issue fi
 
 ## Credits
 
-Built using the [official Hacker News API](https://github.com/HackerNews/API). Not affiliated with HN/YC.
+Built using:
+- [Official Hacker News API](https://github.com/HackerNews/API) for real-time updates and story/comment data
+- [Algolia HN Search API](https://hn.algolia.com/api) for search functionality
+
+Not affiliated with HN/YC.
 
 ## License
 

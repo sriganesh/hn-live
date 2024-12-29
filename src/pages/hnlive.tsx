@@ -3,6 +3,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { StoryView } from '../components/StoryView';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams, useLocation, Outlet } from 'react-router-dom';
+import SearchModal from '../components/SearchModal';
 
 interface HNItem {
   id: number;
@@ -668,6 +669,9 @@ export default function HNLiveTerminal() {
     navigate('/');
   };
 
+  // Add this near other state declarations in the HNLiveTerminal component
+  const [showSearch, setShowSearch] = useState(false);
+
   return (
     <>
       <Helmet>
@@ -782,6 +786,12 @@ export default function HNLiveTerminal() {
                 </button>
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowSearch(true)}
+                  className={themeColors}
+                >
+                  [SEARCH]
+                </button>
                 {showGrep ? (
                   <div className="flex items-center gap-2">
                     <span>grep:</span>
@@ -917,6 +927,12 @@ export default function HNLiveTerminal() {
                 title="Ctrl/Cmd + L"
               >
                 [CLEAR]{showShortcuts && ' (⌘L)'}
+              </button>
+              <button
+                onClick={() => setShowSearch(true)}
+                className={themeColors}
+              >
+                [SEARCH]
               </button>
               {showGrep ? (
                 <div className="flex items-center gap-2">
@@ -1075,6 +1091,13 @@ export default function HNLiveTerminal() {
             <div className="text-white">Loading story...</div>
           </div>
         )}
+
+        {/* Add SearchModal */}
+        <SearchModal 
+          isOpen={showSearch}
+          onClose={() => setShowSearch(false)}
+          theme={options.theme}
+        />
       </div>
 
       <Outlet />
