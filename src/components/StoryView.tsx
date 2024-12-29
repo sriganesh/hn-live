@@ -102,7 +102,11 @@ const getCommentIds = (comments: HNComment[]): Set<number> => {
 };
 
 // Simplify fetchComments back to its original version
-const fetchComments = async (ids: number[], level: number = 0, requiredIds?: Set<number>): Promise<HNComment[]> => {
+const fetchComments = async (
+  ids: number[], 
+  level: number = 0, 
+  requiredIds?: Set<number>
+): Promise<HNComment[]> => {
   // If we've hit max depth and there are no required comments at this level, return empty
   if (level >= MAX_DEPTH && !ids.some(id => requiredIds?.has(id))) {
     return [];
@@ -242,7 +246,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
     const nextBatch = story.kids.slice(startIndex, startIndex + MAX_COMMENTS);
     
     const loadedIds = getCommentIds(commentState.loadedComments);
-    const newComments = await fetchComments(nextBatch, 0, requiredIds);
+    const newComments = await fetchComments(nextBatch, 0, undefined);
     const newTotal = countCommentsInTree(newComments);
     
     setCommentState(prev => ({
