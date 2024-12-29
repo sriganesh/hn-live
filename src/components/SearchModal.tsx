@@ -130,33 +130,33 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, theme }) => 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
       <div className={`w-full max-w-3xl ${themeColors} border shadow-lg`}>
-        <div className="p-4 space-y-4">
+        <div className="p-3 sm:p-4 space-y-4">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between sticky top-0">
             <h2 className="text-lg font-bold">Search Hacker News</h2>
             <button 
               onClick={onClose}
-              className="hover:opacity-75"
+              className="hover:opacity-75 px-2"
             >
               [×]
             </button>
           </div>
 
           {/* Search Form */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <input
               type="text"
               value={params.query}
               onChange={(e) => setParams(prev => ({ ...prev, query: e.target.value }))}
               placeholder="Search stories, comments..."
-              className={`w-full p-2 ${themeColors} border bg-transparent outline-none`}
+              className={`w-full p-2 sm:p-2 ${themeColors} border bg-transparent outline-none`}
               autoFocus
               onKeyPress={handleKeyPress}
             />
 
-            <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-2 sm:gap-4 text-sm overflow-x-auto pb-2">
               <button
                 onClick={() => setParams(prev => ({
                   ...prev,
@@ -198,7 +198,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, theme }) => 
             <button
               onClick={() => handleSearch(0)}
               disabled={loading}
-              className={`w-full p-2 ${themeColors} border hover:opacity-75 disabled:opacity-50`}
+              className={`w-full p-2 sm:p-2 ${themeColors} border hover:opacity-75 disabled:opacity-50`}
             >
               {loading ? 'Searching...' : 'Search'}
             </button>
@@ -213,7 +213,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, theme }) => 
               
               <div 
                 ref={resultsContainerRef}
-                className="space-y-0 max-h-[60vh] overflow-y-auto"
+                className="space-y-0 max-h-[60vh] sm:max-h-[60vh] overflow-y-auto -mx-3 sm:mx-0 px-3 sm:px-0"
               >
                 {results.hits.map((item) => (
                   <div 
