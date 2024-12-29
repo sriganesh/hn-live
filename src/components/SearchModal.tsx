@@ -63,6 +63,12 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, theme }) => 
     }
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    if (!params.query.trim()) {
+      setResults(null);
+    }
+  }, [params.query]);
+
   const handleSearch = async (page = 0) => {
     setLoading(true);
     const queryParams = new URLSearchParams();
@@ -130,11 +136,11 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, theme }) => 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-      <div className={`w-full max-w-3xl ${themeColors} border shadow-lg`}>
-        <div className="p-3 sm:p-4 space-y-4">
+    <div className="fixed inset-0 z-50 flex bg-black/80">
+      <div className={`w-full max-w-3xl h-full sm:h-[90vh] m-auto ${themeColors} border shadow-lg overflow-hidden flex flex-col`}>
+        <div className="p-3 sm:p-4 space-y-4 flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between sticky top-0">
+          <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold">Search Hacker News</h2>
             <button 
               onClick={onClose}
@@ -206,14 +212,15 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, theme }) => 
 
           {/* Results */}
           {results && (
-            <div className="mt-4 space-y-4">
+            <div className="mt-4 space-y-4 overflow-hidden flex flex-col">
               <div className="text-sm opacity-75">
                 {results.nbHits} results found
               </div>
               
               <div 
                 ref={resultsContainerRef}
-                className="space-y-0 max-h-[60vh] sm:max-h-[60vh] overflow-y-auto -mx-3 sm:mx-0 px-3 sm:px-0"
+                className="space-y-0 overflow-y-auto -mx-3 sm:mx-0 px-3 sm:px-0"
+                style={{ maxHeight: 'calc(90vh - 220px)' }}
               >
                 {results.hits.map((item) => (
                   <div 
@@ -262,7 +269,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, theme }) => 
 
               {/* Pagination */}
               {results.nbPages > 1 && (
-                <div className={`flex items-center justify-between pt-4 border-t ${
+                <div className={`flex items-center justify-between py-4 border-t flex-none ${
                   theme === 'og' 
                     ? 'border-current/10'
                     : theme === 'green'
