@@ -66,13 +66,23 @@ const getStoredDirectLinks = () => {
   return false; // Default to our site view
 };
 
+const getStoredAutoscroll = () => {
+  try {
+    const storedAutoscroll = localStorage.getItem('hn-live-autoscroll');
+    return storedAutoscroll === 'true';
+  } catch (e) {
+    console.warn('Could not access localStorage');
+  }
+  return true; // Default to autoscroll on
+};
+
 export default function HNLiveTerminal() {
   useDocumentTitle('Hacker News Live');
   
   const [items, setItems] = useState<HNItem[]>([]);
   const [options, setOptions] = useState<TerminalOptions>({
     theme: getStoredTheme(),
-    autoscroll: true,
+    autoscroll: getStoredAutoscroll(),
     directLinks: getStoredDirectLinks()
   });
   const [isRunning, setIsRunning] = useState(true);
@@ -566,6 +576,15 @@ export default function HNLiveTerminal() {
       console.warn('Could not save direct links preference');
     }
   }, [options.directLinks]);
+
+  // Add a new effect to save autoscroll changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('hn-live-autoscroll', options.autoscroll.toString());
+    } catch (e) {
+      console.warn('Could not save autoscroll preference');
+    }
+  }, [options.autoscroll]);
 
   return (
     <>
