@@ -52,6 +52,10 @@ npm run build
 npm run preview
 ```
 
+## Deployment
+
+This project is deployed on [Cloudflare Pages](https://pages.cloudflare.com/).
+
 ## Contributing
 
 Hey! I'm primarily a backend developer and built this project with the help of some amazing AI tools. 
@@ -61,8 +65,8 @@ please let me know in the issues! Would love to fix them and make this better fo
 ## Credits
 
 Built using:
-- [Official Hacker News API](https://github.com/HackerNews/API) for real-time updates and story/comment data
-- [Algolia HN Search API](https://hn.algolia.com/api) for search functionality
+- [Official Hacker News API](https://github.com/HackerNews/API) - Thanks to HN for providing this amazing API that powers our real-time updates and story/comment data
+- [Algolia HN Search API](https://hn.algolia.com/api) - Huge thanks to Algolia for their powerful search API that makes the search experience possible
 
 Not affiliated with HN/YC.
 
@@ -71,6 +75,7 @@ Not affiliated with HN/YC.
 Special thanks to:
 - [Cursor](https://cursor.com/) - Honestly, this editor is incredible! Made me feel like I had a coding buddy helping me out 24/7.
 - [Claude](https://anthropic.com/claude) & [ChatGPT](https://chat.openai.com) - Sometimes I had to jump directly to them to brainstorm ideas or debug tricky errors.
+- [Cloudflare Pages](https://pages.cloudflare.com/) - For making deployment super easy.
 
 Yeah, these tools helped me build and debug this way faster than I could have imagined. They made building something complex (at least for my skill level!) feel totally doable as a weekend project.
 
