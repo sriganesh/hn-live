@@ -6,6 +6,7 @@ import { useNavigate, useParams, useLocation, Outlet } from 'react-router-dom';
 import SearchModal from '../components/SearchModal';
 import { FrontPage } from '../components/FrontPage';
 import { ShowPage } from '../components/ShowPage';
+import { AskPage } from '../components/AskPage';
 
 interface HNItem {
   id: number;
@@ -787,6 +788,12 @@ export default function HNLiveTerminal() {
                   [SH]
                 </button>
                 <button 
+                  onClick={() => navigate('/ask')}
+                  className={themeColors}
+                >
+                  [ASK]
+                </button>
+                <button 
                   onClick={() => setShowAbout(true)}
                   className={themeColors}
                 >
@@ -946,6 +953,12 @@ export default function HNLiveTerminal() {
                 className={`hidden sm:inline ${themeColors}`}
               >
                 [SHOW]
+              </button>
+              <button 
+                onClick={() => navigate('/ask')}
+                className={`hidden sm:inline ${themeColors}`}
+              >
+                [ASK]
               </button>
               <button 
                 onClick={() => setShowAbout(true)}
@@ -1161,6 +1174,11 @@ export default function HNLiveTerminal() {
         {/* Add the ShowPage component to the render */}
         {location.pathname === '/show' && (
           <ShowPage theme={options.theme} />
+        )}
+
+        {/* Add the AskPage component to the render */}
+        {location.pathname === '/ask' && (
+          <AskPage theme={options.theme} />
         )}
       </div>
 

@@ -28,6 +28,7 @@ The site supports direct links to stories and comments:
 - Home feed: `/`
 - Front page: `/front`
 - Show HN: `/show`
+- Ask HN: `/ask`
 - Story view: `/item/123`
 - Comment view: `/item/123/comment/456`
 
