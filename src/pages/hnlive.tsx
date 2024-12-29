@@ -7,6 +7,7 @@ import SearchModal from '../components/SearchModal';
 import { FrontPage } from '../components/FrontPage';
 import { ShowPage } from '../components/ShowPage';
 import { AskPage } from '../components/AskPage';
+import { JobsPage } from '../components/JobsPage';
 
 interface HNItem {
   id: number;
@@ -967,6 +968,12 @@ export default function HNLiveTerminal() {
                 [ABOUT]
               </button>
               <button 
+                onClick={() => navigate('/jobs')}
+                className={`hidden sm:inline ${themeColors}`}
+              >
+                [JOBS]
+              </button>
+              <button 
                 onClick={toggleFeed}
                 className={themeColors}
                 title="Ctrl/Cmd + S"
@@ -1179,6 +1186,11 @@ export default function HNLiveTerminal() {
         {/* Add the AskPage component to the render */}
         {location.pathname === '/ask' && (
           <AskPage theme={options.theme} />
+        )}
+
+        {/* Add the JobsPage component to the render */}
+        {location.pathname === '/jobs' && (
+          <JobsPage theme={options.theme} />
         )}
       </div>
 

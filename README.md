@@ -10,6 +10,7 @@ HN Live shows you what's happening on Hacker News right now. Instead of refreshi
 
 - Live feed of new stories and comments
 - Front page view with infinite scrolling (just like HN's front page!)
+- Show HN, Ask HN, and Jobs sections
 - Three themes to choose from:
   - Classic HN orange
   - Dark mode
@@ -29,6 +30,7 @@ The site supports direct links to stories and comments:
 - Front page: `/front`
 - Show HN: `/show`
 - Ask HN: `/ask`
+- Jobs: `/jobs`
 - Story view: `/item/123`
 - Comment view: `/item/123/comment/456`
 
