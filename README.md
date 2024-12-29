@@ -53,7 +53,9 @@ npm run preview
 
 ## Contributing
 
-Found a bug? Have a feature idea? PRs are welcome! Feel free to open an issue first to discuss what you'd like to change.
+Hey! I'm primarily a backend developer and built this project with the help of some amazing AI tools. 
+If you find any bugs (especially with different screen sizes - I've only tested on my laptop and phone), 
+please let me know in the issues! Would love to fix them and make this better for everyone.
 
 ## Credits
 
@@ -62,6 +64,14 @@ Built using:
 - [Algolia HN Search API](https://hn.algolia.com/api) for search functionality
 
 Not affiliated with HN/YC.
+
+## Acknowledgments
+
+Special thanks to:
+- [Cursor](https://cursor.com/) - Honestly, this editor is incredible! Made me feel like I had a coding buddy helping me out 24/7.
+- [Claude](https://anthropic.com/claude) & [ChatGPT](https://chat.openai.com) - Sometimes I had to jump directly to them to brainstorm ideas or debug tricky errors.
+
+Yeah, these tools helped me build and debug this way faster than I could have imagined. They made building something complex (at least for my skill level!) feel totally doable as a weekend project.
 
 ## License
 
