@@ -587,6 +587,19 @@ export default function HNLiveTerminal() {
     }
   }, [options.autoscroll]);
 
+  const reloadSite = () => {
+    // Clear existing items and queue
+    setItems([]);
+    processedIds.current.clear();
+    itemQueueRef.current = [];
+    setQueueSize(0);
+    maxItemRef.current = 0;
+    
+    // Reset running state to trigger reload
+    setIsRunning(false);
+    setTimeout(() => setIsRunning(true), 0);
+  };
+
   return (
     <>
       <Helmet>
@@ -626,7 +639,10 @@ export default function HNLiveTerminal() {
           {/* Mobile Layout */}
           <div className="sm:hidden">
             <div className="flex items-center justify-between mb-2">
-              <span className={`${headerColor} font-bold tracking-wider flex items-center gap-2 relative`}>
+              <span 
+                onClick={reloadSite}
+                className={`${headerColor} font-bold tracking-wider flex items-center gap-2 relative cursor-pointer hover:opacity-75 transition-opacity`}
+              >
                 HN
                 <span className="animate-pulse">
                   <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
@@ -742,7 +758,10 @@ export default function HNLiveTerminal() {
           {/* Desktop Layout */}
           <div className="hidden sm:flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <span className={`${headerColor} font-bold tracking-wider flex items-center gap-2 relative`}>
+              <span 
+                onClick={reloadSite}
+                className={`${headerColor} font-bold tracking-wider flex items-center gap-2 relative cursor-pointer hover:opacity-75 transition-opacity`}
+              >
                 HN
                 <span className="animate-pulse">
                   <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
