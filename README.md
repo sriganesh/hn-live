@@ -9,6 +9,7 @@ HN Live shows you what's happening on Hacker News right now. Instead of refreshi
 ## Features
 
 - Live feed of new stories and comments
+- Front page view with infinite scrolling (just like HN's front page!)
 - Three themes to choose from:
   - Classic HN orange
   - Dark mode
@@ -25,6 +26,7 @@ HN Live shows you what's happening on Hacker News right now. Instead of refreshi
 The site supports direct links to stories and comments:
 
 - Home feed: `/`
+- Front page: `/front`
 - Story view: `/item/123`
 - Comment view: `/item/123/comment/456`
 
@@ -36,7 +38,7 @@ You can share these URLs directly and they will load the appropriate content.
 - `⌘/Ctrl + L` - Clear the screen
 - `⌘/Ctrl + F` - Filter live feed (grep)
 - `⌘/Ctrl + K` - Search all HN content
-- `ESC` - Close story view
+- `ESC` - Close story view or return to feed
 
 ## Development
 
