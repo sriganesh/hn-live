@@ -159,6 +159,39 @@ interface StoryViewState {
   isLoadingMore: boolean;
 }
 
+// Add this near the top with other utility functions
+const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    console.error('Failed to copy:', err);
+    return false;
+  }
+};
+
+// Update the CopyButton component to be more minimal
+const CopyButton = ({ url, theme }: { url: string; theme: 'green' | 'og' | 'dog' }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    const success = await copyToClipboard(url);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="hover:underline"
+    >
+      {copied ? 'copied!' : 'copy'}
+    </button>
+  );
+};
+
 export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps) {
   const navigate = useNavigate();
   const [story, setStory] = useState<HNStory | null>(null);
@@ -326,6 +359,11 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
         >
           reply
         </a>
+        {' • '}
+        <CopyButton 
+          url={`https://hn.live/item/${story?.id}/comment/${comment.id}`}
+          theme={theme}
+        />
       </div>
       <div 
         className="prose prose-sm max-w-none break-words whitespace-pre-wrap overflow-hidden"
@@ -423,7 +461,13 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
             </div>
           ) : story ? (
             <div className="max-w-3xl mx-auto px-0 sm:px-4">
-              <h1 className="text-xl font-bold mb-2">{story.title}</h1>
+              <div className="flex items-start justify-between gap-2">
+                <h1 className="text-xl font-bold mb-2">{story.title}</h1>
+                <CopyButton 
+                  url={`https://hn.live/item/${story.id}`}
+                  theme={theme}
+                />
+              </div>
               <div className="text-sm opacity-75 mb-4">
                 <a 
                   href={`https://news.ycombinator.com/user?id=${story.by}`}
@@ -442,6 +486,11 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
                 >
                   {new Date(story.time * 1000).toLocaleString()}
                 </a>
+                {' • '}
+                <CopyButton 
+                  url={`https://hn.live/item/${story.id}`}
+                  theme={theme}
+                />
               </div>
               {story.url && (
                 <a 
