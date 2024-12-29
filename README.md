@@ -20,6 +20,16 @@ HN Live shows you what's happening on Hacker News right now. Instead of refreshi
 - Keyboard shortcuts for power users
 - Choose between viewing stories in our UI or going straight to HN
 
+## URL Structure
+
+The site supports direct links to stories and comments:
+
+- Home feed: `/`
+- Story view: `/item/123`
+- Comment view: `/item/123/comment/456`
+
+You can share these URLs directly and they will load the appropriate content.
+
 ## Keyboard Shortcuts
 
 - `⌘/Ctrl + S` - Start/Stop the feed
@@ -52,13 +62,3 @@ Built using the [official Hacker News API](https://github.com/HackerNews/API). N
 ## License
 
 MIT
-
-## URL Structure
-
-The site supports direct links to stories and comments:
-
-- Home feed: `/`
-- Story view: `/item/123`
-- Comment view: `/item/123/comment/456`
-
-You can share these URLs directly and they will load the appropriate content.
