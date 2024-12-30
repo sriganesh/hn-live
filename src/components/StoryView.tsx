@@ -376,11 +376,6 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
         >
           reply
         </a>
-        {' • '}
-        <CopyButton 
-          url={`https://hn.live/item/${story?.id}/comment/${comment.id}`}
-          theme={theme}
-        />
       </div>
       <div 
         className="prose prose-sm max-w-none break-words whitespace-pre-wrap overflow-hidden"
@@ -449,7 +444,23 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
           ) : story ? (
             <div className="max-w-4xl mx-auto px-0 sm:px-4">
               <div className="flex items-start justify-between gap-2">
-                <h1 className="text-xl font-bold mb-2">{story.title}</h1>
+                <h1 className="text-xl font-bold mb-2">
+                  {story.url ? (
+                    <a
+                      href={story.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:opacity-75"
+                    >
+                      {story.title}
+                      <span className="ml-2 font-normal text-base opacity-50">
+                        ({new URL(story.url).hostname})
+                      </span>
+                    </a>
+                  ) : (
+                    story.title
+                  )}
+                </h1>
               </div>
               <div className="text-sm opacity-75 mb-4">
                 <a 
@@ -476,16 +487,6 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
                   theme={theme}
                 />
               </div>
-              {story.url && (
-                <a 
-                  href={story.url}
-                  className="block mb-4 opacity-75 hover:opacity-100 break-words"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {story.url}
-                </a>
-              )}
               {story.text && (
                 <div 
                   className="prose max-w-none mb-8"
