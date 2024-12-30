@@ -787,110 +787,119 @@ export default function HNLiveTerminal() {
                 </button>
               </div>
 
-              {/* Reordered controls */}
+              {/* Replace the old controls with a simplified set */}
               <div className="flex items-center gap-2">
-                {/* Theme colors */}
-                <div className="flex items-center gap-3">
-                  <button 
-                    onClick={() => setOptions(prev => ({...prev, theme: 'dog'}))}
-                    className="relative"
-                    title="Dark theme"
+                {/* Settings button */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowSettings(!showSettings)}
+                    className={themeColors}
+                    title="Settings"
                   >
-                    <div className={`w-4 h-4 rounded-full border ${
-                      options.theme === 'green'
-                        ? 'bg-[#1a1a1a] border-[#828282]'
-                        : options.theme === 'og'
-                        ? 'bg-black border-[#828282]/30'
-                        : 'bg-[#1a1a1a] border-[#828282]/30'
-                    }`} />
-                    {options.theme === 'dog' && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-2 h-2 rounded-full bg-[#828282]" />
-                      </div>
-                    )}
+                    [SETTINGS]
                   </button>
-                  <button 
-                    onClick={() => setOptions(prev => ({...prev, theme: 'og'}))}
-                    className="relative"
-                    title="Original theme"
-                  >
-                    <div className={`w-4 h-4 rounded-full border ${
-                      options.theme === 'green'
-                        ? 'bg-[#ff6600]/90 border-[#ff6600]'
+                  
+                  {/* Settings dropdown */}
+                  {showSettings && (
+                    <div className={`absolute right-0 mt-2 w-64 py-2 px-3 rounded-lg border shadow-lg z-50
+                      ${options.theme === 'green' 
+                        ? 'bg-black border-green-500/30' 
                         : options.theme === 'dog'
-                        ? 'bg-[#ff6600] border-[#ff6600]/30'
-                        : 'bg-[#f6f6ef] border-[#ff6600]/30'
-                    }`} />
-                    {options.theme === 'og' && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-2 h-2 rounded-full bg-[#ff6600]" />
+                        ? 'bg-[#1a1a1a] border-[#828282]/30'
+                        : 'bg-[#f6f6ef] border-[#ff6600]/30'}`}
+                    >
+                      <div className="space-y-4">
+                        {/* Theme selector */}
+                        <div className="space-y-2">
+                          <div className="text-sm opacity-75">Theme</div>
+                          <div className="flex items-center gap-3">
+                            <button 
+                              onClick={() => setOptions(prev => ({...prev, theme: 'dog'}))}
+                              className="relative"
+                              title="Dark theme"
+                            >
+                              <div className={`w-4 h-4 rounded-full border ${
+                                options.theme === 'green'
+                                  ? 'bg-[#1a1a1a] border-[#828282]'
+                                  : options.theme === 'og'
+                                  ? 'bg-black border-[#828282]/30'
+                                  : 'bg-[#1a1a1a] border-[#828282]/30'
+                              }`} />
+                              {options.theme === 'dog' && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="w-2 h-2 rounded-full bg-[#828282]" />
+                                </div>
+                              )}
+                            </button>
+                            <button 
+                              onClick={() => setOptions(prev => ({...prev, theme: 'og'}))}
+                              className="relative"
+                              title="Original theme"
+                            >
+                              <div className={`w-4 h-4 rounded-full border ${
+                                options.theme === 'green'
+                                  ? 'bg-[#ff6600]/90 border-[#ff6600]'
+                                  : options.theme === 'dog'
+                                  ? 'bg-[#ff6600] border-[#ff6600]/30'
+                                  : 'bg-[#f6f6ef] border-[#ff6600]/30'
+                              }`} />
+                              {options.theme === 'og' && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="w-2 h-2 rounded-full bg-[#ff6600]" />
+                                </div>
+                              )}
+                            </button>
+                            <button 
+                              onClick={() => setOptions(prev => ({...prev, theme: 'green'}))}
+                              className="relative"
+                              title="Terminal theme"
+                            >
+                              <div className={`w-4 h-4 rounded-full border ${
+                                options.theme === 'og'
+                                  ? 'bg-green-500 border-green-500/30'
+                                  : options.theme === 'dog'
+                                  ? 'bg-green-500 border-green-500/30'
+                                  : 'bg-black border-green-500/30'
+                              }`} />
+                              {options.theme === 'green' && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                                </div>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Settings options */}
+                        <div className="space-y-2">
+                          <div className="text-sm opacity-75">Options</div>
+                          <div className="space-y-2">
+                            <button
+                              onClick={() => {
+                                setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}));
+                                showTemporaryNotif(setShowAutoScrollNotif);
+                              }}
+                              className={`${themeColors} ${!options.autoscroll && 'opacity-50'} w-full text-left`}
+                            >
+                              [{options.autoscroll ? '×' : ' '}] Auto-scroll
+                            </button>
+                            <button
+                              onClick={() => {
+                                setOptions(prev => ({...prev, directLinks: !prev.directLinks}));
+                                showTemporaryNotif(setShowDirectLinkNotif);
+                              }}
+                              className={`${themeColors} ${!options.directLinks && 'opacity-50'} w-full text-left`}
+                            >
+                              [{options.directLinks ? '×' : ' '}] Direct HN Links
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    )}
-                  </button>
-                  <button 
-                    onClick={() => setOptions(prev => ({...prev, theme: 'green'}))}
-                    className="relative"
-                    title="Terminal theme"
-                  >
-                    <div className={`w-4 h-4 rounded-full border ${
-                      options.theme === 'og'
-                        ? 'bg-green-500 border-green-500/30'
-                        : options.theme === 'dog'
-                        ? 'bg-green-500 border-green-500/30'
-                        : 'bg-black border-green-500/30'
-                    }`} />
-                    {options.theme === 'green' && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-2 h-2 rounded-full bg-green-500" />
-                      </div>
-                    )}
-                  </button>
+                    </div>
+                  )}
                 </div>
 
-                {/* Auto-scroll */}
-                <button
-                  onClick={() => {
-                    setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}));
-                    showTemporaryNotif(setShowAutoScrollNotif);
-                  }}
-                  className={`${themeColors} flex items-center gap-1`}
-                  title="Auto-scroll"
-                >
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    viewBox="0 0 24 24" 
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className={`w-4 h-4 ${!options.autoscroll && 'opacity-50'}`}
-                  >
-                    <path d="M17 13l-5 5-5-5M17 7l-5 5-5-5" />
-                  </svg>
-                </button>
-
-                {/* Direct links */}
-                <button
-                  onClick={() => {
-                    setOptions(prev => ({...prev, directLinks: !prev.directLinks}));
-                    showTemporaryNotif(setShowDirectLinkNotif);
-                  }}
-                  className={`${themeColors} flex items-center gap-1`}
-                  title="Direct links"
-                >
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    viewBox="0 0 24 24" 
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className={`w-4 h-4 ${!options.directLinks && 'opacity-50'}`}
-                  >
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                  </svg>
-                </button>
-
-                {/* Start/Stop */}
+                {/* Start/Stop button */}
                 <button 
                   onClick={toggleFeed}
                   className={`${
@@ -904,10 +913,10 @@ export default function HNLiveTerminal() {
                   }`}
                   title="Ctrl/Cmd + S"
                 >
-                  [{isRunning ? 'STOP' : 'START'}]{showShortcuts && ' (⌘S)'}
+                  [{isRunning ? 'STOP' : 'START'}]
                 </button>
 
-                {/* Clear screen */}
+                {/* Clear screen button */}
                 <button 
                   onClick={clearScreen}
                   className={`${
@@ -919,13 +928,13 @@ export default function HNLiveTerminal() {
                   }`}
                   title="Ctrl/Cmd + L"
                 >
-                  [CLEAR]{showShortcuts && ' (⌘L)'}
+                  [CLEAR]
                 </button>
               </div>
             </div>
 
-            {/* Second row */}
-            <div className="flex items-center gap-2 text-sm">
+            {/* Second row with navigation buttons */}
+            <div className="flex items-center gap-2 text-sm overflow-x-auto pb-2">
               <button 
                 onClick={() => navigate('/front')}
                 className={themeColors}
@@ -950,6 +959,13 @@ export default function HNLiveTerminal() {
               >
                 [ASK]
               </button>
+              <button 
+                onClick={() => setShowSearch(true)}
+                className={themeColors}
+                title="Ctrl/Cmd + K"
+              >
+                [SEARCH]
+              </button>
               {showGrep ? (
                 <div className="flex items-center gap-2">
                   <span>grep:</span>
@@ -973,16 +989,9 @@ export default function HNLiveTerminal() {
                   className={themeColors}
                   title="Ctrl/Cmd + F"
                 >
-                  [GREP]{showShortcuts && ' (⌘F)'}
+                  [GREP]
                 </button>
               )}
-              <button 
-                onClick={() => setShowSearch(true)}
-                className={themeColors}
-                title="Ctrl/Cmd + K"
-              >
-                [SEARCH]{showShortcuts && ' (⌘K)'}
-              </button>
             </div>
           </div>
 
@@ -1063,6 +1072,13 @@ export default function HNLiveTerminal() {
               >
                 [JOBS]
               </button>
+              <button 
+                onClick={() => setShowSearch(true)}
+                className={themeColors}
+                title="Ctrl/Cmd + K"
+              >
+                [SEARCH]
+              </button>
               {showGrep ? (
                 <div className="flex items-center gap-2">
                   <span>grep:</span>
@@ -1086,16 +1102,9 @@ export default function HNLiveTerminal() {
                   className={themeColors}
                   title="Ctrl/Cmd + F"
                 >
-                  [GREP]{showShortcuts && ' (⌘F)'}
+                  [GREP]
                 </button>
               )}
-              <button 
-                onClick={() => setShowSearch(true)}
-                className={themeColors}
-                title="Ctrl/Cmd + K"
-              >
-                [SEARCH]{showShortcuts && ' (⌘K)'}
-              </button>
 
               {/* Replace theme selector and settings with new Settings button and dropdown */}
               <div className="relative">
@@ -1220,7 +1229,7 @@ export default function HNLiveTerminal() {
                 }`}
                 title="Ctrl/Cmd + S"
               >
-                [{isRunning ? 'STOP' : 'START'}]{showShortcuts && ' (⌘S)'}
+                [{isRunning ? 'STOP' : 'START'}]
               </button>
               <button 
                 onClick={clearScreen}
@@ -1233,7 +1242,7 @@ export default function HNLiveTerminal() {
                 }`}
                 title="Ctrl/Cmd + L"
               >
-                [CLEAR]{showShortcuts && ' (⌘L)'}
+                [CLEAR]
               </button>
             </div>
           </div>
