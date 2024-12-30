@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface ShowPageProps {
   theme: 'green' | 'og' | 'dog';
+  fontSize: 'xs' | 'sm' | 'base';
 }
 
 interface HNStory {
@@ -42,7 +43,7 @@ interface ShowPageState {
 
 const STORIES_PER_PAGE = 30;
 
-export function ShowPage({ theme }: ShowPageProps) {
+export function ShowPage({ theme, fontSize }: ShowPageProps) {
   const navigate = useNavigate();
   const [state, setState] = useState<ShowPageState>({
     stories: [],
@@ -141,7 +142,7 @@ export function ShowPage({ theme }: ShowPageProps) {
     : 'text-[#828282] bg-[#1a1a1a]';
 
   return (
-    <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden`}>
+    <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
       <div className="h-full overflow-y-auto p-4">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">

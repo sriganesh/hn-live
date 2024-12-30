@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface JobsPageProps {
   theme: 'green' | 'og' | 'dog';
+  fontSize: 'xs' | 'sm' | 'base';
 }
 
 interface HNJob {
@@ -41,7 +42,7 @@ interface JobsPageState {
 
 const JOBS_PER_PAGE = 30;
 
-export function JobsPage({ theme }: JobsPageProps) {
+export function JobsPage({ theme, fontSize }: JobsPageProps) {
   const navigate = useNavigate();
   const [state, setState] = useState<JobsPageState>({
     jobs: [],
@@ -140,7 +141,7 @@ export function JobsPage({ theme }: JobsPageProps) {
     : 'text-[#828282] bg-[#1a1a1a]';
 
   return (
-    <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden`}>
+    <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
       <div className="h-full overflow-y-auto p-4">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">

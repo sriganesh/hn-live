@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTopUsers } from '../hooks/useTopUsers';
 
 interface FrontPageProps {
   theme: 'green' | 'og' | 'dog';
+  fontSize: 'xs' | 'sm' | 'base';
 }
 
 interface HNStory {
@@ -22,11 +24,11 @@ const formatTimeAgo = (timestamp: number): string => {
   const days = Math.floor(hours / 24);
 
   if (days > 0) {
-    return `${days} day${days === 1 ? '' : 's'} ago`;
+    return `${days}d ago`;
   } else if (hours > 0) {
-    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    return `${hours}h ago`;
   } else if (minutes > 0) {
-    return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+    return `${minutes}m ago`;
   } else {
     return 'just now';
   }
@@ -42,7 +44,11 @@ interface FrontPageState {
 
 const STORIES_PER_PAGE = 30;
 
-export function FrontPage({ theme }: FrontPageProps) {
+const truncateUrl = (url: string, maxLength: number): string => {
+  return url.length > maxLength ? url.slice(0, maxLength) + '...' : url;
+};
+
+export function FrontPage({ theme, fontSize }: FrontPageProps) {
   const navigate = useNavigate();
   const [state, setState] = useState<FrontPageState>({
     stories: [],
@@ -51,6 +57,8 @@ export function FrontPage({ theme }: FrontPageProps) {
     page: 0,
     hasMore: true
   });
+
+  const { isTopUser, getTopUserClass } = useTopUsers();
 
   const fetchStories = async (pageNumber: number) => {
     try {
@@ -144,7 +152,7 @@ export function FrontPage({ theme }: FrontPageProps) {
     : 'text-[#828282] bg-[#1a1a1a]';
 
   return (
-    <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden`}>
+    <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
       <div className="h-full overflow-y-auto p-4">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">
@@ -171,16 +179,42 @@ export function FrontPage({ theme }: FrontPageProps) {
             Loading front page...
           </div>
         ) : (
-          <div className="max-w-3xl mx-auto space-y-4">
+          <div className="max-w-3xl mx-auto space-y-6">
             {state.stories.map((story, index) => (
               <div 
                 key={story.id}
-                className="group"
+                className="group relative"
               >
-                <div className="flex items-baseline gap-2">
-                  <span className="opacity-50">{index + 1}.</span>
-                  <div className="space-y-1">
-                    <div>
+                <div className="flex items-baseline gap-3">
+                  {/* Left column - story number */}
+                  <span className={`${theme === 'green' ? 'text-green-500/50' : 'text-[#ff6600]/50'} text-sm font-mono`}>
+                    {(index + 1).toString().padStart(2, '0')}
+                  </span>
+
+                  {/* Right column - content */}
+                  <div className="space-y-2 flex-1">
+                    {/* Top line - hostname and timestamp */}
+                    {story.url && (
+                      <div className="flex items-center text-sm opacity-50">
+                        <span className="truncate">
+                          {truncateUrl(new URL(story.url).hostname.replace('www.', ''), 40)}
+                        </span>
+                        <span className="mx-2">•</span>
+                        <span className="shrink-0" title={new Date(story.time * 1000).toLocaleString()}>
+                          {formatTimeAgo(story.time)}
+                        </span>
+                      </div>
+                    )}
+                    {!story.url && (
+                      <div className="text-sm opacity-50">
+                        <span title={new Date(story.time * 1000).toLocaleString()}>
+                          {formatTimeAgo(story.time)}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Title line */}
+                    <div className="pr-4">
                       <a
                         href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
                         onClick={(e) => {
@@ -189,46 +223,56 @@ export function FrontPage({ theme }: FrontPageProps) {
                             navigate(`/item/${story.id}`);
                           }
                         }}
-                        className="group-hover:opacity-75"
+                        className="group-hover:opacity-75 font-medium"
                         target={story.url ? "_blank" : undefined}
                         rel={story.url ? "noopener noreferrer" : undefined}
                       >
                         {story.title}
                       </a>
-                      {story.url && (
-                        <span className="ml-2 opacity-50 text-sm">
-                          ({new URL(story.url).hostname})
-                        </span>
-                      )}
                     </div>
-                    <div className="text-sm opacity-75">
-                      {story.score} points by{' '}
+
+                    {/* Bottom metadata line - without timestamp */}
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                       <a 
                         href={`https://news.ycombinator.com/user?id=${story.by}`}
-                        className="hn-username hover:underline"
+                        className={`hn-username hover:underline ${
+                          isTopUser(story.by) ? getTopUserClass(theme) : ''
+                        }`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
                         {story.by}
-                      </a>{' '}
-                      <span title={new Date(story.time * 1000).toLocaleString()}>
-                        {formatTimeAgo(story.time)}
-                      </span> • {' '}
+                      </a>
+                      <span className="opacity-75">•</span>
+                      <span className="font-mono opacity-75">
+                        {story.score} points
+                      </span>
+                      <span className="opacity-75">•</span>
                       <button
                         onClick={() => navigate(`/item/${story.id}`)}
-                        className="hover:underline"
+                        className="opacity-75 hover:opacity-100 hover:underline"
                       >
-                        {story.descendants || 0} comments
+                        {story.descendants 
+                          ? `${story.descendants} comment${story.descendants === 1 ? '' : 's'}`
+                          : 'discuss'
+                        }
                       </button>
                     </div>
                   </div>
                 </div>
-                <div className={`border-b border-current opacity-5 mt-4`} />
+                
+                <div className={`border-b ${
+                  theme === 'green' 
+                    ? 'border-green-500/10' 
+                    : theme === 'og'
+                    ? 'border-[#ff6600]/5'
+                    : 'border-[#828282]/10'
+                } mt-4`} />
               </div>
             ))}
 
             {state.hasMore && (
-              <div className="text-center py-8">
+              <div className="text-center py-6">
                 <button
                   onClick={loadMore}
                   disabled={state.loadingMore}

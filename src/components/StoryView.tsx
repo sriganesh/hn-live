@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { useTopUsers } from '../hooks/useTopUsers';
 
 interface StoryViewProps {
   itemId: number;
   scrollToId?: number;
   onClose: () => void;
   theme: 'green' | 'og' | 'dog';
+  fontSize: 'xs' | 'sm' | 'base';
 }
 
 interface HNStory {
@@ -215,7 +217,7 @@ const formatTimeAgo = (timestamp: number): string => {
   }
 };
 
-export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps) {
+export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: StoryViewProps) {
   const navigate = useNavigate();
   const [story, setStory] = useState<HNStory | null>(null);
   const [loading, setLoading] = useState(true);
@@ -228,6 +230,8 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
     hasMore: false,
     isLoadingMore: false
   });
+
+  const { isTopUser, getTopUserClass } = useTopUsers();
 
   // Keep the ESC key handler
   useEffect(() => {
@@ -351,7 +355,9 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
       <div className="text-sm opacity-75 mb-1">
         <a 
           href={`https://news.ycombinator.com/user?id=${comment.by}`}
-          className="hn-username hover:underline"
+          className={`hn-username hover:underline ${
+            isTopUser(comment.by) ? getTopUserClass(theme) : ''
+          }`}
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -401,6 +407,37 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
     navigate('/');
   };
 
+  const renderStoryPreview = (story: HNStory) => {
+    return (
+      <div className="group">
+        <div className="space-y-1">
+          {/* Title as main content */}
+          <div className="font-medium">
+            {story.title}
+          </div>
+
+          {/* Metadata row */}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm opacity-75">
+            <span>{story.by}</span>
+            <span>•</span>
+            <span>{formatTimeAgo(story.time)}</span>
+            {story.descendants !== undefined && (
+              <>
+                <span>•</span>
+                <span>
+                  {story.descendants 
+                    ? `${story.descendants} comment${story.descendants === 1 ? '' : 's'}`
+                    : 'discuss'
+                  }
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       {story && (
@@ -414,7 +451,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
           <link rel="canonical" href={`https://hn.live/item/${story.id}`} />
         </Helmet>
       )}
-      <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden`}>
+      <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
         <div className="story-container h-full overflow-y-auto p-4 sm:p-4">
           <div className="flex items-center justify-between mb-8">
             <button 
@@ -465,7 +502,9 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
               <div className="text-sm opacity-75 mb-4">
                 <a 
                   href={`https://news.ycombinator.com/user?id=${story.by}`}
-                  className="hn-username hover:underline"
+                  className={`hn-username hover:underline ${
+                    isTopUser(story.by) ? getTopUserClass(theme) : ''
+                  }`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
