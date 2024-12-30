@@ -702,6 +702,16 @@ export default function HNLiveTerminal() {
   // Add this near other state declarations in the HNLiveTerminal component
   const [showSearch, setShowSearch] = useState(false);
 
+  // Add these state variables at the top of the component
+  const [showAutoScrollNotif, setShowAutoScrollNotif] = useState(false);
+  const [showDirectLinkNotif, setShowDirectLinkNotif] = useState(false);
+
+  // Add this helper function
+  const showTemporaryNotif = (setNotif: (show: boolean) => void) => {
+    setNotif(true);
+    setTimeout(() => setNotif(false), 1500); // Reduced to 1.5 seconds for snappier feedback
+  };
+
   return (
     <>
       <Helmet>
@@ -765,39 +775,49 @@ export default function HNLiveTerminal() {
 
               {/* Auto-scroll, Direct, Theme options, and Controls */}
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}))}
-                  className={`${themeColors} flex items-center gap-1`}
-                  title="Auto-scroll"
-                >
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    viewBox="0 0 24 24" 
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className={`w-4 h-4 ${!options.autoscroll && 'opacity-50'}`}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}));
+                      showTemporaryNotif(setShowAutoScrollNotif);
+                    }}
+                    className={`${themeColors} flex items-center gap-1`}
+                    title="Auto-scroll"
                   >
-                    <path d="M17 13l-5 5-5-5M17 7l-5 5-5-5" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => setOptions(prev => ({...prev, directLinks: !prev.directLinks}))}
-                  className={`${themeColors} flex items-center gap-1`}
-                  title="Direct links"
-                >
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    viewBox="0 0 24 24" 
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className={`w-4 h-4 ${!options.directLinks && 'opacity-50'}`}
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      viewBox="0 0 24 24" 
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className={`w-4 h-4 ${!options.autoscroll && 'opacity-50'}`}
+                    >
+                      <path d="M17 13l-5 5-5-5M17 7l-5 5-5-5" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setOptions(prev => ({...prev, directLinks: !prev.directLinks}));
+                      showTemporaryNotif(setShowDirectLinkNotif);
+                    }}
+                    className={`${themeColors} flex items-center gap-1`}
+                    title="Direct links"
                   >
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                  </svg>
-                </button>
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      viewBox="0 0 24 24" 
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className={`w-4 h-4 ${!options.directLinks && 'opacity-50'}`}
+                    >
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                    </svg>
+                  </button>
+                </div>
                 <div className="flex items-center gap-3 ml-2">
                   <button 
                     onClick={() => setOptions(prev => ({...prev, theme: 'dog'}))}
@@ -1036,13 +1056,19 @@ export default function HNLiveTerminal() {
                 [{options.theme === 'green' ? '×' : ' '}] G
               </button>
               <button
-                onClick={() => setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}))}
+                onClick={() => {
+                  setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}));
+                  showTemporaryNotif(setShowAutoScrollNotif);
+                }}
                 className={`${themeColors} ${!options.autoscroll && 'opacity-50'}`}
               >
                 [{options.autoscroll ? '×' : ' '}] Auto-scroll
               </button>
               <button
-                onClick={() => setOptions(prev => ({...prev, directLinks: !prev.directLinks}))}
+                onClick={() => {
+                  setOptions(prev => ({...prev, directLinks: !prev.directLinks}));
+                  showTemporaryNotif(setShowDirectLinkNotif);
+                }}
                 className={`${themeColors} ${!options.directLinks && 'opacity-50'}`}
               >
                 [{options.directLinks ? '×' : ' '}] Direct
@@ -1306,6 +1332,55 @@ export default function HNLiveTerminal() {
         {/* Add the BestPage component to the render */}
         {location.pathname === '/best' && (
           <BestPage theme={options.theme} />
+        )}
+
+        {/* Center notification overlay */}
+        {(showAutoScrollNotif || showDirectLinkNotif) && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+            <div className={`
+              text-lg animate-fade-out px-6 py-3 rounded-lg border
+              ${options.theme === 'og'
+                ? 'bg-[#1a1a1a] text-[#f6f6ef] border-[#ff6600]/30'
+                : options.theme === 'dog'
+                ? 'bg-[#f6f6ef] text-[#1a1a1a] border-[#ff6600]/30'
+                : options.theme === 'green'
+                ? 'bg-black/90 text-green-400 border-green-500/30'
+                : ''
+              }
+            `}>
+              {showAutoScrollNotif && (
+                <div className="flex items-center gap-2">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="w-5 h-5"
+                  >
+                    <path d="M17 13l-5 5-5-5M17 7l-5 5-5-5" />
+                  </svg>
+                  Auto-scroll {options.autoscroll ? 'enabled' : 'disabled'}
+                </div>
+              )}
+              {showDirectLinkNotif && (
+                <div className="flex items-center gap-2">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="w-5 h-5"
+                  >
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                  </svg>
+                  Direct HN links {options.directLinks ? 'enabled' : 'disabled'}
+                </div>
+              )}
+            </div>
+          </div>
         )}
       </div>
 
