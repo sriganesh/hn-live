@@ -5,6 +5,7 @@ import { FrontPage } from "./components/FrontPage";
 import { ShowPage } from "./components/ShowPage";
 import { AskPage } from "./components/AskPage";
 import { JobsPage } from "./components/JobsPage";
+import { BestPage } from "./components/BestPage";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
             <Route path="show" element={null} />
             <Route path="ask" element={null} />
             <Route path="jobs" element={null} />
+            <Route path="best" element={null} />
           </Route>
         </Routes>
       </Router>
