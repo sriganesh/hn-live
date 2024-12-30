@@ -332,7 +332,13 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
           ? `sm:${getIndentClass(comment.level)} pl-2` 
           : 'pl-0'
       } ${
-        comment.id === scrollToId ? 'bg-yellow-500/10' : ''
+        comment.id === scrollToId 
+          ? theme === 'dog'
+            ? 'bg-yellow-500/5' // Dark theme highlight
+            : theme === 'green'
+            ? 'bg-green-500/20' // Brighter green highlight for green theme
+            : 'bg-yellow-500/10' // Original highlight for og theme
+          : ''
       } ${
         comment.level > 0 ? 'border-l border-current/10' : ''
       }`}
@@ -468,10 +474,6 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
             <div className="max-w-3xl mx-auto px-0 sm:px-4">
               <div className="flex items-start justify-between gap-2">
                 <h1 className="text-xl font-bold mb-2">{story.title}</h1>
-                <CopyButton 
-                  url={`https://hn.live/item/${story.id}`}
-                  theme={theme}
-                />
               </div>
               <div className="text-sm opacity-75 mb-4">
                 <a 

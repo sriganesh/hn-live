@@ -84,6 +84,19 @@ const getStoredAutoscroll = () => {
   return true; // Default to autoscroll on
 };
 
+// Update the style to handle both dark and green themes
+const themeStyles = `
+  [data-theme='dog'] ::selection {
+    background: rgba(255, 255, 255, 0.1);
+    color: inherit;
+  }
+  
+  [data-theme='green'] ::selection {
+    background: rgba(34, 197, 94, 0.2); /* green-500 with low opacity */
+    color: inherit;
+  }
+`;
+
 export default function HNLiveTerminal() {
   useDocumentTitle('Hacker News Live');
   
@@ -715,6 +728,7 @@ export default function HNLiveTerminal() {
             ]
           })}
         </script>
+        <style>{themeStyles}</style>
       </Helmet>
       <div className={`fixed inset-0 ${themeBg} font-mono`} data-theme={options.theme}>
         <noscript>
@@ -1069,7 +1083,7 @@ export default function HNLiveTerminal() {
                           rel="noopener noreferrer"
                           className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
                         >
-                          [comments]
+                          [{item.kids?.length ? 'comments' : 'discuss'}]
                         </a>
                       </span>
                     )}
@@ -1093,18 +1107,18 @@ export default function HNLiveTerminal() {
                   <div className="break-words whitespace-pre-wrap overflow-hidden">
                     {item.type === 'story' ? (
                       <>
-                        <a 
-                          href={item.url || `https://news.ycombinator.com/item?id=${item.id}`}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleStoryClick(item);
-                          }}
-                          className={`${themeColors} transition-colors cursor-pointer`}
-                          dangerouslySetInnerHTML={{ 
-                            __html: item.formatted?.text || ''
-                          }}
-                        />
-                        <span className="ml-2 inline-block">
+                        <span className="opacity-50">
+                          {item.url && (
+                            <a 
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`${themeColors} opacity-50 hover:opacity-100 transition-colors`}
+                            >
+                              [link]
+                            </a>
+                          )}
+                          {' '}
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1112,7 +1126,7 @@ export default function HNLiveTerminal() {
                             }}
                             className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
                           >
-                            [comments]
+                            [{item.kids?.length ? 'comments' : 'discuss'}]
                           </button>
                         </span>
                       </>
