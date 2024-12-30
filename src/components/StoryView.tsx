@@ -197,11 +197,28 @@ const CopyButton = ({ url, theme }: { url: string; theme: 'green' | 'og' | 'dog'
   );
 };
 
+// Add this helper function at the top of the file
+const formatTimeAgo = (timestamp: number): string => {
+  const seconds = Math.floor((Date.now() - timestamp * 1000) / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) {
+    return `${days} day${days === 1 ? '' : 's'} ago`;
+  } else if (hours > 0) {
+    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  } else if (minutes > 0) {
+    return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+  } else {
+    return 'just now';
+  }
+};
+
 export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps) {
   const navigate = useNavigate();
   const [story, setStory] = useState<HNStory | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showBackButton, setShowBackButton] = useState(false);
   
   // Add new state for comment loading
   const [commentState, setCommentState] = useState<StoryViewState>({
@@ -211,18 +228,6 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
     hasMore: false,
     isLoadingMore: false
   });
-
-  // Add scroll handler
-  useEffect(() => {
-    const handleScroll = (e: Event) => {
-      const target = e.target as HTMLDivElement;
-      setShowBackButton(target.scrollTop > 100);
-    };
-
-    const container = document.querySelector('.story-container');
-    container?.addEventListener('scroll', handleScroll);
-    return () => container?.removeEventListener('scroll', handleScroll);
-  }, []);
 
   // Keep the ESC key handler
   useEffect(() => {
@@ -358,8 +363,9 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
           className="hover:underline"
           target="_blank"
           rel="noopener noreferrer"
+          title={new Date(comment.time * 1000).toLocaleString()}
         >
-          {new Date(comment.time * 1000).toLocaleString()}
+          {formatTimeAgo(comment.time)}
         </a>
         {' • '}
         <a
@@ -436,42 +442,12 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
             </button>
           </div>
 
-          {/* Add floating back button */}
-          <div 
-            className={`fixed left-4 bottom-4 transition-opacity duration-200 ${
-              showBackButton ? 'opacity-100' : 'opacity-0 pointer-events-none'
-            }`}
-          >
-            <button
-              onClick={handleClose}
-              className={`${
-                theme === 'green' ? 'bg-green-500' : 'bg-[#ff6600]'
-              } text-black rounded-full p-3 shadow-lg hover:opacity-90 transition-opacity`}
-              aria-label="Back to feed"
-            >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-6 w-6" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18" 
-                />
-              </svg>
-            </button>
-          </div>
-
           {loading ? (
             <div className="flex items-center justify-center h-full">
               Loading...
             </div>
           ) : story ? (
-            <div className="max-w-3xl mx-auto px-0 sm:px-4">
+            <div className="max-w-4xl mx-auto px-0 sm:px-4">
               <div className="flex items-start justify-between gap-2">
                 <h1 className="text-xl font-bold mb-2">{story.title}</h1>
               </div>
@@ -490,8 +466,9 @@ export function StoryView({ itemId, scrollToId, onClose, theme }: StoryViewProps
                   className="hover:underline"
                   target="_blank"
                   rel="noopener noreferrer"
+                  title={new Date(story.time * 1000).toLocaleString()}
                 >
-                  {new Date(story.time * 1000).toLocaleString()}
+                  {formatTimeAgo(story.time)}
                 </a>
                 {' • '}
                 <CopyButton 
