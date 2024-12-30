@@ -752,7 +752,7 @@ export default function HNLiveTerminal() {
           {/* Mobile Layout */}
           <div className="sm:hidden">
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
                 <span 
                   onClick={reloadSite}
                   className={`${headerColor} font-bold tracking-wider flex items-center gap-2 relative cursor-pointer hover:opacity-75 transition-opacity`}
@@ -771,54 +771,18 @@ export default function HNLiveTerminal() {
                     </span>
                   )}
                 </span>
+                <button 
+                  onClick={() => setShowAbout(true)}
+                  className={`${themeColors} mr-2`}
+                >
+                  [?]
+                </button>
               </div>
 
-              {/* Auto-scroll, Direct, Theme options, and Controls */}
+              {/* Reordered controls */}
               <div className="flex items-center gap-2">
-                <div className="relative">
-                  <button
-                    onClick={() => {
-                      setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}));
-                      showTemporaryNotif(setShowAutoScrollNotif);
-                    }}
-                    className={`${themeColors} flex items-center gap-1`}
-                    title="Auto-scroll"
-                  >
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      viewBox="0 0 24 24" 
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className={`w-4 h-4 ${!options.autoscroll && 'opacity-50'}`}
-                    >
-                      <path d="M17 13l-5 5-5-5M17 7l-5 5-5-5" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="relative">
-                  <button
-                    onClick={() => {
-                      setOptions(prev => ({...prev, directLinks: !prev.directLinks}));
-                      showTemporaryNotif(setShowDirectLinkNotif);
-                    }}
-                    className={`${themeColors} flex items-center gap-1`}
-                    title="Direct links"
-                  >
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      viewBox="0 0 24 24" 
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className={`w-4 h-4 ${!options.directLinks && 'opacity-50'}`}
-                    >
-                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="flex items-center gap-3 ml-2">
+                {/* Theme colors */}
+                <div className="flex items-center gap-3">
                   <button 
                     onClick={() => setOptions(prev => ({...prev, theme: 'dog'}))}
                     className="relative"
@@ -874,9 +838,54 @@ export default function HNLiveTerminal() {
                     )}
                   </button>
                 </div>
+
+                {/* Auto-scroll */}
+                <button
+                  onClick={() => {
+                    setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}));
+                    showTemporaryNotif(setShowAutoScrollNotif);
+                  }}
+                  className={`${themeColors} flex items-center gap-1`}
+                  title="Auto-scroll"
+                >
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className={`w-4 h-4 ${!options.autoscroll && 'opacity-50'}`}
+                  >
+                    <path d="M17 13l-5 5-5-5M17 7l-5 5-5-5" />
+                  </svg>
+                </button>
+
+                {/* Direct links */}
+                <button
+                  onClick={() => {
+                    setOptions(prev => ({...prev, directLinks: !prev.directLinks}));
+                    showTemporaryNotif(setShowDirectLinkNotif);
+                  }}
+                  className={`${themeColors} flex items-center gap-1`}
+                  title="Direct links"
+                >
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className={`w-4 h-4 ${!options.directLinks && 'opacity-50'}`}
+                  >
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                  </svg>
+                </button>
+
+                {/* Start/Stop */}
                 <button 
                   onClick={toggleFeed}
-                  className={`${themeColors} ml-2`}
+                  className={themeColors}
                   title={isRunning ? "Stop feed" : "Start feed"}
                 >
                   {isRunning ? (
@@ -900,6 +909,8 @@ export default function HNLiveTerminal() {
                     </svg>
                   )}
                 </button>
+
+                {/* Clear screen */}
                 <button 
                   onClick={clearScreen}
                   className={themeColors}
@@ -917,12 +928,6 @@ export default function HNLiveTerminal() {
                     <path d="M10 10v8" />
                     <path d="M14 10v8" />
                   </svg>
-                </button>
-                <button 
-                  onClick={() => setShowAbout(true)}
-                  className={`${themeColors} ml-2`}
-                >
-                  [?]
                 </button>
               </div>
             </div>
