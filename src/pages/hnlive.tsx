@@ -934,12 +934,6 @@ export default function HNLiveTerminal() {
                 >
                   [ASK]
                 </button>
-                <button 
-                  onClick={() => navigate('/jobs')}
-                  className={themeColors}
-                >
-                  [JOBS]
-                </button>
               </div>
               <div className="flex items-center gap-2">
                 <button
