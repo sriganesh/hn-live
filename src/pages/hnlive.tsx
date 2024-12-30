@@ -8,6 +8,7 @@ import { FrontPage } from '../components/FrontPage';
 import { ShowPage } from '../components/ShowPage';
 import { AskPage } from '../components/AskPage';
 import { JobsPage } from '../components/JobsPage';
+import { BestPage } from '../components/BestPage';
 
 interface HNItem {
   id: number;
@@ -950,6 +951,12 @@ export default function HNLiveTerminal() {
                 [FRONT]
               </button>
               <button 
+                onClick={() => navigate('/best')}
+                className={`hidden sm:inline ${themeColors}`}
+              >
+                [BEST]
+              </button>
+              <button 
                 onClick={() => navigate('/show')}
                 className={`hidden sm:inline ${themeColors}`}
               >
@@ -1191,6 +1198,11 @@ export default function HNLiveTerminal() {
         {/* Add the JobsPage component to the render */}
         {location.pathname === '/jobs' && (
           <JobsPage theme={options.theme} />
+        )}
+
+        {/* Add the BestPage component to the render */}
+        {location.pathname === '/best' && (
+          <BestPage theme={options.theme} />
         )}
       </div>
 
