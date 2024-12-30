@@ -702,6 +702,16 @@ export default function HNLiveTerminal() {
   // Add this near other state declarations in the HNLiveTerminal component
   const [showSearch, setShowSearch] = useState(false);
 
+  // Add these state variables at the top of the component
+  const [showAutoScrollNotif, setShowAutoScrollNotif] = useState(false);
+  const [showDirectLinkNotif, setShowDirectLinkNotif] = useState(false);
+
+  // Add this helper function
+  const showTemporaryNotif = (setNotif: (show: boolean) => void) => {
+    setNotif(true);
+    setTimeout(() => setNotif(false), 1500); // Reduced to 1.5 seconds for snappier feedback
+  };
+
   return (
     <>
       <Helmet>
@@ -742,66 +752,206 @@ export default function HNLiveTerminal() {
           {/* Mobile Layout */}
           <div className="sm:hidden">
             <div className="flex items-center justify-between mb-2">
-              <span 
-                onClick={reloadSite}
-                className={`${headerColor} font-bold tracking-wider flex items-center gap-2 relative cursor-pointer hover:opacity-75 transition-opacity`}
-              >
-                HN
-                <span className="animate-pulse">
-                  <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
-                </span>
-                LIVE
-                {queueSize >= 100 && (
-                  <span className={`absolute -top-1 -right-6 min-w-[1.2rem] h-[1.2rem] 
-                    ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
-                    rounded text-xs flex items-center justify-center font-bold`}
-                  >
-                    {queueSize}
+              <div className="flex items-center gap-4">
+                <span 
+                  onClick={reloadSite}
+                  className={`${headerColor} font-bold tracking-wider flex items-center gap-2 relative cursor-pointer hover:opacity-75 transition-opacity`}
+                >
+                  HN
+                  <span className="animate-pulse">
+                    <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
                   </span>
-                )}
-              </span>
-
-              {/* Theme options in the middle */}
-              <div className="flex items-center gap-2">
+                  LIVE
+                  {queueSize >= 100 && (
+                    <span className={`absolute -top-1 -right-4 min-w-[1.2rem] h-[1.2rem] 
+                      ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
+                      rounded text-xs flex items-center justify-center font-bold`}
+                    >
+                      {queueSize}
+                    </span>
+                  )}
+                </span>
                 <button 
-                  onClick={() => setOptions(prev => ({...prev, theme: 'dog'}))}
-                  className={`${options.theme === 'dog' ? 'text-[#ff6600]' : 'text-[#ff6600]/50'}`}
+                  onClick={() => setShowAbout(true)}
+                  className={`${themeColors} mr-2`}
                 >
-                  [{options.theme === 'dog' ? '×' : ' '}] D
-                </button>
-                <button 
-                  onClick={() => setOptions(prev => ({...prev, theme: 'og'}))}
-                  className={`${options.theme === 'og' ? 'text-[#ff6600]' : 'text-[#ff6600]/50'}`}
-                >
-                  [{options.theme === 'og' ? '×' : ' '}] O
-                </button>
-                <button 
-                  onClick={() => setOptions(prev => ({...prev, theme: 'green'}))}
-                  className={`${
-                    options.theme === 'green' 
-                      ? 'text-green-600'
-                      : options.theme === 'og'
-                      ? 'text-green-700'
-                      : 'text-green-400/50'
-                  }`}
-                >
-                  [{options.theme === 'green' ? '×' : ' '}] G
+                  [?]
                 </button>
               </div>
 
-              {/* Controls on the right */}
+              {/* Reordered controls */}
+              <div className="flex items-center gap-2">
+                {/* Theme colors */}
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setOptions(prev => ({...prev, theme: 'dog'}))}
+                    className="relative"
+                    title="Dark theme"
+                  >
+                    <div className={`w-4 h-4 rounded-full border ${
+                      options.theme === 'green'
+                        ? 'bg-[#1a1a1a] border-[#828282]'
+                        : options.theme === 'og'
+                        ? 'bg-black border-[#828282]/30'
+                        : 'bg-[#1a1a1a] border-[#828282]/30'
+                    }`} />
+                    {options.theme === 'dog' && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-2 h-2 rounded-full bg-[#828282]" />
+                      </div>
+                    )}
+                  </button>
+                  <button 
+                    onClick={() => setOptions(prev => ({...prev, theme: 'og'}))}
+                    className="relative"
+                    title="Original theme"
+                  >
+                    <div className={`w-4 h-4 rounded-full border ${
+                      options.theme === 'green'
+                        ? 'bg-[#ff6600]/90 border-[#ff6600]'
+                        : options.theme === 'dog'
+                        ? 'bg-[#ff6600] border-[#ff6600]/30'
+                        : 'bg-[#f6f6ef] border-[#ff6600]/30'
+                    }`} />
+                    {options.theme === 'og' && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-2 h-2 rounded-full bg-[#ff6600]" />
+                      </div>
+                    )}
+                  </button>
+                  <button 
+                    onClick={() => setOptions(prev => ({...prev, theme: 'green'}))}
+                    className="relative"
+                    title="Terminal theme"
+                  >
+                    <div className={`w-4 h-4 rounded-full border ${
+                      options.theme === 'og'
+                        ? 'bg-green-500 border-green-500/30'
+                        : options.theme === 'dog'
+                        ? 'bg-green-500 border-green-500/30'
+                        : 'bg-black border-green-500/30'
+                    }`} />
+                    {options.theme === 'green' && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                      </div>
+                    )}
+                  </button>
+                </div>
+
+                {/* Auto-scroll */}
+                <button
+                  onClick={() => {
+                    setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}));
+                    showTemporaryNotif(setShowAutoScrollNotif);
+                  }}
+                  className={`${themeColors} flex items-center gap-1`}
+                  title="Auto-scroll"
+                >
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className={`w-4 h-4 ${!options.autoscroll && 'opacity-50'}`}
+                  >
+                    <path d="M17 13l-5 5-5-5M17 7l-5 5-5-5" />
+                  </svg>
+                </button>
+
+                {/* Direct links */}
+                <button
+                  onClick={() => {
+                    setOptions(prev => ({...prev, directLinks: !prev.directLinks}));
+                    showTemporaryNotif(setShowDirectLinkNotif);
+                  }}
+                  className={`${themeColors} flex items-center gap-1`}
+                  title="Direct links"
+                >
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className={`w-4 h-4 ${!options.directLinks && 'opacity-50'}`}
+                  >
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                  </svg>
+                </button>
+
+                {/* Start/Stop */}
+                <button 
+                  onClick={toggleFeed}
+                  className={themeColors}
+                  title={isRunning ? "Stop feed" : "Start feed"}
+                >
+                  {isRunning ? (
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      viewBox="0 0 24 24" 
+                      fill="currentColor" 
+                      className="w-4 h-4"
+                    >
+                      <rect x="6" y="4" width="4" height="16"/>
+                      <rect x="14" y="4" width="4" height="16"/>
+                    </svg>
+                  ) : (
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      viewBox="0 0 24 24" 
+                      fill="currentColor" 
+                      className="w-4 h-4"
+                    >
+                      <polygon points="5,3 19,12 5,21"/>
+                    </svg>
+                  )}
+                </button>
+
+                {/* Clear screen */}
+                <button 
+                  onClick={clearScreen}
+                  className={themeColors}
+                  title="Clear screen"
+                >
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    className="w-4 h-4"
+                  >
+                    <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                    <path d="M10 10v8" />
+                    <path d="M14 10v8" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Second row */}
+            <div className="flex items-center justify-between gap-2 text-sm">
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => navigate('/front')}
                   className={themeColors}
                 >
-                  [FP]
+                  [FRONT]
+                </button>
+                <button 
+                  onClick={() => navigate('/best')}
+                  className={themeColors}
+                >
+                  [BEST]
                 </button>
                 <button 
                   onClick={() => navigate('/show')}
                   className={themeColors}
                 >
-                  [SH]
+                  [SHOW]
                 </button>
                 <button 
                   onClick={() => navigate('/ask')}
@@ -809,38 +959,14 @@ export default function HNLiveTerminal() {
                 >
                   [ASK]
                 </button>
-                <button 
-                  onClick={() => setShowAbout(true)}
-                  className={themeColors}
-                >
-                  [?]
-                </button>
-              </div>
-            </div>
-
-            {/* Second row for other controls */}
-            <div className="flex items-center justify-between gap-2 text-sm">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}))}
-                  className={`${themeColors} ${!options.autoscroll && 'opacity-50'}`}
-                >
-                  [{options.autoscroll ? '×' : ' '}] Auto-scroll
-                </button>
-                <button
-                  onClick={() => setOptions(prev => ({...prev, directLinks: !prev.directLinks}))}
-                  className={`${themeColors} ${!options.directLinks && 'opacity-50'}`}
-                >
-                  [{options.directLinks ? '×' : ' '}] Direct
-                </button>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowSearch(true)}
                   className={themeColors}
-                  title="Ctrl/Cmd + K"
+                  title="Search (Ctrl/Cmd + K)"
                 >
-                  [SEARCH]{showShortcuts && ' (⌘K)'}
+                  [SEARCH]
                 </button>
                 {showGrep ? (
                   <div className="flex items-center gap-2">
@@ -867,18 +993,6 @@ export default function HNLiveTerminal() {
                     [GREP]
                   </button>
                 )}
-                <button 
-                  onClick={toggleFeed}
-                  className={themeColors}
-                >
-                  [{isRunning ? 'STOP' : 'START'}]
-                </button>
-                <button 
-                  onClick={clearScreen}
-                  className={themeColors}
-                >
-                  [CLR]
-                </button>
               </div>
             </div>
           </div>
@@ -896,7 +1010,7 @@ export default function HNLiveTerminal() {
                 </span>
                 LIVE
                 {queueSize >= 100 && (
-                  <span className={`absolute -top-1 -right-6 min-w-[1.2rem] h-[1.2rem] 
+                  <span className={`absolute -top-1 -right-4 min-w-[1.2rem] h-[1.2rem] 
                     ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
                     rounded text-xs flex items-center justify-center font-bold`}
                   >
@@ -947,13 +1061,19 @@ export default function HNLiveTerminal() {
                 [{options.theme === 'green' ? '×' : ' '}] G
               </button>
               <button
-                onClick={() => setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}))}
+                onClick={() => {
+                  setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}));
+                  showTemporaryNotif(setShowAutoScrollNotif);
+                }}
                 className={`${themeColors} ${!options.autoscroll && 'opacity-50'}`}
               >
                 [{options.autoscroll ? '×' : ' '}] Auto-scroll
               </button>
               <button
-                onClick={() => setOptions(prev => ({...prev, directLinks: !prev.directLinks}))}
+                onClick={() => {
+                  setOptions(prev => ({...prev, directLinks: !prev.directLinks}));
+                  showTemporaryNotif(setShowDirectLinkNotif);
+                }}
                 className={`${themeColors} ${!options.directLinks && 'opacity-50'}`}
               >
                 [{options.directLinks ? '×' : ' '}] Direct
@@ -1217,6 +1337,55 @@ export default function HNLiveTerminal() {
         {/* Add the BestPage component to the render */}
         {location.pathname === '/best' && (
           <BestPage theme={options.theme} />
+        )}
+
+        {/* Center notification overlay */}
+        {(showAutoScrollNotif || showDirectLinkNotif) && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+            <div className={`
+              text-lg animate-fade-out px-6 py-3 rounded-lg border
+              ${options.theme === 'og'
+                ? 'bg-[#1a1a1a] text-[#f6f6ef] border-[#ff6600]/30'
+                : options.theme === 'dog'
+                ? 'bg-[#f6f6ef] text-[#1a1a1a] border-[#ff6600]/30'
+                : options.theme === 'green'
+                ? 'bg-black/90 text-green-400 border-green-500/30'
+                : ''
+              }
+            `}>
+              {showAutoScrollNotif && (
+                <div className="flex items-center gap-2">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="w-5 h-5"
+                  >
+                    <path d="M17 13l-5 5-5-5M17 7l-5 5-5-5" />
+                  </svg>
+                  Auto-scroll {options.autoscroll ? 'enabled' : 'disabled'}
+                </div>
+              )}
+              {showDirectLinkNotif && (
+                <div className="flex items-center gap-2">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="w-5 h-5"
+                  >
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                  </svg>
+                  Direct HN links {options.directLinks ? 'enabled' : 'disabled'}
+                </div>
+              )}
+            </div>
+          </div>
         )}
       </div>
 
