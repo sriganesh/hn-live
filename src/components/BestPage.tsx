@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface BestPageProps {
   theme: 'green' | 'og' | 'dog';
+  fontSize: 'xs' | 'sm' | 'base';
 }
 
 interface HNStory {
@@ -42,7 +43,7 @@ interface BestPageState {
 
 const STORIES_PER_PAGE = 30;
 
-export function BestPage({ theme }: BestPageProps) {
+export function BestPage({ theme, fontSize }: BestPageProps) {
   const navigate = useNavigate();
   const [state, setState] = useState<BestPageState>({
     stories: [],
@@ -141,7 +142,7 @@ export function BestPage({ theme }: BestPageProps) {
     : 'text-[#828282] bg-[#1a1a1a]';
 
   return (
-    <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden`}>
+    <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
       <div className="h-full overflow-y-auto p-4">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">

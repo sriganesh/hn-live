@@ -9,6 +9,8 @@ import { ShowPage } from '../components/ShowPage';
 import { AskPage } from '../components/AskPage';
 import { JobsPage } from '../components/JobsPage';
 import { BestPage } from '../components/BestPage';
+import { useTopUsers } from '../hooks/useTopUsers';
+import SettingsModal from '../components/SettingsModal';
 
 interface HNItem {
   id: number;
@@ -39,6 +41,7 @@ interface TerminalOptions {
   theme: 'green' | 'og' | 'dog';
   autoscroll: boolean;
   directLinks: boolean;
+  fontSize: 'xs' | 'sm' | 'base';
 }
 
 interface SearchFilters {
@@ -84,6 +87,25 @@ const getStoredAutoscroll = () => {
   return true; // Default to autoscroll on
 };
 
+const getStoredFontSize = () => {
+  try {
+    const storedSize = localStorage.getItem('hn-live-font-size');
+    if (storedSize && ['xs', 'sm', 'base'].includes(storedSize)) {
+      return storedSize as 'xs' | 'sm' | 'base';
+    }
+    
+    // If no stored preference, check screen width for default
+    const isMobile = window.innerWidth < 640; // 640px is Tailwind's 'sm' breakpoint
+    return isMobile ? 'sm' : 'base'; // 'sm' for mobile, 'base' for desktop
+    
+  } catch (e) {
+    console.warn('Could not access localStorage');
+    // Fallback to same mobile check if localStorage fails
+    const isMobile = window.innerWidth < 640;
+    return isMobile ? 'sm' : 'base';
+  }
+};
+
 // Update the style to handle both dark and green themes
 const themeStyles = `
   [data-theme='dog'] ::selection {
@@ -104,7 +126,8 @@ export default function HNLiveTerminal() {
   const [options, setOptions] = useState<TerminalOptions>({
     theme: getStoredTheme(),
     autoscroll: getStoredAutoscroll(),
-    directLinks: getStoredDirectLinks()
+    directLinks: getStoredDirectLinks(),
+    fontSize: getStoredFontSize()
   });
   const [isRunning, setIsRunning] = useState(true);
   
@@ -127,6 +150,8 @@ export default function HNLiveTerminal() {
   const navigate = useNavigate();
   const { itemId, commentId } = useParams();
   const location = useLocation();
+
+  const { isTopUser, getTopUserClass } = useTopUsers();
 
   // Format timestamp
   const formatTimestamp = (timestamp: number) => {
@@ -483,7 +508,6 @@ export default function HNLiveTerminal() {
             <li>Browse curated sections: Front Page, Best, Show HN, Ask HN, and Jobs</li>
             <li>Search through HN content with GREP (live filtering) and SEARCH (full archive)</li>
             <li>Choose between three themes: Classic HN, Dark mode, and Terminal</li>
-            <li>Mobile-friendly interface with responsive design</li>
           </ul>
           <p>
             Built by <a 
@@ -623,6 +647,15 @@ export default function HNLiveTerminal() {
     }
   }, [options.autoscroll]);
 
+  // Add effect to save font size changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('hn-live-font-size', options.fontSize);
+    } catch (e) {
+      console.warn('Could not save font size preference');
+    }
+  }, [options.fontSize]);
+
   const reloadSite = () => {
     // Clear existing items and queue
     setItems([]);
@@ -720,6 +753,42 @@ export default function HNLiveTerminal() {
   // First add a new state for the settings menu
   const [showSettings, setShowSettings] = useState(false);
 
+  // In the terminal view section where new stories are rendered
+  const renderNewItem = (item: HNItem) => {
+    if (item.type === 'story') {
+      return (
+        <div className="opacity-75">
+          {/* Always show the title if available */}
+          {item.title || 'Untitled'}
+          {' • '}
+          <span className="text-[#ff6600]">{item.by}</span>
+          {item.score !== undefined && (
+            <>
+              {' • '}
+              {item.score} points
+            </>
+          )}
+        </div>
+      );
+    }
+
+    // Keep existing comment rendering
+    if (item.type === 'comment') {
+      return (
+        <div className="opacity-75">
+          Comment by {item.by}: {item.text?.replace(/<[^>]*>/g, '').slice(0, 100)}...
+        </div>
+      );
+    }
+
+    // Fallback for other types
+    return (
+      <div className="opacity-75">
+        <pre className="font-mono text-xs whitespace-pre-wrap">{JSON.stringify(item, null, 2)}</pre>
+      </div>
+    );
+  };
+
   return (
     <>
       <Helmet>
@@ -792,111 +861,11 @@ export default function HNLiveTerminal() {
                 {/* Settings button */}
                 <div className="relative">
                   <button
-                    onClick={() => setShowSettings(!showSettings)}
-                    className={themeColors}
-                    title="Settings"
+                    onClick={() => setShowSettings(true)}
+                    className={`${themeColors} opacity-75 hover:opacity-100 transition-colors`}
                   >
                     [SETTINGS]
                   </button>
-                  
-                  {/* Settings dropdown */}
-                  {showSettings && (
-                    <div className={`absolute right-0 mt-2 w-64 py-2 px-3 rounded-lg border shadow-lg z-50
-                      ${options.theme === 'green' 
-                        ? 'bg-black border-green-500/30' 
-                        : options.theme === 'dog'
-                        ? 'bg-[#1a1a1a] border-[#828282]/30'
-                        : 'bg-[#f6f6ef] border-[#ff6600]/30'}`}
-                    >
-                      <div className="space-y-4">
-                        {/* Theme selector */}
-                        <div className="space-y-2">
-                          <div className="text-sm opacity-75">Theme</div>
-                          <div className="flex items-center gap-3">
-                            <button 
-                              onClick={() => setOptions(prev => ({...prev, theme: 'dog'}))}
-                              className="relative"
-                              title="Dark theme"
-                            >
-                              <div className={`w-4 h-4 rounded-full border ${
-                                options.theme === 'green'
-                                  ? 'bg-[#1a1a1a] border-[#828282]'
-                                  : options.theme === 'og'
-                                  ? 'bg-black border-[#828282]/30'
-                                  : 'bg-[#1a1a1a] border-[#828282]/30'
-                              }`} />
-                              {options.theme === 'dog' && (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <div className="w-2 h-2 rounded-full bg-[#828282]" />
-                                </div>
-                              )}
-                            </button>
-                            <button 
-                              onClick={() => setOptions(prev => ({...prev, theme: 'og'}))}
-                              className="relative"
-                              title="Original theme"
-                            >
-                              <div className={`w-4 h-4 rounded-full border ${
-                                options.theme === 'green'
-                                  ? 'bg-[#ff6600]/90 border-[#ff6600]'
-                                  : options.theme === 'dog'
-                                  ? 'bg-[#ff6600] border-[#ff6600]/30'
-                                  : 'bg-[#f6f6ef] border-[#ff6600]/30'
-                              }`} />
-                              {options.theme === 'og' && (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <div className="w-2 h-2 rounded-full bg-[#ff6600]" />
-                                </div>
-                              )}
-                            </button>
-                            <button 
-                              onClick={() => setOptions(prev => ({...prev, theme: 'green'}))}
-                              className="relative"
-                              title="Terminal theme"
-                            >
-                              <div className={`w-4 h-4 rounded-full border ${
-                                options.theme === 'og'
-                                  ? 'bg-green-500 border-green-500/30'
-                                  : options.theme === 'dog'
-                                  ? 'bg-green-500 border-green-500/30'
-                                  : 'bg-black border-green-500/30'
-                              }`} />
-                              {options.theme === 'green' && (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                                </div>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Settings options */}
-                        <div className="space-y-2">
-                          <div className="text-sm opacity-75">Options</div>
-                          <div className="space-y-2">
-                            <button
-                              onClick={() => {
-                                setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}));
-                                showTemporaryNotif(setShowAutoScrollNotif);
-                              }}
-                              className={`${themeColors} ${!options.autoscroll && 'opacity-50'} w-full text-left`}
-                            >
-                              [{options.autoscroll ? '×' : ' '}] Auto-scroll
-                            </button>
-                            <button
-                              onClick={() => {
-                                setOptions(prev => ({...prev, directLinks: !prev.directLinks}));
-                                showTemporaryNotif(setShowDirectLinkNotif);
-                              }}
-                              className={`${themeColors} ${!options.directLinks && 'opacity-50'} w-full text-left`}
-                            >
-                              [{options.directLinks ? '×' : ' '}] Direct HN Links
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 {/* Start/Stop button */}
@@ -1109,110 +1078,11 @@ export default function HNLiveTerminal() {
               {/* Replace theme selector and settings with new Settings button and dropdown */}
               <div className="relative">
                 <button
-                  onClick={() => setShowSettings(!showSettings)}
-                  className={themeColors}
-                  title="Settings"
+                  onClick={() => setShowSettings(true)}
+                  className={`${themeColors} opacity-75 hover:opacity-100 transition-colors`}
                 >
                   [SETTINGS]
                 </button>
-                
-                {showSettings && (
-                  <div className={`absolute right-0 mt-2 w-64 py-2 px-3 rounded-lg border shadow-lg z-50
-                    ${options.theme === 'green' 
-                      ? 'bg-black border-green-500/30' 
-                      : options.theme === 'dog'
-                      ? 'bg-[#1a1a1a] border-[#828282]/30'
-                      : 'bg-[#f6f6ef] border-[#ff6600]/30'}`}
-                  >
-                    <div className="space-y-4">
-                      {/* Theme selector */}
-                      <div className="space-y-2">
-                        <div className="text-sm opacity-75">Theme</div>
-                        <div className="flex items-center gap-3">
-                          <button 
-                            onClick={() => setOptions(prev => ({...prev, theme: 'dog'}))}
-                            className="relative"
-                            title="Dark theme"
-                          >
-                            <div className={`w-4 h-4 rounded-full border ${
-                              options.theme === 'green'
-                                ? 'bg-[#1a1a1a] border-[#828282]'
-                                : options.theme === 'og'
-                                ? 'bg-black border-[#828282]/30'
-                                : 'bg-[#1a1a1a] border-[#828282]/30'
-                            }`} />
-                            {options.theme === 'dog' && (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full bg-[#828282]" />
-                              </div>
-                            )}
-                          </button>
-                          <button 
-                            onClick={() => setOptions(prev => ({...prev, theme: 'og'}))}
-                            className="relative"
-                            title="Original theme"
-                          >
-                            <div className={`w-4 h-4 rounded-full border ${
-                              options.theme === 'green'
-                                ? 'bg-[#ff6600]/90 border-[#ff6600]'
-                                : options.theme === 'dog'
-                                ? 'bg-[#ff6600] border-[#ff6600]/30'
-                                : 'bg-[#f6f6ef] border-[#ff6600]/30'
-                            }`} />
-                            {options.theme === 'og' && (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full bg-[#ff6600]" />
-                              </div>
-                            )}
-                          </button>
-                          <button 
-                            onClick={() => setOptions(prev => ({...prev, theme: 'green'}))}
-                            className="relative"
-                            title="Terminal theme"
-                          >
-                            <div className={`w-4 h-4 rounded-full border ${
-                              options.theme === 'og'
-                                ? 'bg-green-500 border-green-500/30'
-                                : options.theme === 'dog'
-                                ? 'bg-green-500 border-green-500/30'
-                                : 'bg-black border-green-500/30'
-                            }`} />
-                            {options.theme === 'green' && (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full bg-green-500" />
-                              </div>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Settings options */}
-                      <div className="space-y-2">
-                        <div className="text-sm opacity-75">Options</div>
-                        <div className="space-y-2">
-                          <button
-                            onClick={() => {
-                              setOptions(prev => ({...prev, autoscroll: !prev.autoscroll}));
-                              showTemporaryNotif(setShowAutoScrollNotif);
-                            }}
-                            className={`${themeColors} ${!options.autoscroll && 'opacity-50'} w-full text-left`}
-                          >
-                            [{options.autoscroll ? '×' : ' '}] Auto-scroll
-                          </button>
-                          <button
-                            onClick={() => {
-                              setOptions(prev => ({...prev, directLinks: !prev.directLinks}));
-                              showTemporaryNotif(setShowDirectLinkNotif);
-                            }}
-                            className={`${themeColors} ${!options.directLinks && 'opacity-50'} w-full text-left`}
-                          >
-                            [{options.directLinks ? '×' : ' '}] Direct HN Links
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Controls */}
@@ -1250,7 +1120,7 @@ export default function HNLiveTerminal() {
 
         <div 
           ref={containerRef}
-          className={`h-screen pt-24 sm:pt-20 pb-20 sm:pb-4 px-3 sm:px-4 overflow-y-auto font-mono
+          className={`h-screen pt-24 sm:pt-20 pb-20 sm:pb-4 px-3 sm:px-4 overflow-y-auto font-mono text-${options.fontSize}
                        ${options.theme === 'green'
                          ? 'text-green-400'
                          : 'text-[#828282]'}
@@ -1300,7 +1170,9 @@ export default function HNLiveTerminal() {
                     <span>•</span>
                     <a 
                       href={`https://news.ycombinator.com/user?id=${item.by}`}
-                      className="hn-username hover:underline"
+                      className={`hn-username hover:underline ${
+                        isTopUser(item.by) ? getTopUserClass(options.theme) : ''
+                      }`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -1310,18 +1182,17 @@ export default function HNLiveTerminal() {
                   <div className="break-words whitespace-pre-wrap overflow-hidden">
                     {item.type === 'story' ? (
                       <>
-                        <span className="opacity-50">
-                          {item.url && (
-                            <a 
-                              href={item.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={`${themeColors} opacity-50 hover:opacity-100 transition-colors`}
-                            >
-                              [link]
-                            </a>
-                          )}
-                          {' '}
+                        <div className="mb-1">
+                          <a
+                            href={item.url || `https://news.ycombinator.com/item?id=${item.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`${themeColors} hover:opacity-75 transition-colors`}
+                          >
+                            {item.title}
+                          </a>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1331,9 +1202,10 @@ export default function HNLiveTerminal() {
                           >
                             [{item.kids?.length ? 'comments' : 'discuss'}]
                           </button>
-                        </span>
+                        </div>
                       </>
                     ) : (
+                      // Keep existing comment rendering
                       <a 
                         onClick={(e) => {
                           e.preventDefault();
@@ -1375,7 +1247,7 @@ export default function HNLiveTerminal() {
         </div>
 
         {location.pathname === '/front' && (
-          <FrontPage theme={options.theme} />
+          <FrontPage theme={options.theme} fontSize={options.fontSize} />
         )}
 
         {/* Add the StoryView component to the render */}
@@ -1385,6 +1257,7 @@ export default function HNLiveTerminal() {
             scrollToId={viewingStory.scrollToId}
             onClose={handleStoryClose}
             theme={options.theme}
+            fontSize={options.fontSize}
           />
         )}
 
@@ -1404,22 +1277,22 @@ export default function HNLiveTerminal() {
 
         {/* Add the ShowPage component to the render */}
         {location.pathname === '/show' && (
-          <ShowPage theme={options.theme} />
+          <ShowPage theme={options.theme} fontSize={options.fontSize} />
         )}
 
         {/* Add the AskPage component to the render */}
         {location.pathname === '/ask' && (
-          <AskPage theme={options.theme} />
+          <AskPage theme={options.theme} fontSize={options.fontSize} />
         )}
 
         {/* Add the JobsPage component to the render */}
         {location.pathname === '/jobs' && (
-          <JobsPage theme={options.theme} />
+          <JobsPage theme={options.theme} fontSize={options.fontSize} />
         )}
 
         {/* Add the BestPage component to the render */}
         {location.pathname === '/best' && (
-          <BestPage theme={options.theme} />
+          <BestPage theme={options.theme} fontSize={options.fontSize} />
         )}
 
         {/* Center notification overlay */}
@@ -1470,6 +1343,23 @@ export default function HNLiveTerminal() {
             </div>
           </div>
         )}
+
+        <SettingsModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+          theme={options.theme}
+          options={options}
+          onUpdateOptions={(newOptions) => {
+            setOptions(newOptions);
+            try {
+              localStorage.setItem('hn-live-theme', newOptions.theme);
+              localStorage.setItem('hn-live-autoscroll', String(newOptions.autoscroll));
+              localStorage.setItem('hn-live-direct', String(newOptions.directLinks));
+            } catch (e) {
+              console.warn('Could not save settings to localStorage');
+            }
+          }}
+        />
       </div>
 
       <Outlet />
