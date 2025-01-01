@@ -10,7 +10,7 @@ interface SettingsModalProps {
     directLinks: boolean;
     fontSize: 'xs' | 'sm' | 'base';
   };
-  onUpdateOptions: (options: {
+  onUpdateOptions: (newOptions: {
     theme: 'green' | 'og' | 'dog';
     autoscroll: boolean;
     directLinks: boolean;
@@ -18,10 +18,14 @@ interface SettingsModalProps {
   }) => void;
 }
 
-export default function SettingsModal({ isOpen, onClose, theme, options, onUpdateOptions }: SettingsModalProps) {
-  if (!isOpen) return null;
-
-  // Add keyboard event listener for ESC key
+const SettingsModal: React.FC<SettingsModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  theme,
+  options,
+  onUpdateOptions
+}) => {
+  // Add ESC key handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -29,122 +33,105 @@ export default function SettingsModal({ isOpen, onClose, theme, options, onUpdat
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
 
   const themeColors = theme === 'green'
-    ? 'text-green-400 bg-black'
+    ? 'text-green-400 bg-black border-green-500/30'
     : theme === 'og'
-    ? 'text-[#828282] bg-[#f6f6ef]'
-    : 'text-[#828282] bg-[#1a1a1a]';
+    ? 'text-[#828282] bg-[#f6f6ef] border-[#ff6600]/30'
+    : 'text-[#828282] bg-[#1a1a1a] border-[#ff6600]/30';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className={`${themeColors} p-6 max-w-md w-full mx-4 border border-current/20`}>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold">Settings</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+      <div className={`w-full max-w-lg ${themeColors} border p-4 shadow-lg font-mono`}>
+        {/* Terminal-style header */}
+        <div className="flex items-center justify-between mb-6 border-b border-current pb-2">
+          <div className="flex items-center gap-2">
+            <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'}`}>
+              $
+            </span>
+            <span>settings.conf</span>
+          </div>
           <button 
             onClick={onClose}
-            className="opacity-75 hover:opacity-100"
+            className="hover:opacity-75"
           >
-            [ESC]
+            [×]
           </button>
         </div>
 
         <div className="space-y-6">
           {/* Theme Selection */}
-          <div>
-            <h3 className="font-bold mb-2">Theme</h3>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="theme"
-                  value="og"
-                  checked={options.theme === 'og'}
-                  onChange={(e) => onUpdateOptions({ ...options, theme: 'og' })}
-                />
-                Original HN
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="theme"
-                  value="dog"
-                  checked={options.theme === 'dog'}
-                  onChange={(e) => onUpdateOptions({ ...options, theme: 'dog' })}
-                />
-                Dark HN
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="theme"
-                  value="green"
-                  checked={options.theme === 'green'}
-                  onChange={(e) => onUpdateOptions({ ...options, theme: 'green' })}
-                />
-                Green Terminal
-              </label>
-            </div>
-          </div>
-
-          {/* Auto-scroll Toggle */}
-          <div>
-            <h3 className="font-bold mb-2">Behavior</h3>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={options.autoscroll}
-                  onChange={(e) => onUpdateOptions({ ...options, autoscroll: e.target.checked })}
-                />
-                Auto-scroll new items
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={options.directLinks}
-                  onChange={(e) => onUpdateOptions({ ...options, directLinks: e.target.checked })}
-                />
-                Direct HN links
-              </label>
-            </div>
-          </div>
-
           <div className="space-y-2">
-            <div className="font-bold">Font Size</div>
-            <div className="flex items-center gap-4">
+            <div className="text-sm opacity-75">THEME</div>
+            <div className="flex flex-wrap gap-4">
+              <button
+                onClick={() => onUpdateOptions({ ...options, theme: 'og' })}
+                className={`hover:opacity-75 transition-opacity`}
+              >
+                [{options.theme === 'og' ? 'x' : ' '}] Classic
+              </button>
+              <button
+                onClick={() => onUpdateOptions({ ...options, theme: 'dog' })}
+                className={`hover:opacity-75 transition-opacity`}
+              >
+                [{options.theme === 'dog' ? 'x' : ' '}] Dark
+              </button>
+              <button
+                onClick={() => onUpdateOptions({ ...options, theme: 'green' })}
+                className={`hover:opacity-75 transition-opacity`}
+              >
+                [{options.theme === 'green' ? 'x' : ' '}] Terminal
+              </button>
+            </div>
+          </div>
+
+          {/* Font Size Selection */}
+          <div className="space-y-2">
+            <div className="text-sm opacity-75">FONT SIZE</div>
+            <div className="flex flex-wrap gap-4">
               <button
                 onClick={() => onUpdateOptions({ ...options, fontSize: 'xs' })}
-                className={`${
-                  options.fontSize === 'xs' 
-                    ? 'opacity-100 underline' 
-                    : 'opacity-75 hover:opacity-100'
-                }`}
+                className={`hover:opacity-75 transition-opacity`}
               >
-                [Small]
+                [{options.fontSize === 'xs' ? 'x' : ' '}] Small
               </button>
               <button
                 onClick={() => onUpdateOptions({ ...options, fontSize: 'sm' })}
-                className={`${
-                  options.fontSize === 'sm'
-                    ? 'opacity-100 underline'
-                    : 'opacity-75 hover:opacity-100'
-                }`}
+                className={`hover:opacity-75 transition-opacity`}
               >
-                [Medium]
+                [{options.fontSize === 'sm' ? 'x' : ' '}] Medium
               </button>
               <button
                 onClick={() => onUpdateOptions({ ...options, fontSize: 'base' })}
-                className={`${
-                  options.fontSize === 'base'
-                    ? 'opacity-100 underline'
-                    : 'opacity-75 hover:opacity-100'
-                }`}
+                className={`hover:opacity-75 transition-opacity`}
               >
-                [Large]
+                [{options.fontSize === 'base' ? 'x' : ' '}] Large
+              </button>
+            </div>
+          </div>
+
+          {/* Terminal Behavior Options */}
+          <div className="space-y-2">
+            <div className="text-sm opacity-75">TERMINAL BEHAVIOR</div>
+            <div className="space-y-2">
+              <button
+                onClick={() => onUpdateOptions({ ...options, autoscroll: !options.autoscroll })}
+                className={`hover:opacity-75 transition-opacity block`}
+              >
+                [{options.autoscroll ? 'x' : ' '}] Auto-scroll feed
+              </button>
+              <button
+                onClick={() => onUpdateOptions({ ...options, directLinks: !options.directLinks })}
+                className={`hover:opacity-75 transition-opacity block`}
+              >
+                [{options.directLinks ? 'x' : ' '}] Direct HN links
               </button>
             </div>
           </div>
@@ -152,4 +139,6 @@ export default function SettingsModal({ isOpen, onClose, theme, options, onUpdat
       </div>
     </div>
   );
-} 
+};
+
+export default SettingsModal; 
