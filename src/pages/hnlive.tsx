@@ -1297,46 +1297,82 @@ export default function HNLiveTerminal() {
 
         {/* Add the ShowPage component to the render */}
         {location.pathname === '/show' && (
-          <ShowPage 
-            theme={options.theme} 
-            fontSize={options.fontSize}
-            onShowSearch={() => setShowSearch(true)}
-            onShowGrep={() => setShowGrep(true)}
-            onShowSettings={() => setShowSettings(true)}
-          />
+          <>
+            <ShowPage 
+              theme={options.theme} 
+              fontSize={options.fontSize}
+              onShowSearch={() => setShowSearch(true)}
+              onShowGrep={() => setShowGrep(true)}
+              onShowSettings={() => setShowSettings(true)}
+              isSettingsOpen={showSettings}
+              isSearchOpen={showSearch}
+            />
+            <SearchModal 
+              isOpen={showSearch}
+              onClose={() => setShowSearch(false)}
+              theme={options.theme}
+            />
+          </>
         )}
 
         {/* Add the AskPage component to the render */}
         {location.pathname === '/ask' && (
-          <AskPage 
-            theme={options.theme} 
-            fontSize={options.fontSize}
-            onShowSearch={() => setShowSearch(true)}
-            onShowGrep={() => setShowGrep(true)}
-            onShowSettings={() => setShowSettings(true)}
-          />
+          <>
+            <AskPage 
+              theme={options.theme} 
+              fontSize={options.fontSize}
+              onShowSearch={() => setShowSearch(true)}
+              onShowGrep={() => setShowGrep(true)}
+              onShowSettings={() => setShowSettings(true)}
+              isSettingsOpen={showSettings}
+              isSearchOpen={showSearch}
+            />
+            <SearchModal 
+              isOpen={showSearch}
+              onClose={() => setShowSearch(false)}
+              theme={options.theme}
+            />
+          </>
         )}
 
         {/* Add the JobsPage component to the render */}
         {location.pathname === '/jobs' && (
-          <JobsPage 
-            theme={options.theme} 
-            fontSize={options.fontSize}
-            onShowSearch={() => setShowSearch(true)}
-            onShowGrep={() => setShowGrep(true)}
-            onShowSettings={() => setShowSettings(true)}
-          />
+          <>
+            <JobsPage 
+              theme={options.theme} 
+              fontSize={options.fontSize}
+              onShowSearch={() => setShowSearch(true)}
+              onShowGrep={() => setShowGrep(true)}
+              onShowSettings={() => setShowSettings(true)}
+              isSettingsOpen={showSettings}
+              isSearchOpen={showSearch}
+            />
+            <SearchModal 
+              isOpen={showSearch}
+              onClose={() => setShowSearch(false)}
+              theme={options.theme}
+            />
+          </>
         )}
 
         {/* Add the BestPage component to the render */}
         {location.pathname === '/best' && (
-          <BestPage 
-            theme={options.theme} 
-            fontSize={options.fontSize}
-            onShowSearch={() => setShowSearch(true)}
-            onShowGrep={() => setShowGrep(true)}
-            onShowSettings={() => setShowSettings(true)}
-          />
+          <>
+            <BestPage 
+              theme={options.theme} 
+              fontSize={options.fontSize}
+              onShowSearch={() => setShowSearch(true)}
+              onShowGrep={() => setShowGrep(true)}
+              onShowSettings={() => setShowSettings(true)}
+              isSettingsOpen={showSettings}
+              isSearchOpen={showSearch}
+            />
+            <SearchModal 
+              isOpen={showSearch}
+              onClose={() => setShowSearch(false)}
+              theme={options.theme}
+            />
+          </>
         )}
 
         {/* Center notification overlay */}

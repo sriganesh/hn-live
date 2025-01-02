@@ -219,24 +219,61 @@ export function FrontPage({
         <div className="mb-8">
           {/* Desktop view - single row */}
           <div className="hidden sm:flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider`}>
-                HN.LIVE
-              </span>
-              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
-                /
-              </span>
-              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
-                FRONT PAGE
-              </span>
+            <div className="flex items-center">
+              <div className="flex items-center">
+                <button
+                  onClick={() => navigate('/')}
+                  className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider hover:opacity-75 flex items-center`}
+                >
+                  <span>HN</span>
+                  <span className="text-2xl leading-[0] relative top-[1px] mx-[1px]">•</span>
+                  <span>LIVE</span>
+                </button>
+                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
+                  /
+                </span>
+                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
+                  FRONT PAGE
+                </span>
+              </div>
             </div>
 
             {/* Desktop controls in one row */}
-            <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-4">
+              <button 
+                onClick={() => navigate('/front')}
+                className={`${themeColors} opacity-30 hover:opacity-50`}
+              >
+                [FRONT PAGE]
+              </button>
+              <button 
+                onClick={() => navigate('/show')}
+                className={themeColors}
+              >
+                [SHOW]
+              </button>
+              <button 
+                onClick={() => navigate('/ask')}
+                className={themeColors}
+              >
+                [ASK]
+              </button>
+              <button 
+                onClick={() => navigate('/jobs')}
+                className={themeColors}
+              >
+                [JOBS]
+              </button>
+              <button 
+                onClick={() => navigate('/best')}
+                className={themeColors}
+              >
+                [BEST]
+              </button>
               <button 
                 onClick={onShowSearch}
-                className={`${themeColors} hover:opacity-75`}
-                title="Search (Ctrl/Cmd + K)"
+                className={themeColors}
+                title="Ctrl/Cmd + K"
               >
                 [SEARCH]
               </button>
@@ -250,31 +287,20 @@ export function FrontPage({
                     className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
                     placeholder="filter..."
                     autoFocus
-                    onBlur={() => {
-                      if (!grepFilter) {
-                        setShowGrep(false);
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') {
-                        setGrepFilter('');
-                        setShowGrep(false);
-                      }
-                    }}
                   />
                 </div>
               ) : (
                 <button
                   onClick={handleGrepClick}
-                  className={`${themeColors} hover:opacity-75`}
-                  title="Filter (Ctrl/Cmd + F)"
+                  className={themeColors}
+                  title="Ctrl/Cmd + F"
                 >
                   [GREP]
                 </button>
               )}
               <button
                 onClick={onShowSettings}
-                className={`${themeColors} hover:opacity-75`}
+                className={themeColors}
               >
                 [SETTINGS]
               </button>
@@ -291,18 +317,22 @@ export function FrontPage({
           <div className="sm:hidden">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider`}>
-                  HN.LIVE
-                </span>
-                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
+                <button
+                  onClick={() => navigate('/')}
+                  className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider hover:opacity-75 flex items-center`}
+                >
+                  <span>HN</span>
+                  <span className="text-2xl leading-[0] relative top-[1px] mx-[1px]">•</span>
+                  <span>LIVE</span>
+                </button>
+                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
                   /
                 </span>
-                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
+                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
                   FRONT PAGE
                 </span>
               </div>
 
-              {/* Controls on the right */}
               <div className="flex items-center gap-2 text-sm">
                 <button
                   onClick={onShowSettings}

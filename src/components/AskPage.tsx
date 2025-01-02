@@ -4,6 +4,11 @@ import { useNavigate } from 'react-router-dom';
 interface AskPageProps {
   theme: 'green' | 'og' | 'dog';
   fontSize: 'xs' | 'sm' | 'base';
+  onShowSearch: () => void;
+  onShowGrep: () => void;
+  onShowSettings: () => void;
+  isSettingsOpen?: boolean;
+  isSearchOpen?: boolean;
 }
 
 interface HNStory {
@@ -44,7 +49,15 @@ interface AskPageState {
 
 const STORIES_PER_PAGE = 30;
 
-export function AskPage({ theme, fontSize }: AskPageProps) {
+export function AskPage({ 
+  theme, 
+  fontSize, 
+  onShowSearch, 
+  onShowGrep, 
+  onShowSettings,
+  isSettingsOpen,
+  isSearchOpen 
+}: AskPageProps) {
   const navigate = useNavigate();
   const [state, setState] = useState<AskPageState>({
     stories: [],
@@ -53,6 +66,8 @@ export function AskPage({ theme, fontSize }: AskPageProps) {
     page: 0,
     hasMore: true
   });
+  const [showGrep, setShowGrep] = useState(false);
+  const [grepFilter, setGrepFilter] = useState('');
 
   const fetchStories = async (pageNumber: number) => {
     try {
@@ -117,14 +132,14 @@ export function AskPage({ theme, fontSize }: AskPageProps) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && !showGrep && !isSettingsOpen && !isSearchOpen) {
         navigate('/');
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate]);
+  }, [navigate, showGrep, isSettingsOpen, isSearchOpen]);
 
   const loadMore = () => {
     const nextPage = state.page + 1;
@@ -142,27 +157,149 @@ export function AskPage({ theme, fontSize }: AskPageProps) {
     ? 'text-[#828282] bg-[#f6f6ef]'
     : 'text-[#828282] bg-[#1a1a1a]';
 
+  const filteredStories = state.stories.filter(story => {
+    if (!grepFilter) return true;
+    const searchText = `${story.title} ${story.by}`.toLowerCase();
+    return searchText.includes(grepFilter.toLowerCase());
+  });
+
   return (
     <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
       <div className="h-full overflow-y-auto p-4">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-2">
-            <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider`}>
-              HN.LIVE
-            </span>
-            <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
-              /
-            </span>
-            <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
-              ASK HN
-            </span>
+        <div className="hidden sm:flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <div className="flex items-center">
+              <button
+                onClick={() => navigate('/')}
+                className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider hover:opacity-75 flex items-center`}
+              >
+                <span>HN</span>
+                <span className="text-2xl leading-[0] relative top-[1px] mx-[1px]">•</span>
+                <span>LIVE</span>
+              </button>
+              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
+                /
+              </span>
+              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
+                ASK HN
+              </span>
+            </div>
           </div>
-          <button 
-            onClick={handleClose}
-            className="opacity-75 hover:opacity-100"
-          >
-            [ESC]
-          </button>
+          
+          <div className="hidden sm:flex items-center gap-4">
+            <button 
+              onClick={() => navigate('/front')}
+              className={themeColors}
+            >
+              [FRONT PAGE]
+            </button>
+            <button 
+              onClick={() => navigate('/show')}
+              className={themeColors}
+            >
+              [SHOW]
+            </button>
+            <button 
+              onClick={() => navigate('/ask')}
+              className={`${themeColors} opacity-30 hover:opacity-50`}
+            >
+              [ASK]
+            </button>
+            <button 
+              onClick={() => navigate('/jobs')}
+              className={themeColors}
+            >
+              [JOBS]
+            </button>
+            <button 
+              onClick={() => navigate('/best')}
+              className={themeColors}
+            >
+              [BEST]
+            </button>
+            <button 
+              onClick={onShowSearch}
+              className={themeColors}
+              title="Ctrl/Cmd + K"
+            >
+              [SEARCH]
+            </button>
+            {showGrep ? (
+              <div className="flex items-center gap-2">
+                <span>grep:</span>
+                <input
+                  type="text"
+                  value={grepFilter}
+                  onChange={(e) => setGrepFilter(e.target.value)}
+                  className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
+                  placeholder="filter..."
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setGrepFilter('');
+                      setShowGrep(false);
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowGrep(true)}
+                className={themeColors}
+                title="Ctrl/Cmd + F"
+              >
+                [GREP]
+              </button>
+            )}
+            <button
+              onClick={onShowSettings}
+              className={themeColors}
+            >
+              [SETTINGS]
+            </button>
+            <button 
+              onClick={handleClose}
+              className="opacity-75 hover:opacity-100"
+            >
+              [ESC]
+            </button>
+          </div>
+        </div>
+
+        <div className="sm:hidden mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate('/')}
+                className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider hover:opacity-75 flex items-center`}
+              >
+                <span>HN</span>
+                <span className="text-2xl leading-[0] relative top-[1px] mx-[1px]">•</span>
+                <span>LIVE</span>
+              </button>
+              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
+                /
+              </span>
+              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
+                ASK HN
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 text-sm">
+              <button
+                onClick={onShowSettings}
+                className={`${themeColors} hover:opacity-75`}
+              >
+                [SETTINGS]
+              </button>
+              <button 
+                onClick={handleClose}
+                className="opacity-75 hover:opacity-100"
+              >
+                [ESC]
+              </button>
+            </div>
+          </div>
         </div>
 
         {state.loading ? (
@@ -171,7 +308,7 @@ export function AskPage({ theme, fontSize }: AskPageProps) {
           </div>
         ) : (
           <div className="max-w-3xl mx-auto space-y-4">
-            {state.stories.map((story, index) => (
+            {filteredStories.map((story, index) => (
               <div 
                 key={story.id}
                 className="group"
