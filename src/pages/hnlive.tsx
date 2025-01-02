@@ -1247,7 +1247,15 @@ export default function HNLiveTerminal() {
         </div>
 
         {location.pathname === '/front' && (
-          <FrontPage theme={options.theme} fontSize={options.fontSize} />
+          <FrontPage 
+            theme={options.theme} 
+            fontSize={options.fontSize}
+            onShowSearch={() => setShowSearch(true)}
+            onShowGrep={() => setShowGrep(true)}
+            onShowSettings={() => setShowSettings(true)}
+            isSettingsOpen={showSettings}
+            isSearchOpen={showSearch}
+          />
         )}
 
         {/* Add the StoryView component to the render */}
@@ -1277,22 +1285,46 @@ export default function HNLiveTerminal() {
 
         {/* Add the ShowPage component to the render */}
         {location.pathname === '/show' && (
-          <ShowPage theme={options.theme} fontSize={options.fontSize} />
+          <ShowPage 
+            theme={options.theme} 
+            fontSize={options.fontSize}
+            onShowSearch={() => setShowSearch(true)}
+            onShowGrep={() => setShowGrep(true)}
+            onShowSettings={() => setShowSettings(true)}
+          />
         )}
 
         {/* Add the AskPage component to the render */}
         {location.pathname === '/ask' && (
-          <AskPage theme={options.theme} fontSize={options.fontSize} />
+          <AskPage 
+            theme={options.theme} 
+            fontSize={options.fontSize}
+            onShowSearch={() => setShowSearch(true)}
+            onShowGrep={() => setShowGrep(true)}
+            onShowSettings={() => setShowSettings(true)}
+          />
         )}
 
         {/* Add the JobsPage component to the render */}
         {location.pathname === '/jobs' && (
-          <JobsPage theme={options.theme} fontSize={options.fontSize} />
+          <JobsPage 
+            theme={options.theme} 
+            fontSize={options.fontSize}
+            onShowSearch={() => setShowSearch(true)}
+            onShowGrep={() => setShowGrep(true)}
+            onShowSettings={() => setShowSettings(true)}
+          />
         )}
 
         {/* Add the BestPage component to the render */}
         {location.pathname === '/best' && (
-          <BestPage theme={options.theme} fontSize={options.fontSize} />
+          <BestPage 
+            theme={options.theme} 
+            fontSize={options.fontSize}
+            onShowSearch={() => setShowSearch(true)}
+            onShowGrep={() => setShowGrep(true)}
+            onShowSettings={() => setShowSettings(true)}
+          />
         )}
 
         {/* Center notification overlay */}

@@ -5,6 +5,11 @@ import { useTopUsers } from '../hooks/useTopUsers';
 interface FrontPageProps {
   theme: 'green' | 'og' | 'dog';
   fontSize: 'xs' | 'sm' | 'base';
+  onShowSearch: () => void;
+  onShowGrep: () => void;
+  onShowSettings: () => void;
+  isSettingsOpen: boolean;
+  isSearchOpen: boolean;
 }
 
 interface HNStory {
@@ -48,7 +53,15 @@ const truncateUrl = (url: string, maxLength: number): string => {
   return url.length > maxLength ? url.slice(0, maxLength) + '...' : url;
 };
 
-export function FrontPage({ theme, fontSize }: FrontPageProps) {
+export function FrontPage({ 
+  theme, 
+  fontSize,
+  onShowSearch,
+  onShowGrep,
+  onShowSettings,
+  isSettingsOpen,
+  isSearchOpen
+}: FrontPageProps) {
   const navigate = useNavigate();
   const [state, setState] = useState<FrontPageState>({
     stories: [],
@@ -57,6 +70,23 @@ export function FrontPage({ theme, fontSize }: FrontPageProps) {
     page: 0,
     hasMore: true
   });
+
+  // Add grep state
+  const [showGrep, setShowGrep] = useState(false);
+  const [grepFilter, setGrepFilter] = useState('');
+
+  // Filter stories based on grep input
+  const filteredStories = state.stories.filter(story => {
+    if (!grepFilter) return true;
+    const searchText = `${story.title} ${story.by}`.toLowerCase();
+    return searchText.includes(grepFilter.toLowerCase());
+  });
+
+  // Handle grep button click
+  const handleGrepClick = () => {
+    setShowGrep(true);
+    onShowGrep(); // Still call the parent handler if needed
+  };
 
   const { isTopUser, getTopUserClass } = useTopUsers();
 
@@ -124,6 +154,25 @@ export function FrontPage({ theme, fontSize }: FrontPageProps) {
     fetchStories(0);
   }, []);
 
+  // Add Ctrl+F handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Handle Ctrl+F or Cmd+F
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault(); // Prevent default browser search
+        setShowGrep(true);
+      }
+      // Handle Escape for grep input
+      if (e.key === 'Escape' && showGrep) {
+        setGrepFilter('');
+        setShowGrep(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showGrep]);
+
   const loadMore = () => {
     const nextPage = state.page + 1;
     setState(prev => ({ ...prev, page: nextPage }));
@@ -133,13 +182,23 @@ export function FrontPage({ theme, fontSize }: FrontPageProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        navigate('/');
+        // Only handle ESC if neither modal is open
+        if (!isSettingsOpen && !isSearchOpen) {
+          // First check if grep is open
+          if (showGrep) {
+            setGrepFilter('');
+            setShowGrep(false);
+            return;
+          }
+          // If no modals are open, then navigate back
+          navigate('/');
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate]);
+  }, [navigate, showGrep, isSettingsOpen, isSearchOpen]); // Add isSearchOpen to dependencies
 
   const handleClose = () => {
     navigate('/');
@@ -154,24 +213,110 @@ export function FrontPage({ theme, fontSize }: FrontPageProps) {
   return (
     <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
       <div className="h-full overflow-y-auto p-4">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-2">
-            <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider`}>
-              HN.LIVE
-            </span>
-            <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
-              /
-            </span>
-            <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
-              FRONT PAGE
-            </span>
+        {/* Header */}
+        <div className="mb-8">
+          {/* Desktop view - single row */}
+          <div className="hidden sm:flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider`}>
+                HN.LIVE
+              </span>
+              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
+                /
+              </span>
+              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
+                FRONT PAGE
+              </span>
+            </div>
+
+            {/* Desktop controls in one row */}
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={onShowSearch}
+                className={`${themeColors} hover:opacity-75`}
+                title="Search (Ctrl/Cmd + K)"
+              >
+                [SEARCH]
+              </button>
+              {showGrep ? (
+                <div className="flex items-center gap-2">
+                  <span>grep:</span>
+                  <input
+                    type="text"
+                    value={grepFilter}
+                    onChange={(e) => setGrepFilter(e.target.value)}
+                    className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
+                    placeholder="filter..."
+                    autoFocus
+                    onBlur={() => {
+                      if (!grepFilter) {
+                        setShowGrep(false);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        setGrepFilter('');
+                        setShowGrep(false);
+                      }
+                    }}
+                  />
+                </div>
+              ) : (
+                <button
+                  onClick={handleGrepClick}
+                  className={`${themeColors} hover:opacity-75`}
+                  title="Filter (Ctrl/Cmd + F)"
+                >
+                  [GREP]
+                </button>
+              )}
+              <button
+                onClick={onShowSettings}
+                className={`${themeColors} hover:opacity-75`}
+              >
+                [SETTINGS]
+              </button>
+              <button 
+                onClick={handleClose}
+                className="opacity-75 hover:opacity-100"
+              >
+                [ESC]
+              </button>
+            </div>
           </div>
-          <button 
-            onClick={handleClose}
-            className="opacity-75 hover:opacity-100"
-          >
-            [ESC]
-          </button>
+
+          {/* Mobile view - single row with title and controls */}
+          <div className="sm:hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider`}>
+                  HN.LIVE
+                </span>
+                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
+                  /
+                </span>
+                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
+                  FRONT PAGE
+                </span>
+              </div>
+
+              {/* Controls on the right */}
+              <div className="flex items-center gap-2 text-sm">
+                <button
+                  onClick={onShowSettings}
+                  className={`${themeColors} hover:opacity-75`}
+                >
+                  [SETTINGS]
+                </button>
+                <button 
+                  onClick={handleClose}
+                  className="opacity-75 hover:opacity-100"
+                >
+                  [ESC]
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {state.loading ? (
@@ -180,7 +325,7 @@ export function FrontPage({ theme, fontSize }: FrontPageProps) {
           </div>
         ) : (
           <div className="max-w-3xl mx-auto space-y-6">
-            {state.stories.map((story, index) => (
+            {filteredStories.map((story, index) => (
               <div 
                 key={story.id}
                 className="group relative"
@@ -227,7 +372,15 @@ export function FrontPage({ theme, fontSize }: FrontPageProps) {
                         target={story.url ? "_blank" : undefined}
                         rel={story.url ? "noopener noreferrer" : undefined}
                       >
-                        {story.title}
+                        <div className={`${
+                          theme === 'green'
+                            ? 'text-green-400'
+                            : theme === 'og'
+                            ? 'text-[#666666]'
+                            : 'text-[#a0a0a0]'
+                        }`}>
+                          {story.title}
+                        </div>
                       </a>
                     </div>
 
@@ -271,8 +424,8 @@ export function FrontPage({ theme, fontSize }: FrontPageProps) {
               </div>
             ))}
 
-            {state.hasMore && (
-              <div className="text-center py-6">
+            {!grepFilter && state.hasMore && (
+              <div className="text-center py-8">
                 <button
                   onClick={loadMore}
                   disabled={state.loadingMore}
