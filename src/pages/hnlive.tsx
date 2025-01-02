@@ -1026,13 +1026,7 @@ export default function HNLiveTerminal() {
                 onClick={() => navigate('/front')}
                 className={`hidden sm:inline ${themeColors}`}
               >
-                [FRONT]
-              </button>
-              <button 
-                onClick={() => navigate('/best')}
-                className={`hidden sm:inline ${themeColors}`}
-              >
-                [BEST]
+                [FRONT PAGE]
               </button>
               <button 
                 onClick={() => navigate('/show')}
@@ -1051,6 +1045,12 @@ export default function HNLiveTerminal() {
                 className={`hidden sm:inline ${themeColors}`}
               >
                 [JOBS]
+              </button>
+              <button 
+                onClick={() => navigate('/best')}
+                className={`hidden sm:inline ${themeColors}`}
+              >
+                [BEST]
               </button>
               <button 
                 onClick={() => setShowSearch(true)}
