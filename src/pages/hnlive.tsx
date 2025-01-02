@@ -110,12 +110,12 @@ const getStoredFontSize = () => {
 const getStoredLayout = () => {
   try {
     const storedLayout = localStorage.getItem('hn-live-classic-layout');
-    // Only return true if explicitly set to 'true'
-    return storedLayout === 'true';
+    // Return false only if explicitly set to 'false'
+    return storedLayout === null ? true : storedLayout === 'true';
   } catch (e) {
     console.warn('Could not access localStorage');
   }
-  return false; // Default to HN Live layout
+  return true; // Default to classic HN layout
 };
 
 // Update the style to handle both dark and green themes
@@ -805,7 +805,7 @@ export default function HNLiveTerminal() {
   // Add state for username colorization
   const [colorizeUsernames, setColorizeUsernames] = useState(() => {
     const saved = localStorage.getItem('hn-live-colorize-usernames');
-    return saved ? JSON.parse(saved) : false; // Default to false - usernames not colorized
+    return saved ? JSON.parse(saved) : true; // Default to true - usernames colorized
   });
 
   // Add effect to save setting
