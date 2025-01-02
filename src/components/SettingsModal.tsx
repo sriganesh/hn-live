@@ -9,12 +9,14 @@ interface SettingsModalProps {
     autoscroll: boolean;
     directLinks: boolean;
     fontSize: 'xs' | 'sm' | 'base';
+    classicLayout: boolean;
   };
   onUpdateOptions: (newOptions: {
     theme: 'green' | 'og' | 'dog';
     autoscroll: boolean;
     directLinks: boolean;
     fontSize: 'xs' | 'sm' | 'base';
+    classicLayout: boolean;
   }) => void;
   colorizeUsernames: boolean;
   onColorizeUsernamesChange: (value: boolean) => void;
@@ -143,12 +145,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
           <div className="space-y-2">
             <div className="text-sm opacity-75">VIEW OPTIONS</div>
-            <button
-              onClick={() => onColorizeUsernamesChange(!colorizeUsernames)}
-              className={`hover:opacity-75 transition-opacity block`}
-            >
-              [{colorizeUsernames ? 'x' : ' '}] Colorize usernames
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={() => onColorizeUsernamesChange(!colorizeUsernames)}
+                className={`hover:opacity-75 transition-opacity block`}
+              >
+                [{colorizeUsernames ? 'x' : ' '}] Colorize usernames
+              </button>
+              <button
+                onClick={() => onUpdateOptions({
+                  ...options,
+                  classicLayout: !options.classicLayout
+                })}
+                className={`hover:opacity-75 transition-opacity block`}
+              >
+                [{options.classicLayout ? 'x' : ' '}] Classic HN layout
+              </button>
+            </div>
           </div>
         </div>
       </div>

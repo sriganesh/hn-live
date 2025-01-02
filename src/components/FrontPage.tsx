@@ -6,6 +6,7 @@ interface FrontPageProps {
   theme: 'green' | 'og' | 'dog';
   fontSize: 'xs' | 'sm' | 'base';
   colorizeUsernames: boolean;
+  classicLayout: boolean;
   onShowSearch: () => void;
   onShowGrep: () => void;
   onShowSettings: () => void;
@@ -58,6 +59,7 @@ export function FrontPage({
   theme, 
   fontSize,
   colorizeUsernames,
+  classicLayout,
   onShowSearch,
   onShowGrep,
   onShowSettings,
@@ -362,91 +364,144 @@ export function FrontPage({
                 key={story.id}
                 className="group relative"
               >
-                <div className="flex items-baseline gap-3">
-                  {/* Left column - story number */}
-                  <span className={`${theme === 'green' ? 'text-green-500/50' : 'text-[#ff6600]/50'} text-sm font-mono`}>
-                    {(index + 1).toString().padStart(2, '0')}
-                  </span>
-
-                  {/* Right column - content */}
-                  <div className="space-y-2 flex-1">
-                    {/* Top line - hostname and timestamp */}
-                    {story.url && (
-                      <div className="flex items-center text-sm opacity-50">
-                        <span className="truncate">
-                          {truncateUrl(new URL(story.url).hostname.replace('www.', ''), 40)}
-                        </span>
-                        <span className="mx-2">•</span>
-                        <span className="shrink-0" title={new Date(story.time * 1000).toLocaleString()}>
-                          {formatTimeAgo(story.time)}
-                        </span>
+                {classicLayout ? (
+                  <div className="flex items-baseline gap-2">
+                    <span className="opacity-50">{index + 1}.</span>
+                    <div className="space-y-1">
+                      <div>
+                        <a
+                          href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
+                          onClick={(e) => {
+                            if (!story.url) {
+                              e.preventDefault();
+                              navigate(`/item/${story.id}`);
+                            }
+                          }}
+                          className="group-hover:opacity-75"
+                          target={story.url ? "_blank" : undefined}
+                          rel={story.url ? "noopener noreferrer" : undefined}
+                        >
+                          {story.title}
+                        </a>
+                        {story.url && (
+                          <span className="ml-2 opacity-50 text-sm">
+                            ({new URL(story.url).hostname})
+                          </span>
+                        )}
                       </div>
-                    )}
-                    {!story.url && (
-                      <div className="text-sm opacity-50">
+                      <div className="text-sm opacity-75">
+                        {story.score} points by{' '}
+                        <a 
+                          href={`https://news.ycombinator.com/user?id=${story.by}`}
+                          className={`hover:underline ${
+                            colorizeUsernames 
+                              ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
+                              : 'opacity-75'
+                          }`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {story.by}
+                        </a>{' '}
                         <span title={new Date(story.time * 1000).toLocaleString()}>
                           {formatTimeAgo(story.time)}
-                        </span>
+                        </span> • {' '}
+                        <button
+                          onClick={() => navigate(`/item/${story.id}`)}
+                          className="hover:underline"
+                        >
+                          {story.descendants || 0} comments
+                        </button>
                       </div>
-                    )}
-
-                    {/* Title line */}
-                    <div className="pr-4">
-                      <a
-                        href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
-                        onClick={(e) => {
-                          if (!story.url) {
-                            e.preventDefault();
-                            navigate(`/item/${story.id}`);
-                          }
-                        }}
-                        className="group-hover:opacity-75 font-medium"
-                        target={story.url ? "_blank" : undefined}
-                        rel={story.url ? "noopener noreferrer" : undefined}
-                      >
-                        <div className={`${
-                          theme === 'green'
-                            ? 'text-green-400'
-                            : theme === 'og'
-                            ? 'text-[#666666]'
-                            : 'text-[#a0a0a0]'
-                        }`}>
-                          {story.title}
-                        </div>
-                      </a>
-                    </div>
-
-                    {/* Bottom metadata line - without timestamp */}
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                      <a 
-                        href={`https://news.ycombinator.com/user?id=${story.by}`}
-                        className={`hover:underline ${
-                          colorizeUsernames 
-                            ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
-                            : 'opacity-75'
-                        }`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {story.by}
-                      </a>
-                      <span className="opacity-75">•</span>
-                      <span className="font-mono opacity-75">
-                        {story.score} points
-                      </span>
-                      <span className="opacity-75">•</span>
-                      <button
-                        onClick={() => navigate(`/item/${story.id}`)}
-                        className="opacity-75 hover:opacity-100 hover:underline"
-                      >
-                        {story.descendants 
-                          ? `${story.descendants} comment${story.descendants === 1 ? '' : 's'}`
-                          : 'discuss'
-                        }
-                      </button>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-baseline gap-3">
+                    {/* Left column - story number */}
+                    <span className={`${theme === 'green' ? 'text-green-500/50' : 'text-[#ff6600]/50'} text-sm font-mono`}>
+                      {(index + 1).toString().padStart(2, '0')}
+                    </span>
+
+                    {/* Right column - content */}
+                    <div className="space-y-2 flex-1">
+                      {/* Top line - hostname and timestamp */}
+                      {story.url && (
+                        <div className="flex items-center text-sm opacity-50">
+                          <span className="truncate">
+                            {truncateUrl(new URL(story.url).hostname.replace('www.', ''), 40)}
+                          </span>
+                          <span className="mx-2">•</span>
+                          <span className="shrink-0" title={new Date(story.time * 1000).toLocaleString()}>
+                            {formatTimeAgo(story.time)}
+                          </span>
+                        </div>
+                      )}
+                      {!story.url && (
+                        <div className="text-sm opacity-50">
+                          <span title={new Date(story.time * 1000).toLocaleString()}>
+                            {formatTimeAgo(story.time)}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Title line */}
+                      <div className="pr-4">
+                        <a
+                          href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
+                          onClick={(e) => {
+                            if (!story.url) {
+                              e.preventDefault();
+                              navigate(`/item/${story.id}`);
+                            }
+                          }}
+                          className="group-hover:opacity-75 font-medium"
+                          target={story.url ? "_blank" : undefined}
+                          rel={story.url ? "noopener noreferrer" : undefined}
+                        >
+                          <div className={`${
+                            theme === 'green'
+                              ? 'text-green-400'
+                              : theme === 'og'
+                              ? 'text-[#666666]'
+                              : 'text-[#a0a0a0]'
+                          }`}>
+                            {story.title}
+                          </div>
+                        </a>
+                      </div>
+
+                      {/* Bottom metadata line - without timestamp */}
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                        <a 
+                          href={`https://news.ycombinator.com/user?id=${story.by}`}
+                          className={`hover:underline ${
+                            colorizeUsernames 
+                              ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
+                              : 'opacity-75'
+                          }`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {story.by}
+                        </a>
+                        <span className="opacity-75">•</span>
+                        <span className="font-mono opacity-75">
+                          {story.score} points
+                        </span>
+                        <span className="opacity-75">•</span>
+                        <button
+                          onClick={() => navigate(`/item/${story.id}`)}
+                          className="opacity-75 hover:opacity-100 hover:underline"
+                        >
+                          {story.descendants 
+                            ? `${story.descendants} comment${story.descendants === 1 ? '' : 's'}`
+                            : 'discuss'
+                          }
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 <div className={`border-b ${
                   theme === 'green' 
