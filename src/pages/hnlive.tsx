@@ -1301,6 +1301,7 @@ export default function HNLiveTerminal() {
             <ShowPage 
               theme={options.theme} 
               fontSize={options.fontSize}
+              colorizeUsernames={colorizeUsernames}
               onShowSearch={() => setShowSearch(true)}
               onShowGrep={() => setShowGrep(true)}
               onShowSettings={() => setShowSettings(true)}
@@ -1321,6 +1322,7 @@ export default function HNLiveTerminal() {
             <AskPage 
               theme={options.theme} 
               fontSize={options.fontSize}
+              colorizeUsernames={colorizeUsernames}
               onShowSearch={() => setShowSearch(true)}
               onShowGrep={() => setShowGrep(true)}
               onShowSettings={() => setShowSettings(true)}
@@ -1361,6 +1363,7 @@ export default function HNLiveTerminal() {
             <BestPage 
               theme={options.theme} 
               fontSize={options.fontSize}
+              colorizeUsernames={colorizeUsernames}
               onShowSearch={() => setShowSearch(true)}
               onShowGrep={() => setShowGrep(true)}
               onShowSettings={() => setShowSettings(true)}
