@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTopUsers } from '../hooks/useTopUsers';
 
 interface AskPageProps {
   theme: 'green' | 'og' | 'dog';
   fontSize: 'xs' | 'sm' | 'base';
+  colorizeUsernames: boolean;
   onShowSearch: () => void;
   onShowGrep: () => void;
   onShowSettings: () => void;
@@ -52,6 +54,7 @@ const STORIES_PER_PAGE = 30;
 export function AskPage({ 
   theme, 
   fontSize, 
+  colorizeUsernames,
   onShowSearch, 
   onShowGrep, 
   onShowSettings,
@@ -68,6 +71,7 @@ export function AskPage({
   });
   const [showGrep, setShowGrep] = useState(false);
   const [grepFilter, setGrepFilter] = useState('');
+  const { isTopUser, getTopUserClass } = useTopUsers();
 
   const fetchStories = async (pageNumber: number) => {
     try {
@@ -332,7 +336,11 @@ export function AskPage({
                       {story.score} points by{' '}
                       <a 
                         href={`https://news.ycombinator.com/user?id=${story.by}`}
-                        className="hn-username hover:underline"
+                        className={`hover:underline ${
+                          colorizeUsernames 
+                            ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
+                            : 'opacity-75'
+                        }`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
