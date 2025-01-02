@@ -5,6 +5,7 @@ import { useTopUsers } from '../hooks/useTopUsers';
 interface FrontPageProps {
   theme: 'green' | 'og' | 'dog';
   fontSize: 'xs' | 'sm' | 'base';
+  colorizeUsernames: boolean;
   onShowSearch: () => void;
   onShowGrep: () => void;
   onShowSettings: () => void;
@@ -56,6 +57,7 @@ const truncateUrl = (url: string, maxLength: number): string => {
 export function FrontPage({ 
   theme, 
   fontSize,
+  colorizeUsernames,
   onShowSearch,
   onShowGrep,
   onShowSettings,
@@ -388,8 +390,10 @@ export function FrontPage({
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                       <a 
                         href={`https://news.ycombinator.com/user?id=${story.by}`}
-                        className={`hn-username hover:underline ${
-                          isTopUser(story.by) ? getTopUserClass(theme) : ''
+                        className={`hover:underline ${
+                          colorizeUsernames 
+                            ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
+                            : 'opacity-75'
                         }`}
                         target="_blank"
                         rel="noopener noreferrer"

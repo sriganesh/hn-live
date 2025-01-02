@@ -16,6 +16,8 @@ interface SettingsModalProps {
     directLinks: boolean;
     fontSize: 'xs' | 'sm' | 'base';
   }) => void;
+  colorizeUsernames: boolean;
+  onColorizeUsernamesChange: (value: boolean) => void;
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ 
@@ -23,7 +25,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose, 
   theme,
   options,
-  onUpdateOptions
+  onUpdateOptions,
+  colorizeUsernames,
+  onColorizeUsernamesChange
 }) => {
   // Add ESC key handler
   useEffect(() => {
@@ -135,6 +139,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 [{options.directLinks ? 'x' : ' '}] Direct HN links
               </button>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-sm opacity-75">VIEW OPTIONS</div>
+            <button
+              onClick={() => onColorizeUsernamesChange(!colorizeUsernames)}
+              className={`hover:opacity-75 transition-opacity block`}
+            >
+              [{colorizeUsernames ? 'x' : ' '}] Colorize usernames
+            </button>
           </div>
         </div>
       </div>
