@@ -789,6 +789,17 @@ export default function HNLiveTerminal() {
     );
   };
 
+  // Add state for username colorization
+  const [colorizeUsernames, setColorizeUsernames] = useState(() => {
+    const saved = localStorage.getItem('hn-live-colorize-usernames');
+    return saved ? JSON.parse(saved) : false; // Default to false - usernames not colorized
+  });
+
+  // Add effect to save setting
+  useEffect(() => {
+    localStorage.setItem('hn-live-colorize-usernames', JSON.stringify(colorizeUsernames));
+  }, [colorizeUsernames]);
+
   return (
     <>
       <Helmet>
@@ -1250,6 +1261,7 @@ export default function HNLiveTerminal() {
           <FrontPage 
             theme={options.theme} 
             fontSize={options.fontSize}
+            colorizeUsernames={colorizeUsernames}
             onShowSearch={() => setShowSearch(true)}
             onShowGrep={() => setShowGrep(true)}
             onShowSettings={() => setShowSettings(true)}
@@ -1391,6 +1403,8 @@ export default function HNLiveTerminal() {
               console.warn('Could not save settings to localStorage');
             }
           }}
+          colorizeUsernames={colorizeUsernames}
+          onColorizeUsernamesChange={setColorizeUsernames}
         />
       </div>
 
