@@ -1254,6 +1254,7 @@ export default function HNLiveTerminal() {
             onShowGrep={() => setShowGrep(true)}
             onShowSettings={() => setShowSettings(true)}
             isSettingsOpen={showSettings}
+            isSearchOpen={showSearch}
           />
         )}
 

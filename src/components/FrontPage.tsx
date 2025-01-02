@@ -9,6 +9,7 @@ interface FrontPageProps {
   onShowGrep: () => void;
   onShowSettings: () => void;
   isSettingsOpen: boolean;
+  isSearchOpen: boolean;
 }
 
 interface HNStory {
@@ -58,7 +59,8 @@ export function FrontPage({
   onShowSearch,
   onShowGrep,
   onShowSettings,
-  isSettingsOpen
+  isSettingsOpen,
+  isSearchOpen
 }: FrontPageProps) {
   const navigate = useNavigate();
   const [state, setState] = useState<FrontPageState>({
@@ -180,8 +182,8 @@ export function FrontPage({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        // Only handle ESC if settings modal is not open
-        if (!isSettingsOpen) {
+        // Only handle ESC if neither modal is open
+        if (!isSettingsOpen && !isSearchOpen) {
           // First check if grep is open
           if (showGrep) {
             setGrepFilter('');
@@ -196,7 +198,7 @@ export function FrontPage({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, showGrep, isSettingsOpen]); // Add isSettingsOpen to dependencies
+  }, [navigate, showGrep, isSettingsOpen, isSearchOpen]); // Add isSearchOpen to dependencies
 
   const handleClose = () => {
     navigate('/');
@@ -283,74 +285,36 @@ export function FrontPage({
             </div>
           </div>
 
-          {/* Mobile view - two rows */}
-          <div className="sm:hidden space-y-3">
-            {/* First row - title */}
-            <div className="flex items-center gap-2">
-              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider`}>
-                HN.LIVE
-              </span>
-              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
-                /
-              </span>
-              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
-                FRONT PAGE
-              </span>
-            </div>
+          {/* Mobile view - single row with title and controls */}
+          <div className="sm:hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider`}>
+                  HN.LIVE
+                </span>
+                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
+                  /
+                </span>
+                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
+                  FRONT PAGE
+                </span>
+              </div>
 
-            {/* Second row - controls */}
-            <div className="flex items-center gap-2 text-sm">
-              <button 
-                onClick={onShowSearch}
-                className={`${themeColors} hover:opacity-75`}
-                title="Search (Ctrl/Cmd + K)"
-              >
-                [SEARCH]
-              </button>
-              {showGrep ? (
-                <div className="flex items-center gap-2">
-                  <span>grep:</span>
-                  <input
-                    type="text"
-                    value={grepFilter}
-                    onChange={(e) => setGrepFilter(e.target.value)}
-                    className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
-                    placeholder="filter..."
-                    autoFocus
-                    onBlur={() => {
-                      if (!grepFilter) {
-                        setShowGrep(false);
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') {
-                        setGrepFilter('');
-                        setShowGrep(false);
-                      }
-                    }}
-                  />
-                </div>
-              ) : (
+              {/* Controls on the right */}
+              <div className="flex items-center gap-2 text-sm">
                 <button
-                  onClick={handleGrepClick}
+                  onClick={onShowSettings}
                   className={`${themeColors} hover:opacity-75`}
-                  title="Filter (Ctrl/Cmd + F)"
                 >
-                  [GREP]
+                  [SETTINGS]
                 </button>
-              )}
-              <button
-                onClick={onShowSettings}
-                className={`${themeColors} hover:opacity-75`}
-              >
-                [SETTINGS]
-              </button>
-              <button 
-                onClick={handleClose}
-                className="opacity-75 hover:opacity-100"
-              >
-                [ESC]
-              </button>
+                <button 
+                  onClick={handleClose}
+                  className="opacity-75 hover:opacity-100"
+                >
+                  [ESC]
+                </button>
+              </div>
             </div>
           </div>
         </div>
