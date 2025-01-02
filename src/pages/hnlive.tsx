@@ -42,6 +42,7 @@ interface TerminalOptions {
   autoscroll: boolean;
   directLinks: boolean;
   fontSize: 'xs' | 'sm' | 'base';
+  classicLayout: boolean;
 }
 
 interface SearchFilters {
@@ -106,6 +107,17 @@ const getStoredFontSize = () => {
   }
 };
 
+const getStoredLayout = () => {
+  try {
+    const storedLayout = localStorage.getItem('hn-live-classic-layout');
+    // Only return true if explicitly set to 'true'
+    return storedLayout === 'true';
+  } catch (e) {
+    console.warn('Could not access localStorage');
+  }
+  return false; // Default to HN Live layout
+};
+
 // Update the style to handle both dark and green themes
 const themeStyles = `
   [data-theme='dog'] ::selection {
@@ -127,7 +139,8 @@ export default function HNLiveTerminal() {
     theme: getStoredTheme(),
     autoscroll: getStoredAutoscroll(),
     directLinks: getStoredDirectLinks(),
-    fontSize: getStoredFontSize()
+    fontSize: getStoredFontSize(),
+    classicLayout: getStoredLayout()
   });
   const [isRunning, setIsRunning] = useState(true);
   
@@ -800,6 +813,19 @@ export default function HNLiveTerminal() {
     localStorage.setItem('hn-live-colorize-usernames', JSON.stringify(colorizeUsernames));
   }, [colorizeUsernames]);
 
+  // Update the settings handler to store the layout preference
+  const handleSettingsUpdate = (newOptions: TerminalOptions) => {
+    setOptions(newOptions);
+    try {
+      localStorage.setItem('hn-live-theme', newOptions.theme);
+      localStorage.setItem('hn-live-autoscroll', String(newOptions.autoscroll));
+      localStorage.setItem('hn-live-direct', String(newOptions.directLinks));
+      localStorage.setItem('hn-live-classic-layout', String(newOptions.classicLayout));
+    } catch (e) {
+      console.warn('Could not save settings to localStorage');
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -1262,6 +1288,7 @@ export default function HNLiveTerminal() {
             theme={options.theme} 
             fontSize={options.fontSize}
             colorizeUsernames={colorizeUsernames}
+            classicLayout={options.classicLayout}
             onShowSearch={() => setShowSearch(true)}
             onShowGrep={() => setShowGrep(true)}
             onShowSettings={() => setShowSettings(true)}
@@ -1302,6 +1329,7 @@ export default function HNLiveTerminal() {
               theme={options.theme} 
               fontSize={options.fontSize}
               colorizeUsernames={colorizeUsernames}
+              classicLayout={options.classicLayout}
               onShowSearch={() => setShowSearch(true)}
               onShowGrep={() => setShowGrep(true)}
               onShowSettings={() => setShowSettings(true)}
@@ -1323,6 +1351,7 @@ export default function HNLiveTerminal() {
               theme={options.theme} 
               fontSize={options.fontSize}
               colorizeUsernames={colorizeUsernames}
+              classicLayout={options.classicLayout}
               onShowSearch={() => setShowSearch(true)}
               onShowGrep={() => setShowGrep(true)}
               onShowSettings={() => setShowSettings(true)}
@@ -1364,6 +1393,7 @@ export default function HNLiveTerminal() {
               theme={options.theme} 
               fontSize={options.fontSize}
               colorizeUsernames={colorizeUsernames}
+              classicLayout={options.classicLayout}
               onShowSearch={() => setShowSearch(true)}
               onShowGrep={() => setShowGrep(true)}
               onShowSettings={() => setShowSettings(true)}
@@ -1432,16 +1462,7 @@ export default function HNLiveTerminal() {
           onClose={() => setShowSettings(false)}
           theme={options.theme}
           options={options}
-          onUpdateOptions={(newOptions) => {
-            setOptions(newOptions);
-            try {
-              localStorage.setItem('hn-live-theme', newOptions.theme);
-              localStorage.setItem('hn-live-autoscroll', String(newOptions.autoscroll));
-              localStorage.setItem('hn-live-direct', String(newOptions.directLinks));
-            } catch (e) {
-              console.warn('Could not save settings to localStorage');
-            }
-          }}
+          onUpdateOptions={handleSettingsUpdate}
           colorizeUsernames={colorizeUsernames}
           onColorizeUsernamesChange={setColorizeUsernames}
         />
