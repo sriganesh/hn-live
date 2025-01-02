@@ -47,7 +47,7 @@ You can share these URLs directly and they will load the appropriate content.
 
 ## Development Notes
 
-Hey! I'm primarily a backend developer who loves building things. This project started as a way to browse HN the way I personally enjoy - with a clean, terminal-like interface and real-time updates.
+I'm primarily a backend developer who loves building things. This project started as a way to browse HN the way I personally enjoy - with a clean, terminal-like interface and real-time updates.
 
 The design is intentionally minimalist, inspired by both HN's simplicity and old-school terminal UIs. Since I'm not a designer by trade, I built it based on how I like to browse HN - but I'm always open to suggestions for improvements!
 
@@ -96,7 +96,7 @@ Special thanks to:
 - [Claude](https://anthropic.com/claude) & [ChatGPT](https://chat.openai.com) - Sometimes I had to jump directly to them to brainstorm ideas or debug tricky errors.
 - [Cloudflare Pages](https://pages.cloudflare.com/) - For making deployment super easy.
 
-Yeah, these tools helped me build and debug this way faster than I could have imagined. They turned what could have been weeks of debugging and learning into a fun weekend project. It's amazing how they can help you quickly turn ideas into working products!
+These tools helped me build and debug this way faster than I could have imagined. They turned what could have been weeks of debugging and learning into a fun weekend project. It's amazing how they can help you quickly turn ideas into working products!
 
 ## License
 
