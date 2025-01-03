@@ -1176,49 +1176,79 @@ export default function HNLiveTerminal() {
                     time={item.formatted?.timestamp.time || formatTimestamp(item.time).time}
                     fullDate={item.formatted?.timestamp.fullDate || formatTimestamp(item.time).fullDate}
                   />
-                  <div className="flex-1 break-words whitespace-pre-wrap overflow-hidden">
+                  <div className="flex-1">
                     <a 
                       onClick={(e) => {
                         e.preventDefault();
                         handleStoryClick(item);
                       }}
                       href={item.formatted?.links.main}
-                      className={`${themeColors} transition-colors cursor-pointer break-words`}
+                      className={`${themeColors} transition-colors cursor-pointer`}
                       dangerouslySetInnerHTML={{ 
                         __html: item.type === 'story' 
                           ? item.formatted?.text.replace(
                               item.title || '',
-                              `<span class="font-bold break-words">${item.title || ''}</span>`
+                              `<span class="font-bold">${item.title || ''}</span>`
                             ) 
                           : item.formatted?.text || '' 
                       }}
                     />
+                    {/* Add discuss/comments link for all stories */}
+                    {item.type === 'story' && (
+                      <span className="ml-2">
+                        <a 
+                          href={item.formatted?.links.comments}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigate(`/item/${item.id}`);
+                          }}
+                          className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
+                        >
+                          [{item.kids?.length ? `${item.kids.length} comments` : 'discuss'}]
+                        </a>
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                {/* Mobile view - add same classes */}
+                {/* Mobile view */}
                 <div className="sm:hidden space-y-1">
                   <TimeStamp 
                     time={item.formatted?.timestamp.time || formatTimestamp(item.time).time}
                     fullDate={item.formatted?.timestamp.fullDate || formatTimestamp(item.time).fullDate}
                   />
-                  <div className="break-words whitespace-pre-wrap overflow-hidden">
+                  <div>
                     <a 
                       onClick={(e) => {
                         e.preventDefault();
                         handleStoryClick(item);
                       }}
                       href={item.formatted?.links.main}
-                      className={`${themeColors} transition-colors cursor-pointer break-words`}
+                      className={`${themeColors} transition-colors cursor-pointer`}
                       dangerouslySetInnerHTML={{ 
                         __html: item.type === 'story' 
                           ? item.formatted?.text.replace(
                               item.title || '',
-                              `<span class="font-bold break-words">${item.title || ''}</span>`
+                              `<span class="font-bold">${item.title || ''}</span>`
                             ) 
                           : item.formatted?.text || '' 
                       }}
                     />
+                    {/* Add discuss/comments link for mobile view too */}
+                    {item.type === 'story' && (
+                      <span className="ml-2">
+                        <a 
+                          href={item.formatted?.links.comments}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigate(`/item/${item.id}`);
+                          }}
+                          className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
+                        >
+                          [{item.kids?.length ? `${item.kids.length} comments` : 'discuss'}]
+                        </a>
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
