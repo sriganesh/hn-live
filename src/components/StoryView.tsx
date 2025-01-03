@@ -598,7 +598,13 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
               : 'bg-yellow-500/10'
             : ''
         } ${
-          comment.level > 0 ? 'border-l border-current/10' : ''
+          comment.level > 0 
+            ? theme === 'og'
+              ? 'border-l border-current/10'
+              : theme === 'green'
+              ? 'border-l border-green-900'  // Much darker green for terminal mode
+              : 'border-l border-gray-700'   // Darker gray for dark mode
+            : ''
         }`}
       >
         <div className="space-y-2">
@@ -645,8 +651,10 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
             </a>
           </div>
           <div 
-            className="break-words whitespace-pre-wrap"
-            dangerouslySetInnerHTML={{ __html: comment.text || '' }}
+            className="prose max-w-none mb-4 break-words whitespace-pre-wrap overflow-hidden"
+            dangerouslySetInnerHTML={{ 
+              __html: addTargetBlankToLinks(comment.text) 
+            }} 
           />
         </div>
 
@@ -758,7 +766,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
         </Helmet>
       )}
       <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
-        <div className="story-container h-full overflow-y-auto p-4 sm:p-4">
+        <div className="story-container h-full overflow-y-auto overflow-x-hidden p-4 sm:p-4">
           <div className="flex items-center justify-between mb-8">
             <button 
               onClick={handleClose}
@@ -853,7 +861,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
               </div>
               {story.text && (
                 <div 
-                  className="prose max-w-none mb-8"
+                  className="prose max-w-none mb-8 break-words whitespace-pre-wrap overflow-hidden"
                   dangerouslySetInnerHTML={{ __html: addTargetBlankToLinks(story.text) }}
                 />
               )}
