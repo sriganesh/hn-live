@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom';
 interface JobsPageProps {
   theme: 'green' | 'og' | 'dog';
   fontSize: 'xs' | 'sm' | 'base';
+  colorizeUsernames: boolean;
+  classicLayout: boolean;
   onShowSearch: () => void;
-  onShowGrep: () => void;
   onShowSettings: () => void;
   isSettingsOpen?: boolean;
   isSearchOpen?: boolean;
@@ -47,14 +48,21 @@ interface JobsPageState {
 
 const JOBS_PER_PAGE = 30;
 
+interface GrepState {
+  isActive: boolean;
+  searchTerm: string;
+  matchedStories: HNJob[];
+}
+
 export function JobsPage({ 
   theme, 
-  fontSize, 
-  onShowSearch, 
-  onShowGrep, 
+  fontSize,
+  colorizeUsernames,
+  classicLayout,
+  onShowSearch,
   onShowSettings,
   isSettingsOpen,
-  isSearchOpen 
+  isSearchOpen
 }: JobsPageProps) {
   const navigate = useNavigate();
   const [state, setState] = useState<JobsPageState>({
@@ -64,8 +72,11 @@ export function JobsPage({
     page: 0,
     hasMore: true
   });
-  const [showGrep, setShowGrep] = useState(false);
-  const [grepFilter, setGrepFilter] = useState('');
+  const [grepState, setGrepState] = useState<GrepState>({
+    isActive: false,
+    searchTerm: '',
+    matchedStories: []
+  });
 
   const fetchJobs = async (pageNumber: number) => {
     try {
@@ -132,15 +143,20 @@ export function JobsPage({
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault();
-        setShowGrep(true);
+        setGrepState(prev => ({ ...prev, isActive: true }));
       }
       if (e.key === 'Escape') {
-        if (!isSettingsOpen && !isSearchOpen) {
-          if (showGrep) {
-            setGrepFilter('');
-            setShowGrep(false);
-            return;
-          }
+        if (isSettingsOpen || isSearchOpen) {
+          return;
+        }
+        if (grepState.isActive) {
+          setGrepState(prev => ({
+            ...prev,
+            isActive: false,
+            searchTerm: '',
+            matchedStories: []
+          }));
+        } else {
           navigate('/');
         }
       }
@@ -148,7 +164,7 @@ export function JobsPage({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, showGrep, isSettingsOpen, isSearchOpen]);
+  }, [navigate, grepState.isActive, isSettingsOpen, isSearchOpen]);
 
   const loadMore = () => {
     const nextPage = state.page + 1;
@@ -166,11 +182,9 @@ export function JobsPage({
     ? 'text-[#828282] bg-[#f6f6ef]'
     : 'text-[#828282] bg-[#1a1a1a]';
 
-  const filteredJobs = state.jobs.filter(job => {
-    if (!grepFilter) return true;
-    const searchText = `${job.title} ${job.by || ''}`.toLowerCase();
-    return searchText.includes(grepFilter.toLowerCase());
-  });
+  const filteredJobs = grepState.searchTerm 
+    ? grepState.matchedStories 
+    : state.jobs;
 
   return (
     <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
@@ -233,29 +247,31 @@ export function JobsPage({
             >
               [SEARCH]
             </button>
-            {showGrep ? (
+            {grepState.isActive ? (
               <div className="flex items-center gap-2">
                 <span>grep:</span>
                 <input
                   type="text"
-                  value={grepFilter}
-                  onChange={(e) => setGrepFilter(e.target.value)}
-                  className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
+                  value={grepState.searchTerm}
+                  onChange={(e) => {
+                    setGrepState(prev => ({
+                      ...prev,
+                      searchTerm: e.target.value,
+                      matchedStories: e.target.value ? state.jobs.filter(job => {
+                        const searchText = `${job.title} ${job.by}`.toLowerCase();
+                        return searchText.includes(e.target.value.toLowerCase());
+                      }) : []
+                    }));
+                  }}
+                  className="bg-transparent border-b border-current/20 px-1 py-0.5 focus:outline-none focus:border-current/40 w-32"
                   placeholder="filter..."
                   autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      setGrepFilter('');
-                      setShowGrep(false);
-                    }
-                  }}
                 />
               </div>
             ) : (
               <button
-                onClick={() => setShowGrep(true)}
+                onClick={() => setGrepState(prev => ({ ...prev, isActive: true }))}
                 className={themeColors}
-                title="Ctrl/Cmd + F"
               >
                 [GREP]
               </button>

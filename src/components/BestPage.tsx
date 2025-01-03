@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTopUsers } from '../hooks/useTopUsers';
 
@@ -8,7 +8,6 @@ interface BestPageProps {
   colorizeUsernames: boolean;
   classicLayout: boolean;
   onShowSearch: () => void;
-  onShowGrep: () => void;
   onShowSettings: () => void;
   isSettingsOpen?: boolean;
   isSearchOpen?: boolean;
@@ -51,16 +50,21 @@ interface BestPageState {
 
 const STORIES_PER_PAGE = 30;
 
+interface GrepState {
+  isActive: boolean;
+  searchTerm: string;
+  matchedStories: HNStory[];
+}
+
 export function BestPage({ 
   theme, 
   fontSize, 
   colorizeUsernames, 
   classicLayout, 
   onShowSearch, 
-  onShowGrep, 
   onShowSettings,
   isSettingsOpen,
-  isSearchOpen 
+  isSearchOpen
 }: BestPageProps) {
   const navigate = useNavigate();
   const [state, setState] = useState<BestPageState>({
@@ -70,9 +74,15 @@ export function BestPage({
     page: 0,
     hasMore: true
   });
-  const [showGrep, setShowGrep] = useState(false);
-  const [grepFilter, setGrepFilter] = useState('');
+  const [grepState, setGrepState] = useState<GrepState>({
+    isActive: false,
+    searchTerm: '',
+    matchedStories: []
+  });
   const { isTopUser, getTopUserClass } = useTopUsers();
+  
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadingRef = useRef<HTMLDivElement>(null);
 
   const fetchStories = async (pageNumber: number) => {
     try {
@@ -139,15 +149,20 @@ export function BestPage({
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault();
-        setShowGrep(true);
+        setGrepState(prev => ({ ...prev, isActive: true }));
       }
       if (e.key === 'Escape') {
-        if (!isSettingsOpen && !isSearchOpen) {
-          if (showGrep) {
-            setGrepFilter('');
-            setShowGrep(false);
-            return;
-          }
+        if (isSettingsOpen || isSearchOpen) {
+          return;
+        }
+        if (grepState.isActive) {
+          setGrepState(prev => ({
+            ...prev,
+            isActive: false,
+            searchTerm: '',
+            matchedStories: []
+          }));
+        } else {
           navigate('/');
         }
       }
@@ -155,7 +170,7 @@ export function BestPage({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, showGrep, isSettingsOpen, isSearchOpen]);
+  }, [navigate, grepState.isActive, isSettingsOpen, isSearchOpen]);
 
   const loadMore = () => {
     const nextPage = state.page + 1;
@@ -173,11 +188,38 @@ export function BestPage({
     ? 'text-[#828282] bg-[#f6f6ef]'
     : 'text-[#828282] bg-[#1a1a1a]';
 
-  const filteredStories = state.stories.filter(story => {
-    if (!grepFilter) return true;
-    const searchText = `${story.title} ${story.by}`.toLowerCase();
-    return searchText.includes(grepFilter.toLowerCase());
-  });
+  const filteredStories = grepState.searchTerm 
+    ? grepState.matchedStories 
+    : state.stories;
+
+  useEffect(() => {
+    if (state.stories.length > 0 && state.hasMore && !state.loading) {
+      const options = {
+        root: null,
+        rootMargin: '1000px',
+        threshold: 0.1
+      };
+
+      const handleObserver = (entries: IntersectionObserverEntry[]) => {
+        const target = entries[0];
+        if (target.isIntersecting && !state.loadingMore && state.hasMore) {
+          loadMore();
+        }
+      };
+
+      observerRef.current = new IntersectionObserver(handleObserver, options);
+      
+      if (loadingRef.current) {
+        observerRef.current.observe(loadingRef.current);
+      }
+
+      return () => {
+        if (observerRef.current) {
+          observerRef.current.disconnect();
+        }
+      };
+    }
+  }, [state.stories.length, state.hasMore, state.loading, state.loadingMore]);
 
   return (
     <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
@@ -239,29 +281,31 @@ export function BestPage({
             >
               [SEARCH]
             </button>
-            {showGrep ? (
+            {grepState.isActive ? (
               <div className="flex items-center gap-2">
                 <span>grep:</span>
                 <input
                   type="text"
-                  value={grepFilter}
-                  onChange={(e) => setGrepFilter(e.target.value)}
-                  className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
+                  value={grepState.searchTerm}
+                  onChange={(e) => {
+                    setGrepState(prev => ({
+                      ...prev,
+                      searchTerm: e.target.value,
+                      matchedStories: e.target.value ? state.stories.filter(story => {
+                        const searchText = `${story.title} ${story.by}`.toLowerCase();
+                        return searchText.includes(e.target.value.toLowerCase());
+                      }) : []
+                    }));
+                  }}
+                  className="bg-transparent border-b border-current/20 px-1 py-0.5 focus:outline-none focus:border-current/40 w-32"
                   placeholder="filter..."
                   autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      setGrepFilter('');
-                      setShowGrep(false);
-                    }
-                  }}
                 />
               </div>
             ) : (
               <button
-                onClick={() => setShowGrep(true)}
+                onClick={() => setGrepState(prev => ({ ...prev, isActive: true }))}
                 className={themeColors}
-                title="Ctrl/Cmd + F"
               >
                 [GREP]
               </button>
@@ -478,8 +522,8 @@ export function BestPage({
               </div>
             ))}
 
-            {state.hasMore && (
-              <div className="text-center py-8">
+            {!grepState.searchTerm && (
+              <div ref={loadingRef} className="text-center py-8">
                 <button
                   onClick={loadMore}
                   disabled={state.loadingMore}
