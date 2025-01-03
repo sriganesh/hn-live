@@ -1159,14 +1159,18 @@ export default function HNLiveTerminal() {
 
         <div 
           ref={containerRef}
-          className={`h-screen pt-24 sm:pt-20 pb-20 sm:pb-4 px-3 sm:px-4 overflow-y-auto overflow-x-hidden font-mono text-${options.fontSize}
-                       ${options.theme === 'green'
-                         ? 'text-green-400'
-                         : 'text-[#828282]'}
-                       scrollbar-thin scrollbar-track-transparent
-                       ${options.theme === 'green'
-                         ? 'scrollbar-thumb-green-500/30'
-                         : 'scrollbar-thumb-[#ff6600]/30'}`}
+          className={`
+            min-h-screen pt-16 sm:pt-20 pb-20 sm:pb-4 px-3 sm:px-4 
+            overflow-y-auto overflow-x-hidden font-mono
+            scrollbar-thin scrollbar-track-transparent
+            ${options.theme === 'green'
+              ? 'text-green-400 bg-black scrollbar-thumb-green-500/30'
+              : options.theme === 'og'
+              ? 'text-[#828282] bg-[#f6f6ef] scrollbar-thumb-[#ff6600]/30'
+              : 'text-[#828282] bg-[#1a1a1a] scrollbar-thumb-[#ff6600]/30'
+            }
+            text-${options.fontSize}
+          `}
         >
           {filteredItems.map((item, index) => (
             <div key={`${item.id}-${index}`} className="break-words">
