@@ -80,12 +80,12 @@ const getStoredDirectLinks = () => {
 const getStoredAutoscroll = () => {
   try {
     const storedAutoscroll = localStorage.getItem('hn-live-autoscroll');
-    // Return true if no value is stored (first visit) or if the stored value is 'true'
-    return storedAutoscroll === null ? true : storedAutoscroll === 'true';
+    // Return false if no value is stored (first visit) or if the stored value is 'false'
+    return storedAutoscroll === 'true';
   } catch (e) {
     console.warn('Could not access localStorage');
   }
-  return true; // Default to autoscroll on
+  return false; // Default to autoscroll off
 };
 
 const getStoredFontSize = () => {
@@ -855,7 +855,7 @@ export default function HNLiveTerminal() {
         </script>
         <style>{themeStyles}</style>
       </Helmet>
-      <div className={`fixed inset-0 ${themeBg} font-mono`} data-theme={options.theme}>
+      <div className={`fixed inset-0 ${themeBg} font-mono overflow-x-hidden`} data-theme={options.theme}>
         <noscript>
           <div className="p-4">
             <h1>HN Live - Real-time Hacker News Feed</h1>
@@ -1158,7 +1158,7 @@ export default function HNLiveTerminal() {
 
         <div 
           ref={containerRef}
-          className={`h-screen pt-24 sm:pt-20 pb-20 sm:pb-4 px-3 sm:px-4 overflow-y-auto font-mono text-${options.fontSize}
+          className={`h-screen pt-24 sm:pt-20 pb-20 sm:pb-4 px-3 sm:px-4 overflow-y-auto overflow-x-hidden font-mono text-${options.fontSize}
                        ${options.theme === 'green'
                          ? 'text-green-400'
                          : 'text-[#828282]'}
@@ -1168,7 +1168,7 @@ export default function HNLiveTerminal() {
                          : 'scrollbar-thumb-[#ff6600]/30'}`}
         >
           {filteredItems.map((item, index) => (
-            <div key={`${item.id}-${index}`}>
+            <div key={`${item.id}-${index}`} className="break-words">
               <div className="py-1">
                 {/* Desktop view */}
                 <div className="hidden sm:flex items-start gap-4">
@@ -1176,73 +1176,49 @@ export default function HNLiveTerminal() {
                     time={item.formatted?.timestamp.time || formatTimestamp(item.time).time}
                     fullDate={item.formatted?.timestamp.fullDate || formatTimestamp(item.time).fullDate}
                   />
-                  <div className="flex-1">
+                  <div className="flex-1 break-words whitespace-pre-wrap overflow-hidden">
                     <a 
                       onClick={(e) => {
                         e.preventDefault();
                         handleStoryClick(item);
                       }}
                       href={item.formatted?.links.main}
-                      className={`${themeColors} transition-colors cursor-pointer`}
+                      className={`${themeColors} transition-colors cursor-pointer break-words`}
                       dangerouslySetInnerHTML={{ 
                         __html: item.type === 'story' 
                           ? item.formatted?.text.replace(
                               item.title || '',
-                              `<span class="font-bold">${item.title || ''}</span>`
+                              `<span class="font-bold break-words">${item.title || ''}</span>`
                             ) 
                           : item.formatted?.text || '' 
                       }}
                     />
-                    {item.type === 'story' && item.url && (
-                      <span className="ml-2">
-                        <a 
-                          href={item.formatted?.links.comments}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
-                        >
-                          [{item.kids?.length ? 'comments' : 'discuss'}]
-                        </a>
-                      </span>
-                    )}
                   </div>
                 </div>
 
-                {/* Mobile view */}
+                {/* Mobile view - add same classes */}
                 <div className="sm:hidden space-y-1">
                   <TimeStamp 
                     time={item.formatted?.timestamp.time || formatTimestamp(item.time).time}
                     fullDate={item.formatted?.timestamp.fullDate || formatTimestamp(item.time).fullDate}
                   />
-                  <div>
+                  <div className="break-words whitespace-pre-wrap overflow-hidden">
                     <a 
                       onClick={(e) => {
                         e.preventDefault();
                         handleStoryClick(item);
                       }}
                       href={item.formatted?.links.main}
-                      className={`${themeColors} transition-colors cursor-pointer`}
+                      className={`${themeColors} transition-colors cursor-pointer break-words`}
                       dangerouslySetInnerHTML={{ 
                         __html: item.type === 'story' 
                           ? item.formatted?.text.replace(
                               item.title || '',
-                              `<span class="font-bold">${item.title || ''}</span>`
+                              `<span class="font-bold break-words">${item.title || ''}</span>`
                             ) 
                           : item.formatted?.text || '' 
                       }}
                     />
-                    {item.type === 'story' && item.url && (
-                      <span className="ml-2">
-                        <a 
-                          href={item.formatted?.links.comments}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
-                        >
-                          [{item.kids?.length ? 'comments' : 'discuss'}]
-                        </a>
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
