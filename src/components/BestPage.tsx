@@ -137,8 +137,19 @@ export function BestPage({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !showGrep && !isSettingsOpen && !isSearchOpen) {
-        navigate('/');
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setShowGrep(true);
+      }
+      if (e.key === 'Escape') {
+        if (!isSettingsOpen && !isSearchOpen) {
+          if (showGrep) {
+            setGrepFilter('');
+            setShowGrep(false);
+            return;
+          }
+          navigate('/');
+        }
       }
     };
 
