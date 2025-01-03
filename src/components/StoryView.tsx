@@ -85,21 +85,22 @@ const getIndentClass = (level: number) => {
   return indentClasses[Math.min(level, indentClasses.length - 1)];
 };
 
-// Add this helper to find the path to a specific comment
-async function findCommentPath(commentId: number): Promise<number[]> {
+// Add this helper function to find the complete path to a comment
+const findCommentPath = async (commentId: number): Promise<number[]> => {
   const path: number[] = [];
   let currentId = commentId;
-  
+
   while (currentId) {
-    const response = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentId}.json`);
-    const item = await response.json();
     path.unshift(currentId);
-    if (item.type === 'story') break;
-    currentId = item.parent;
+    const comment = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentId}.json`)
+      .then(res => res.json());
+    
+    if (!comment.parent) break; // Stop if we reach the story (no parent)
+    currentId = comment.parent;
   }
-  
+
   return path;
-}
+};
 
 // Add a helper to track loaded comment IDs
 const getCommentIds = (comments: HNComment[]): Set<number> => {
@@ -118,49 +119,80 @@ const fetchComment = async (commentId: number) => {
   return response.json();
 };
 
-// Update the fetchComments function to use cached comments
-const fetchComments = async (
-  ids: number[], 
-  level: number = 0, 
-  requiredIds?: Set<number>,
-  loadMore: boolean = false
-): Promise<HNComment[]> => {
-  if (level >= MAX_DEPTH && !loadMore && !ids.some(id => requiredIds?.has(id))) {
-    return [];
+// Add this helper to find all necessary comment IDs to load
+const findRequiredCommentIds = async (targetId: number): Promise<{
+  parentChain: number[];
+  topLevelParentIndex: number;
+}> => {
+  const parentChain: number[] = [];
+  let currentId = targetId;
+  let topLevelParentIndex = -1;
+
+  while (currentId) {
+    const comment = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentId}.json`)
+      .then(res => res.json());
+    
+    parentChain.unshift(currentId);
+    
+    if (!comment.parent || comment.type === 'story') {
+      break;
+    }
+    currentId = comment.parent;
   }
 
-  const limitedIds = level === 0 
-    ? ids.slice(0, MAX_COMMENTS)
-    : ids;
+  // Get the story to find the index of the top-level parent
+  const story = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentId}.json`)
+    .then(res => res.json());
+  
+  if (story.kids) {
+    topLevelParentIndex = story.kids.indexOf(parentChain[0]);
+  }
+
+  return { parentChain, topLevelParentIndex };
+};
+
+// Update the fetchComments function
+const fetchComments = async (
+  commentIds: number[], 
+  depth: number = 0,
+  requiredIds?: Set<number>,
+  forceLoad: boolean = false
+): Promise<HNComment[]> => {
+  // Always load if it's required or forced
+  if (depth > MAX_DEPTH && !requiredIds?.size && !forceLoad) return [];
 
   const comments = await Promise.all(
-    limitedIds.map(async (id) => {
-      try {
-        const comment = await fetchComment(id); // Use cached comment fetch
-        
-        if (!comment || comment.dead || comment.deleted) return null;
+    commentIds.map(async id => {
+      const comment = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
+        .then(res => res.json());
+      
+      if (!comment || comment.dead || comment.deleted) return null;
 
-        let replies: HNComment[] = [];
-        const hasDeepReplies = !loadMore && level === MAX_DEPTH - 1 && comment.kids?.length > 0;
-        
-        if (comment.kids && (level < MAX_DEPTH || loadMore)) {
-          replies = await fetchComments(comment.kids, level + 1, requiredIds, loadMore);
-        }
-        
-        return { 
-          ...comment, 
-          level,
-          comments: replies,
-          hasDeepReplies
-        };
-      } catch (error) {
-        console.error(`Error fetching comment ${id}:`, error);
-        return null;
+      let kids: HNComment[] = [];
+      if (comment.kids) {
+        const isRequired = requiredIds?.has(id) || 
+          comment.kids.some(kid => requiredIds?.has(kid));
+
+        kids = await fetchComments(
+          comment.kids,
+          depth + 1,
+          requiredIds,
+          isRequired // Force load all children of required comments
+        );
       }
+
+      return {
+        id: comment.id,
+        text: comment.text || '',
+        by: comment.by || '[deleted]',
+        time: comment.time,
+        level: depth,
+        comments: kids
+      };
     })
   );
 
-  return comments.filter((c): c is HNComment => c !== null);
+  return comments.filter(Boolean);
 };
 
 // Add a helper function to count total comments including replies
@@ -331,33 +363,60 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
     }));
   };
 
-  // Replace useQuery with useEffect
+  // Update the useEffect that handles initial data fetching
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
         const rootStoryId = await findRootStoryId(itemId);
         const storyData = await fetchStory(rootStoryId);
-
-        let requiredIds: Set<number> | undefined;
-        if (scrollToId) {
-          const commentPath = await findCommentPath(scrollToId);
-          requiredIds = new Set(commentPath);
-        }
-
+        
         let initialComments: HNComment[] = [];
-        if (storyData.kids) {
-          const initialBatch = storyData.kids.slice(0, MAX_COMMENTS);
-          initialComments = await fetchComments(initialBatch, 0, requiredIds);
-          initialComments = getUniqueComments(initialComments);
-        }
+        let requiredIds: Set<number> | undefined;
 
-        const initialTotal = countCommentsInTree(initialComments);
+        if (storyData.kids) {
+          // First, if we have a scrollToId, find its parent chain
+          let targetCommentChain: number[] = [];
+          if (scrollToId) {
+            const comment = await fetch(`https://hacker-news.firebaseio.com/v0/item/${scrollToId}.json`)
+              .then(res => res.json());
+            
+            // Find the top-level parent of this comment
+            let currentId = scrollToId;
+            while (currentId) {
+              targetCommentChain.unshift(currentId);
+              const parent = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentId}.json`)
+                .then(res => res.json());
+              
+              if (parent.parent === storyData.id || !parent.parent) break;
+              currentId = parent.parent;
+            }
+            
+            requiredIds = new Set(targetCommentChain);
+          }
+
+          // Always load first 10 comments
+          const firstTenComments = storyData.kids.slice(0, MAX_COMMENTS);
+          
+          // If our target comment's thread isn't in first 10, add it
+          const topLevelParentId = targetCommentChain[0];
+          if (scrollToId && !firstTenComments.includes(topLevelParentId)) {
+            firstTenComments.push(topLevelParentId);
+          }
+
+          // Load all these comments
+          initialComments = await fetchComments(
+            firstTenComments,
+            0,
+            requiredIds,
+            true // Force load the entire chain
+          );
+        }
 
         setCommentState({
           loadedComments: initialComments,
           loadedCount: initialComments.length,
-          loadedTotal: initialTotal,
+          loadedTotal: countCommentsInTree(initialComments),
           hasMore: (storyData.kids?.length || 0) > MAX_COMMENTS,
           isLoadingMore: false
         });
@@ -366,10 +425,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
           setTimeout(() => {
             const element = document.getElementById(`comment-${scrollToId}`);
             if (element) {
-              element.scrollIntoView({ 
-                behavior: 'smooth',
-                block: 'center'
-              });
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
               element.classList.add('highlight');
             }
           }, 100);
@@ -378,9 +434,8 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
         setStory(storyData);
       } catch (error) {
         console.error('Error fetching story:', error);
-      } finally {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
 
     fetchData();
