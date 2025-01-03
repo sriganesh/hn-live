@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -10,6 +10,7 @@ interface SettingsModalProps {
     directLinks: boolean;
     fontSize: 'xs' | 'sm' | 'base';
     classicLayout: boolean;
+    showCommentParents: boolean;
   };
   onUpdateOptions: (newOptions: {
     theme: 'green' | 'og' | 'dog';
@@ -17,6 +18,7 @@ interface SettingsModalProps {
     directLinks: boolean;
     fontSize: 'xs' | 'sm' | 'base';
     classicLayout: boolean;
+    showCommentParents: boolean;
   }) => void;
   colorizeUsernames: boolean;
   onColorizeUsernamesChange: (value: boolean) => void;
@@ -45,6 +47,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       return () => window.removeEventListener('keydown', handleKeyDown);
     }
   }, [isOpen, onClose]);
+
+  // Add state for showing the reload message
+  const [showReloadMessage, setShowReloadMessage] = useState(false);
 
   if (!isOpen) return null;
 
@@ -124,7 +129,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          {/* Terminal Behavior Options */}
+          {/* Terminal Behavior */}
           <div className="space-y-2">
             <div className="text-sm opacity-75">TERMINAL BEHAVIOR</div>
             <div className="space-y-2">
@@ -140,9 +145,27 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               >
                 [{options.directLinks ? 'x' : ' '}] Direct HN links
               </button>
+              <button
+                onClick={() => {
+                  onUpdateOptions({ ...options, showCommentParents: !options.showCommentParents });
+                  setShowReloadMessage(true);
+                  setTimeout(() => setShowReloadMessage(false), 1000);
+                }}
+                className={`hover:opacity-75 transition-opacity block w-full text-left`}
+              >
+                <div className="flex items-center gap-2">
+                  <span>[{options.showCommentParents ? 'x' : ' '}] Show story context</span>
+                  {showReloadMessage && (
+                    <span className="text-sm opacity-75">
+                      [reload required]
+                    </span>
+                  )}
+                </div>
+              </button>
             </div>
           </div>
 
+          {/* View Options */}
           <div className="space-y-2">
             <div className="text-sm opacity-75">VIEW OPTIONS</div>
             <div className="space-y-2">
