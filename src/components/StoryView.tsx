@@ -254,6 +254,45 @@ const getUniqueComments = (comments: HNComment[]): HNComment[] => {
     });
 };
 
+// Add this near the top with other interfaces
+interface GrepState {
+  isActive: boolean;
+  searchTerm: string;
+  matchedComments: HNComment[];
+}
+
+// Add this helper function to highlight matched text
+const highlightText = (text: string, searchTerm: string): string => {
+  if (!searchTerm) return text;
+  const regex = new RegExp(`(${searchTerm})`, 'gi');
+  return text.replace(regex, '<mark class="bg-current/20">$1</mark>');
+};
+
+// Update the grepComments function to include the full comment path and highlight matches
+const grepComments = (comments: HNComment[], searchTerm: string): HNComment[] => {
+  const matches: HNComment[] = [];
+  
+  const search = (comment: HNComment) => {
+    const textContent = comment.text?.toLowerCase() || '';
+    const authorContent = comment.by.toLowerCase();
+    const searchLower = searchTerm.toLowerCase();
+    
+    if (textContent.includes(searchLower) || authorContent.includes(searchLower)) {
+      // Create a new comment object with highlighted text
+      const highlightedComment = {
+        ...comment,
+        text: comment.text ? highlightText(comment.text, searchTerm) : ''
+      };
+      matches.push(highlightedComment);
+    }
+    
+    comment.comments?.forEach(search);
+  };
+  
+  comments.forEach(search);
+  return matches;
+};
+
 export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: StoryViewProps) {
   const navigate = useNavigate();
   const { isTopUser, getTopUserClass } = useTopUsers();
@@ -267,6 +306,30 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
     hasMore: false,
     isLoadingMore: false
   });
+
+  // Add these inside the StoryView component, near other state declarations
+  const [grepState, setGrepState] = useState<GrepState>({
+    isActive: false,
+    searchTerm: '',
+    matchedComments: []
+  });
+
+  // Add this inside StoryView component, after other state declarations
+  const handleGrepToggle = () => {
+    setGrepState(prev => ({
+      ...prev,
+      isActive: !prev.isActive,
+      matchedComments: prev.isActive ? [] : prev.matchedComments
+    }));
+  };
+
+  const handleGrepSearch = (term: string) => {
+    setGrepState(prev => ({
+      ...prev,
+      searchTerm: term,
+      matchedComments: term ? grepComments(commentState.loadedComments, term) : []
+    }));
+  };
 
   // Replace useQuery with useEffect
   useEffect(() => {
@@ -429,17 +492,26 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
     };
   }, [story, commentState.hasMore, commentState.isLoadingMore, loadMore]);
 
-  // Keep the ESC key handler
+  // Update the ESC key handler useEffect
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        navigate('/');
+        if (grepState.isActive) {
+          setGrepState(prev => ({
+            ...prev,
+            isActive: false,
+            searchTerm: '',
+            matchedComments: []
+          }));
+        } else {
+          navigate('/');
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate]);
+  }, [navigate, grepState.isActive]);
 
   useEffect(() => {
     // Track story view
@@ -645,12 +717,31 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
               </span>
               LIVE
             </button>
-            <button 
-              onClick={handleClose}
-              className="opacity-75 hover:opacity-100"
-            >
-              [ESC]
-            </button>
+            <div className="flex items-center gap-4">
+              {grepState.isActive ? (
+                <input
+                  type="text"
+                  value={grepState.searchTerm}
+                  onChange={(e) => handleGrepSearch(e.target.value)}
+                  placeholder="grep comment:"
+                  className="bg-transparent border-b border-current/20 px-1 py-0.5 focus:outline-none focus:border-current/40 w-32"
+                  autoFocus
+                />
+              ) : (
+                <button 
+                  onClick={handleGrepToggle}
+                  className="opacity-75 hover:opacity-100"
+                >
+                  [GREP]
+                </button>
+              )}
+              <button 
+                onClick={handleClose}
+                className="opacity-75 hover:opacity-100"
+              >
+                [ESC]
+              </button>
+            </div>
           </div>
 
           {isLoading ? (
@@ -713,8 +804,20 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
               )}
               <div className="border-t border-current opacity-10 my-8" />
               <div className="space-y-4">
-                {commentState.loadedComments.map((comment, index) => 
-                  renderComment(comment, `${index}`)
+                {grepState.isActive && grepState.searchTerm ? (
+                  grepState.matchedComments.length > 0 ? (
+                    grepState.matchedComments.map((comment, index) => 
+                      renderComment(comment, `grep-${index}`)
+                    )
+                  ) : (
+                    <div className="text-center py-8 opacity-75">
+                      No matching comments found
+                    </div>
+                  )
+                ) : (
+                  commentState.loadedComments.map((comment, index) => 
+                    renderComment(comment, `${index}`)
+                  )
                 )}
                 
                 {commentState.hasMore ? (
