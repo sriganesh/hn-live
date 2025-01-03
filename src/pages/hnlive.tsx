@@ -43,6 +43,7 @@ interface TerminalOptions {
   directLinks: boolean;
   fontSize: 'xs' | 'sm' | 'base';
   classicLayout: boolean;
+  showCommentParents: boolean;
 }
 
 interface SearchFilters {
@@ -118,6 +119,16 @@ const getStoredLayout = () => {
   return true; // Default to classic HN layout
 };
 
+const getStoredCommentParents = () => {
+  try {
+    const stored = localStorage.getItem('hn-live-comment-parents');
+    return stored === 'true';
+  } catch (e) {
+    console.warn('Could not access localStorage');
+  }
+  return false; // Default to not showing parents
+};
+
 // Update the style to handle both dark and green themes
 const themeStyles = `
   [data-theme='dog'] ::selection {
@@ -147,7 +158,8 @@ export default function HNLiveTerminal() {
     autoscroll: getStoredAutoscroll(),
     directLinks: getStoredDirectLinks(),
     fontSize: getStoredFontSize(),
-    classicLayout: getStoredLayout()
+    classicLayout: getStoredLayout(),
+    showCommentParents: getStoredCommentParents()
   });
   const [isRunning, setIsRunning] = useState(true);
   
@@ -207,6 +219,7 @@ export default function HNLiveTerminal() {
       main: '',
       comments: ''
     };
+    let parentStory = null;
     
     // Always link username directly to HN
     const userLink = `<a href="https://news.ycombinator.com/user?id=${item.by}" 
@@ -217,7 +230,37 @@ export default function HNLiveTerminal() {
     >${item.by}</a>`;
     
     if (item.type === 'comment') {
-      text = `${userLink} > ${item.text?.replace(/<[^>]*>/g, '')}`;
+      // Fetch parent story if needed
+      if (options.showCommentParents && item.parent) {
+        try {
+          let currentParent = await fetch(`https://hacker-news.firebaseio.com/v0/item/${item.parent}.json`).then(r => r.json());
+          
+          // Keep going up until we find the root story
+          while (currentParent.type === 'comment' && currentParent.parent) {
+            currentParent = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentParent.parent}.json`).then(r => r.json());
+          }
+          
+          if (currentParent.type === 'story') {
+            parentStory = currentParent;
+          }
+        } catch (error) {
+          console.error('Error fetching parent story:', error);
+        }
+      }
+
+      // First show the comment with the username
+      text = `${userLink}: ${item.text?.replace(/<[^>]*>/g, '')}`;
+      
+      // Then add the parent story info if available, respecting directLinks setting
+      if (parentStory) {
+        text += ` <span class="opacity-50">| re: </span><a href="https://news.ycombinator.com/item?id=${parentStory.id}" 
+          class="hover:underline opacity-75"
+          target="_blank"
+          rel="noopener noreferrer"
+          onclick="event.stopPropagation()"
+        >${parentStory.title}</a>`;
+      }
+      
       links.main = `https://news.ycombinator.com/item?id=${item.id}`;
       links.comments = ''; 
     } else if (item.type === 'story') {
@@ -833,6 +876,15 @@ export default function HNLiveTerminal() {
       console.warn('Could not save settings to localStorage');
     }
   };
+
+  // Add effect to save comment parent preference
+  useEffect(() => {
+    try {
+      localStorage.setItem('hn-live-comment-parents', String(options.showCommentParents));
+    } catch (e) {
+      console.warn('Could not save comment parent preference');
+    }
+  }, [options.showCommentParents]);
 
   return (
     <>
