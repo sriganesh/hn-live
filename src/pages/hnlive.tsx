@@ -131,6 +131,13 @@ const themeStyles = `
   }
 `;
 
+// Add this near other style definitions at the top
+const mobileNavStyles = `
+  .mobile-nav-button {
+    @apply flex-1 py-3 flex items-center justify-center transition-colors border-r last:border-r-0 border-current/30;
+  }
+`;
+
 export default function HNLiveTerminal() {
   useDocumentTitle('Hacker News Live');
   
@@ -854,6 +861,7 @@ export default function HNLiveTerminal() {
           })}
         </script>
         <style>{themeStyles}</style>
+        <style>{mobileNavStyles}</style>
       </Helmet>
       <div className={`fixed inset-0 ${themeBg} font-mono overflow-x-hidden`} data-theme={options.theme}>
         <noscript>
@@ -866,7 +874,7 @@ export default function HNLiveTerminal() {
         <div className={`fixed top-0 left-0 right-0 z-50 ${themeHeaderBg} border-b ${themeColors} py-2 px-3 sm:py-4 sm:px-4`}>
           {/* Mobile Layout */}
           <div className="sm:hidden">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <span 
                   onClick={reloadSite}
@@ -894,111 +902,52 @@ export default function HNLiveTerminal() {
                 </button>
               </div>
 
-              {/* Replace the old controls with a simplified set */}
+              {/* Right side controls */}
               <div className="flex items-center gap-2">
-                {/* Settings button */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowSettings(true)}
-                    className={`${themeColors} opacity-75 hover:opacity-100 transition-colors`}
-                  >
-                    [SETTINGS]
-                  </button>
-                </div>
-
-                {/* Start/Stop button */}
+                {/* Search button */}
                 <button 
-                  onClick={toggleFeed}
-                  className={`${
-                    isRunning 
-                      ? options.theme === 'green'
-                        ? 'text-red-500'
-                        : 'text-red-500'
-                      : options.theme === 'green'
-                        ? 'text-green-400'
-                        : 'text-green-600'
-                  }`}
-                  title="Ctrl/Cmd + S"
+                  onClick={() => setShowSearch(true)}
+                  className={themeColors}
+                  title="Ctrl/Cmd + K"
                 >
-                  [{isRunning ? 'STOP' : 'START'}]
+                  [SEARCH]
                 </button>
 
-                {/* Clear screen button */}
-                <button 
-                  onClick={clearScreen}
-                  className={`${
-                    options.theme === 'green'
-                      ? 'text-yellow-400'
-                      : options.theme === 'dog'
-                      ? 'text-yellow-500'
-                      : 'text-yellow-600'
-                  }`}
-                  title="Ctrl/Cmd + L"
+                {/* Grep control */}
+                {showGrep ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={filters.text}
+                      onChange={(e) => setFilters(prev => ({...prev, text: e.target.value}))}
+                      className={`bg-transparent border-b border-current outline-none w-20 px-1 ${themeColors}`}
+                      placeholder="grep..."
+                      autoFocus
+                      onBlur={() => {
+                        if (!filters.text) {
+                          setShowGrep(false);
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowGrep(true)}
+                    className={themeColors}
+                    title="Ctrl/Cmd + F"
+                  >
+                    [GREP]
+                  </button>
+                )}
+
+                {/* Settings button */}
+                <button
+                  onClick={() => setShowSettings(true)}
+                  className={`${themeColors} opacity-75 hover:opacity-100 transition-colors`}
                 >
-                  [CLEAR]
+                  [⚙️]
                 </button>
               </div>
-            </div>
-
-            {/* Second row with navigation buttons */}
-            <div className="flex items-center gap-2 text-sm overflow-x-auto pb-2">
-              <button 
-                onClick={() => navigate('/front')}
-                className={themeColors}
-              >
-                [FRONT]
-              </button>
-              <button 
-                onClick={() => navigate('/best')}
-                className={themeColors}
-              >
-                [BEST]
-              </button>
-              <button 
-                onClick={() => navigate('/show')}
-                className={themeColors}
-              >
-                [SHOW]
-              </button>
-              <button 
-                onClick={() => navigate('/ask')}
-                className={themeColors}
-              >
-                [ASK]
-              </button>
-              <button 
-                onClick={() => setShowSearch(true)}
-                className={themeColors}
-                title="Ctrl/Cmd + K"
-              >
-                [SEARCH]
-              </button>
-              {showGrep ? (
-                <div className="flex items-center gap-2">
-                  <span>grep:</span>
-                  <input
-                    type="text"
-                    value={filters.text}
-                    onChange={(e) => setFilters(prev => ({...prev, text: e.target.value}))}
-                    className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
-                    placeholder="search..."
-                    autoFocus
-                    onBlur={() => {
-                      if (!filters.text) {
-                        setShowGrep(false);
-                      }
-                    }}
-                  />
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowGrep(true)}
-                  className={themeColors}
-                  title="Ctrl/Cmd + F"
-                >
-                  [GREP]
-                </button>
-              )}
             </div>
           </div>
 
@@ -1459,6 +1408,63 @@ export default function HNLiveTerminal() {
           colorizeUsernames={colorizeUsernames}
           onColorizeUsernamesChange={setColorizeUsernames}
         />
+
+        {/* Mobile Bottom Bar - Only show on main feed page */}
+        {location.pathname === '/' && (
+          <div className="fixed sm:hidden bottom-0 left-0 right-0 mobile-bottom-bar border-t z-50">
+            <div className={`${
+              options.theme === 'green'
+                ? 'bg-black/90 border-green-500/30'
+                : options.theme === 'og'
+                ? 'bg-[#f6f6ef]/90 border-[#ff6600]/30'
+                : 'bg-[#1a1a1a]/90 border-[#828282]/30'
+            } grid grid-cols-4 divide-x ${
+              options.theme === 'green'
+                ? 'divide-green-500/30'
+                : options.theme === 'og'
+                ? 'divide-[#ff6600]/30'
+                : 'divide-[#828282]/30'
+            }`}>
+              {/* Left: Start/Stop Button (1/4) */}
+              <button
+                onClick={toggleFeed}
+                className={`py-4 text-center transition-colors ${
+                  isRunning 
+                    ? options.theme === 'green'
+                      ? 'text-red-500'
+                      : 'text-red-500'
+                    : options.theme === 'green'
+                      ? 'text-green-400'
+                      : 'text-green-600'
+                }`}
+              >
+                {isRunning ? 'STOP' : 'START'}
+              </button>
+
+              {/* Middle: Front Page Button (2/4) */}
+              <button
+                onClick={() => navigate('/front')}
+                className={`col-span-2 py-4 text-center ${themeColors} hover:opacity-75 transition-opacity`}
+              >
+                FRONT PAGE
+              </button>
+
+              {/* Right: Clear Button (1/4) */}
+              <button
+                onClick={clearScreen}
+                className={`py-4 text-center transition-colors ${
+                  options.theme === 'green'
+                    ? 'text-yellow-400'
+                    : options.theme === 'dog'
+                    ? 'text-yellow-500'
+                    : 'text-yellow-600'
+                }`}
+              >
+                CLEAR
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <Outlet />
