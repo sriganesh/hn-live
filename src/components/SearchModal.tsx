@@ -5,6 +5,7 @@ interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
   theme: 'green' | 'og' | 'dog';
+  initialQuery?: string;
 }
 
 interface SearchParams {
@@ -39,12 +40,16 @@ interface SearchResult {
   hitsPerPage: number;
 }
 
-const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, theme }) => {
+const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, theme, initialQuery = '' }) => {
   const navigate = useNavigate();
   const resultsContainerRef = useRef<HTMLDivElement>(null);
   const [params, setParams] = useState<SearchParams>({
-    query: '',
-    tags: ['story'],
+    query: initialQuery,
+    tags: initialQuery === 'Show HN' 
+      ? ['show_hn'] 
+      : initialQuery === 'Ask HN'
+      ? ['ask_hn']
+      : ['story'],
     page: 0
   });
   const [results, setResults] = useState<SearchResult | null>(null);
@@ -68,6 +73,24 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, theme }) => 
       setResults(null);
     }
   }, [params.query]);
+
+  useEffect(() => {
+    if (isOpen && initialQuery) {
+      handleSearch(0);
+    }
+  }, [isOpen, initialQuery]);
+
+  useEffect(() => {
+    setParams(prev => ({
+      ...prev,
+      query: initialQuery,
+      tags: initialQuery === 'Show HN' 
+        ? ['show_hn']
+        : initialQuery === 'Ask HN'
+        ? ['ask_hn']
+        : ['story']
+    }));
+  }, [initialQuery]);
 
   const handleSearch = async (page = 0) => {
     setLoading(true);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTopUsers } from '../hooks/useTopUsers';
 
@@ -177,11 +177,11 @@ export function FrontPage({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showGrep]);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     const nextPage = state.page + 1;
     setState(prev => ({ ...prev, page: nextPage }));
     fetchStories(nextPage);
-  };
+  }, [state.page]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -213,6 +213,42 @@ export function FrontPage({
     : theme === 'og'
     ? 'text-[#828282] bg-[#f6f6ef]'
     : 'text-[#828282] bg-[#1a1a1a]';
+
+  // Add a ref for the intersection observer
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadingRef = useRef<HTMLDivElement>(null);
+
+  // Create a callback for intersection observer
+  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
+    const target = entries[0];
+    if (target.isIntersecting && !state.loadingMore && state.hasMore) {
+      loadMore();
+    }
+  }, [state.loadingMore, state.hasMore, loadMore]);
+
+  // Move the observer setup after the stories are loaded
+  useEffect(() => {
+    // Only set up observer if we have stories and there's more to load
+    if (state.stories.length > 0 && state.hasMore && !state.loading) {
+      const options = {
+        root: null,
+        rootMargin: '1000px',
+        threshold: 0.1
+      };
+
+      observerRef.current = new IntersectionObserver(handleObserver, options);
+      
+      if (loadingRef.current) {
+        observerRef.current.observe(loadingRef.current);
+      }
+
+      return () => {
+        if (observerRef.current) {
+          observerRef.current.disconnect();
+        }
+      };
+    }
+  }, [handleObserver, state.stories.length, state.hasMore, state.loading]);
 
   return (
     <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
@@ -513,17 +549,42 @@ export function FrontPage({
               </div>
             ))}
 
-            {!grepFilter && state.hasMore && (
-              <div className="text-center py-8">
-                <button
-                  onClick={loadMore}
-                  disabled={state.loadingMore}
-                  className={`${
+            {!grepFilter && (
+              <div 
+                ref={loadingRef} 
+                className="text-center py-8"
+              >
+                {state.loadingMore ? (
+                  <div className={`${
                     theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
-                  } opacity-75 hover:opacity-100 transition-opacity disabled:opacity-50`}
-                >
-                  {state.loadingMore ? 'Loading more stories...' : 'Load more stories'}
-                </button>
+                  } opacity-75`}>
+                    Loading more stories...
+                  </div>
+                ) : state.hasMore ? (
+                  // Invisible div for intersection observer when there are more stories
+                  <div className="h-20 opacity-50">
+                    <span className="text-sm">Loading more...</span>
+                  </div>
+                ) : (
+                  // Show end message when no more stories
+                  <div className="space-y-2">
+                    <div className={`${
+                      theme === 'green' ? 'text-green-500/50' : 'text-[#ff6600]/50'
+                    } text-sm`}>
+                      That's all for now! 
+                    </div>
+                    <div className="text-sm">
+                      <button
+                        onClick={() => navigate('/')}
+                        className={`${
+                          theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
+                        } hover:opacity-75`}
+                      >
+                        → Head back to the live feed to see real-time stories and discussions
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
