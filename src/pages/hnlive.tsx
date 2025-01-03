@@ -771,8 +771,9 @@ export default function HNLiveTerminal() {
     if (item.type === 'story') {
       return (
         <div className="opacity-75">
-          {/* Always show the title if available */}
-          {item.title || 'Untitled'}
+          <span className="font-bold">
+            {item.title || 'Untitled'}
+          </span>
           {' • '}
           <span className="text-[#ff6600]">{item.by}</span>
           {item.score !== undefined && (
@@ -1183,7 +1184,14 @@ export default function HNLiveTerminal() {
                       }}
                       href={item.formatted?.links.main}
                       className={`${themeColors} transition-colors cursor-pointer`}
-                      dangerouslySetInnerHTML={{ __html: item.formatted?.text || '' }}
+                      dangerouslySetInnerHTML={{ 
+                        __html: item.type === 'story' 
+                          ? item.formatted?.text.replace(
+                              item.title || '',
+                              `<span class="font-bold">${item.title || ''}</span>`
+                            ) 
+                          : item.formatted?.text || '' 
+                      }}
                     />
                     {item.type === 'story' && item.url && (
                       <span className="ml-2">
@@ -1202,61 +1210,38 @@ export default function HNLiveTerminal() {
 
                 {/* Mobile view */}
                 <div className="sm:hidden space-y-1">
-                  <div className="flex items-center gap-2 text-sm opacity-50">
-                    <span>{item.formatted?.timestamp.time || formatTimestamp(item.time).time}</span>
-                    <span>•</span>
+                  <TimeStamp 
+                    time={item.formatted?.timestamp.time || formatTimestamp(item.time).time}
+                    fullDate={item.formatted?.timestamp.fullDate || formatTimestamp(item.time).fullDate}
+                  />
+                  <div>
                     <a 
-                      href={`https://news.ycombinator.com/user?id=${item.by}`}
-                      className={`hn-username hover:underline ${
-                        isTopUser(item.by) ? getTopUserClass(options.theme) : ''
-                      }`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {item.by}
-                    </a>
-                  </div>
-                  <div className="break-words whitespace-pre-wrap overflow-hidden">
-                    {item.type === 'story' ? (
-                      <>
-                        <div className="mb-1">
-                          <a
-                            href={item.url || `https://news.ycombinator.com/item?id=${item.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`${themeColors} hover:opacity-75 transition-colors`}
-                          >
-                            {item.title}
-                          </a>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/item/${item.id}`);
-                            }}
-                            className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
-                          >
-                            [{item.kids?.length ? 'comments' : 'discuss'}]
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      // Keep existing comment rendering
-                      <a 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleStoryClick(item);
-                        }}
-                        href={item.formatted?.links.main}
-                        className={`${themeColors} transition-colors cursor-pointer`}
-                        dangerouslySetInnerHTML={{ 
-                          __html: item.formatted?.text
-                            .replace(/<a[^>]*>.*?<\/a>\s*>\s*/, '')
-                            .replace(/^[^>]*>\s*/, '')
-                            || '' 
-                        }}
-                      />
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleStoryClick(item);
+                      }}
+                      href={item.formatted?.links.main}
+                      className={`${themeColors} transition-colors cursor-pointer`}
+                      dangerouslySetInnerHTML={{ 
+                        __html: item.type === 'story' 
+                          ? item.formatted?.text.replace(
+                              item.title || '',
+                              `<span class="font-bold">${item.title || ''}</span>`
+                            ) 
+                          : item.formatted?.text || '' 
+                      }}
+                    />
+                    {item.type === 'story' && item.url && (
+                      <span className="ml-2">
+                        <a 
+                          href={item.formatted?.links.comments}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`${themeColors} opacity-50 hover:opacity-100 transition-colors cursor-pointer`}
+                        >
+                          [{item.kids?.length ? 'comments' : 'discuss'}]
+                        </a>
+                      </span>
                     )}
                   </div>
                 </div>
@@ -1340,6 +1325,7 @@ export default function HNLiveTerminal() {
               isOpen={showSearch}
               onClose={() => setShowSearch(false)}
               theme={options.theme}
+              initialQuery="Show HN"
             />
           </>
         )}
@@ -1362,6 +1348,7 @@ export default function HNLiveTerminal() {
               isOpen={showSearch}
               onClose={() => setShowSearch(false)}
               theme={options.theme}
+              initialQuery="Ask HN"
             />
           </>
         )}

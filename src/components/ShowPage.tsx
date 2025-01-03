@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTopUsers } from '../hooks/useTopUsers';
 
@@ -63,6 +63,9 @@ export function ShowPage({
   isSearchOpen
 }: ShowPageProps) {
   const navigate = useNavigate();
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadingRef = useRef<HTMLDivElement>(null);
+  
   const [state, setState] = useState<ShowPageState>({
     stories: [],
     loading: true,
@@ -146,11 +149,40 @@ export function ShowPage({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate, showGrep, isSettingsOpen, isSearchOpen]);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     const nextPage = state.page + 1;
     setState(prev => ({ ...prev, page: nextPage }));
     fetchStories(nextPage);
-  };
+  }, [state.page]);
+
+  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
+    const target = entries[0];
+    if (target.isIntersecting && !state.loadingMore && state.hasMore) {
+      loadMore();
+    }
+  }, [state.loadingMore, state.hasMore, loadMore]);
+
+  useEffect(() => {
+    if (state.stories.length > 0 && state.hasMore && !state.loading) {
+      const options = {
+        root: null,
+        rootMargin: '1000px',
+        threshold: 0.1
+      };
+
+      observerRef.current = new IntersectionObserver(handleObserver, options);
+      
+      if (loadingRef.current) {
+        observerRef.current.observe(loadingRef.current);
+      }
+
+      return () => {
+        if (observerRef.current) {
+          observerRef.current.disconnect();
+        }
+      };
+    }
+  }, [handleObserver, state.stories.length, state.hasMore, state.loading]);
 
   const handleClose = () => {
     navigate('/');
@@ -469,17 +501,55 @@ export function ShowPage({
               </div>
             ))}
 
-            {state.hasMore && (
-              <div className="text-center py-8">
-                <button
-                  onClick={loadMore}
-                  disabled={state.loadingMore}
-                  className={`${
+            {!grepFilter && (
+              <div 
+                ref={loadingRef} 
+                className="text-center py-8"
+              >
+                {state.loadingMore ? (
+                  <div className={`${
                     theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
-                  } opacity-75 hover:opacity-100 transition-opacity disabled:opacity-50`}
-                >
-                  {state.loadingMore ? 'Loading more stories...' : 'Load more stories'}
-                </button>
+                  } opacity-75`}>
+                    Loading more stories...
+                  </div>
+                ) : state.hasMore ? (
+                  <div className="h-20 opacity-50">
+                    <span className="text-sm">Loading more...</span>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className={`${
+                      theme === 'green' ? 'text-green-500/50' : 'text-[#ff6600]/50'
+                    } text-sm`}>
+                      That's all the Show HN posts for now!
+                    </div>
+                    <div className="text-sm space-y-2">
+                      <div>
+                        <button
+                          onClick={() => onShowSearch()}
+                          className={`${
+                            theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
+                          } hover:opacity-75`}
+                        >
+                          → Search all Show HN posts in history
+                        </button>
+                      </div>
+                      <div>
+                        <span className="opacity-50">or</span>
+                      </div>
+                      <div>
+                        <button
+                          onClick={() => navigate('/')}
+                          className={`${
+                            theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
+                          } hover:opacity-75`}
+                        >
+                          → Head back to the live feed to see real-time stories and discussions
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
