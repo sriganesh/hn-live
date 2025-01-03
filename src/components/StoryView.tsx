@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTopUsers } from '../hooks/useTopUsers';
-import { useQuery } from '@tanstack/react-query';
 
 interface StoryViewProps {
   itemId: number;
@@ -38,47 +37,13 @@ interface HNComment {
 const MAX_COMMENTS = 10;  // Maximum number of top-level comments to load
 const MAX_DEPTH = 5;     // Maximum nesting depth for replies
 
-// Cache duration calculator
-const getStoryCacheDuration = (timestamp: number) => {
-  const age = Date.now() - timestamp * 1000;
-  if (age < 24 * 60 * 60 * 1000) return 5 * 60 * 1000;  // 5 mins for new content
-  if (age < 7 * 24 * 60 * 60 * 1000) return 60 * 60 * 1000;  // 1 hour for recent
-  return 7 * 24 * 60 * 60 * 1000;  // 1 week for old content
-};
-
-// Update comment cache duration logic
-const getCommentCacheDuration = (timestamp: number) => {
-  const age = Date.now() - timestamp * 1000;
-  if (age < 60 * 60 * 1000) return 30 * 60 * 1000;  // 30 mins for comments under 1 hour
-  return 7 * 24 * 60 * 60 * 1000;  // 1 week for comments over 1 hour old
-};
-
 // Add this at the top of the file
 const isDev = import.meta.env.DEV;
 
 // Story fetching function
 const fetchStory = async (storyId: number) => {
-  const cacheKey = `story-${storyId}`;
-  const cached = localStorage.getItem(cacheKey);
-  
-  if (cached) {
-    const { data, timestamp } = JSON.parse(cached);
-    if (Date.now() - timestamp < getStoryCacheDuration(data.time)) {
-      isDev && console.log('🎯 Cache hit:', storyId);
-      return data;
-    }
-  }
-
-  isDev && console.log('📡 Fetching from API:', storyId);
   const response = await fetch(`https://hacker-news.firebaseio.com/v0/item/${storyId}.json`);
-  const data = await response.json();
-  
-  localStorage.setItem(cacheKey, JSON.stringify({
-    data,
-    timestamp: Date.now()
-  }));
-  
-  return data;
+  return response.json();
 };
 
 async function findRootStoryId(itemId: number): Promise<number> {
@@ -147,29 +112,10 @@ const getCommentIds = (comments: HNComment[]): Set<number> => {
   return ids;
 };
 
-// Add comment caching
+// Update the fetchComment function to remove caching
 const fetchComment = async (commentId: number) => {
-  const cacheKey = `comment-${commentId}`;
-  const cached = localStorage.getItem(cacheKey);
-  
-  if (cached) {
-    const { data, timestamp } = JSON.parse(cached);
-    if (Date.now() - timestamp < getCommentCacheDuration(data.time)) {
-      isDev && console.log('🎯 Cache hit comment:', commentId);
-      return data;
-    }
-  }
-
-  isDev && console.log('📡 Fetching comment:', commentId);
   const response = await fetch(`https://hacker-news.firebaseio.com/v0/item/${commentId}.json`);
-  const data = await response.json();
-  
-  localStorage.setItem(cacheKey, JSON.stringify({
-    data,
-    timestamp: Date.now()
-  }));
-  
-  return data;
+  return response.json();
 };
 
 // Update the fetchComments function to use cached comments
@@ -312,7 +258,8 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
   const navigate = useNavigate();
   const { isTopUser, getTopUserClass } = useTopUsers();
   
-  // Add state for comments first
+  const [story, setStory] = useState<HNStory | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [commentState, setCommentState] = useState<StoryViewState>({
     loadedComments: [],
     loadedCount: 0,
@@ -321,55 +268,60 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
     isLoadingMore: false
   });
 
-  // Move useQuery to the top level
-  const { data: story, isLoading } = useQuery({
-    queryKey: ['story', itemId],
-    queryFn: async () => {
-      const rootStoryId = await findRootStoryId(itemId);
-      const storyData = await fetchStory(rootStoryId);
+  // Replace useQuery with useEffect
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const rootStoryId = await findRootStoryId(itemId);
+        const storyData = await fetchStory(rootStoryId);
 
-      let requiredIds: Set<number> | undefined;
-      if (scrollToId) {
-        const commentPath = await findCommentPath(scrollToId);
-        requiredIds = new Set(commentPath);
+        let requiredIds: Set<number> | undefined;
+        if (scrollToId) {
+          const commentPath = await findCommentPath(scrollToId);
+          requiredIds = new Set(commentPath);
+        }
+
+        let initialComments: HNComment[] = [];
+        if (storyData.kids) {
+          const initialBatch = storyData.kids.slice(0, MAX_COMMENTS);
+          initialComments = await fetchComments(initialBatch, 0, requiredIds);
+          initialComments = getUniqueComments(initialComments);
+        }
+
+        const initialTotal = countCommentsInTree(initialComments);
+
+        setCommentState({
+          loadedComments: initialComments,
+          loadedCount: initialComments.length,
+          loadedTotal: initialTotal,
+          hasMore: (storyData.kids?.length || 0) > MAX_COMMENTS,
+          isLoadingMore: false
+        });
+
+        if (scrollToId) {
+          setTimeout(() => {
+            const element = document.getElementById(`comment-${scrollToId}`);
+            if (element) {
+              element.scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'center'
+              });
+              element.classList.add('highlight');
+            }
+          }, 100);
+        }
+
+        setStory(storyData);
+      } catch (error) {
+        console.error('Error fetching story:', error);
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      let initialComments: HNComment[] = [];
-      if (storyData.kids) {
-        const initialBatch = storyData.kids.slice(0, MAX_COMMENTS);
-        initialComments = await fetchComments(initialBatch, 0, requiredIds);
-        // Filter out duplicate comments
-        initialComments = getUniqueComments(initialComments);
-      }
-
-      const initialTotal = countCommentsInTree(initialComments);
-
-      setCommentState({
-        loadedComments: initialComments,
-        loadedCount: initialComments.length,
-        loadedTotal: initialTotal,
-        hasMore: (storyData.kids?.length || 0) > MAX_COMMENTS,
-        isLoadingMore: false
-      });
-
-      // Handle scroll to comment
-      if (scrollToId) {
-        setTimeout(() => {
-          const element = document.getElementById(`comment-${scrollToId}`);
-          if (element) {
-            element.scrollIntoView({ 
-              behavior: 'smooth',
-              block: 'center'
-            });
-            element.classList.add('highlight');
-          }
-        }, 100);
-      }
-
-      return storyData;
-    },
-    staleTime: getStoryCacheDuration(Date.now() / 1000),
-  });
+    fetchData();
+  }, [itemId, scrollToId]);
 
   // Add these refs at the top of the StoryView component
   const observerRef = useRef<IntersectionObserver | null>(null);
