@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTopUsers } from '../hooks/useTopUsers';
+import { MobileMoreMenu } from './MobileMoreMenu';
 
 interface ShowPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -238,100 +239,144 @@ export function ShowPage({
   }, [showMoreMenu]);
 
   return (
-    <>
-      <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
-        <div className="h-full overflow-y-auto p-4">
-          {/* Desktop view */}
-          <div className="hidden sm:flex items-center justify-between mb-8">
+    <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
+      <div className="h-full overflow-y-auto p-4">
+        {/* Desktop view */}
+        <div className="hidden sm:flex items-center justify-between mb-8">
+          <div className="flex items-center">
             <div className="flex items-center">
-              <div className="flex items-center">
-                <button
-                  onClick={() => navigate('/')}
-                  className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider hover:opacity-75 flex items-center`}
-                >
-                  <span>HN</span>
-                  <span className="text-2xl leading-[0] relative top-[1px] mx-[1px]">•</span>
-                  <span>LIVE</span>
-                </button>
-                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
-                  /
-                </span>
-                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
-                  SHOW HN
-                </span>
+              <button
+                onClick={() => navigate('/')}
+                className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider hover:opacity-75 flex items-center`}
+              >
+                <span>HN</span>
+                <span className="text-2xl leading-[0] relative top-[1px] mx-[1px]">•</span>
+                <span>LIVE</span>
+              </button>
+              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
+                /
+              </span>
+              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
+                SHOW HN
+              </span>
+            </div>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-4">
+            <button 
+              onClick={() => navigate('/front')}
+              className={themeColors}
+            >
+              [FRONT PAGE]
+            </button>
+            <button 
+              onClick={() => navigate('/show')}
+              className={`${themeColors} opacity-30 hover:opacity-50`}
+            >
+              [SHOW]
+            </button>
+            <button 
+              onClick={() => navigate('/ask')}
+              className={themeColors}
+            >
+              [ASK]
+            </button>
+            <button 
+              onClick={() => navigate('/jobs')}
+              className={themeColors}
+            >
+              [JOBS]
+            </button>
+            <button 
+              onClick={() => navigate('/best')}
+              className={themeColors}
+            >
+              [BEST]
+            </button>
+            <button 
+              onClick={onShowSearch}
+              className={themeColors}
+              title="Ctrl/Cmd + K"
+            >
+              [SEARCH]
+            </button>
+            {grepState.isActive ? (
+              <div className="flex items-center gap-2">
+                <span>grep:</span>
+                <input
+                  type="text"
+                  value={grepState.searchTerm}
+                  onChange={(e) => {
+                    setGrepState(prev => ({
+                      ...prev,
+                      searchTerm: e.target.value,
+                      matchedStories: e.target.value ? state.stories.filter(story => {
+                        const searchText = `${story.title} ${story.by}`.toLowerCase();
+                        return searchText.includes(e.target.value.toLowerCase());
+                      }) : []
+                    }));
+                  }}
+                  className="bg-transparent border-b border-current/20 px-1 py-0.5 focus:outline-none focus:border-current/40 w-32"
+                  placeholder="filter..."
+                  autoFocus
+                />
               </div>
+            ) : (
+              <button
+                onClick={() => setGrepState(prev => ({ ...prev, isActive: true }))}
+                className={themeColors}
+              >
+                [GREP]
+              </button>
+            )}
+            <button
+              onClick={onShowSettings}
+              className={themeColors}
+            >
+              [SETTINGS]
+            </button>
+            <button 
+              onClick={handleClose}
+              className="opacity-75 hover:opacity-100"
+            >
+              [ESC]
+            </button>
+          </div>
+
+          <div className="sm:hidden">
+            <button 
+              onClick={handleClose}
+              className="opacity-75 hover:opacity-100"
+            >
+              [ESC]
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile view */}
+        <div className="sm:hidden mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate('/')}
+                className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider hover:opacity-75 flex items-center`}
+              >
+                <span>HN</span>
+                <span className="text-2xl leading-[0] relative top-[1px] mx-[1px]">•</span>
+                <span>LIVE</span>
+              </button>
+              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
+                /
+              </span>
+              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
+                SHOW HN
+              </span>
             </div>
 
-            <div className="hidden sm:flex items-center gap-4">
-              <button 
-                onClick={() => navigate('/front')}
-                className={themeColors}
-              >
-                [FRONT PAGE]
-              </button>
-              <button 
-                onClick={() => navigate('/show')}
-                className={`${themeColors} opacity-30 hover:opacity-50`}
-              >
-                [SHOW]
-              </button>
-              <button 
-                onClick={() => navigate('/ask')}
-                className={themeColors}
-              >
-                [ASK]
-              </button>
-              <button 
-                onClick={() => navigate('/jobs')}
-                className={themeColors}
-              >
-                [JOBS]
-              </button>
-              <button 
-                onClick={() => navigate('/best')}
-                className={themeColors}
-              >
-                [BEST]
-              </button>
-              <button 
-                onClick={onShowSearch}
-                className={themeColors}
-                title="Ctrl/Cmd + K"
-              >
-                [SEARCH]
-              </button>
-              {grepState.isActive ? (
-                <div className="flex items-center gap-2">
-                  <span>grep:</span>
-                  <input
-                    type="text"
-                    value={grepState.searchTerm}
-                    onChange={(e) => {
-                      setGrepState(prev => ({
-                        ...prev,
-                        searchTerm: e.target.value,
-                        matchedStories: e.target.value ? state.stories.filter(story => {
-                          const searchText = `${story.title} ${story.by}`.toLowerCase();
-                          return searchText.includes(e.target.value.toLowerCase());
-                        }) : []
-                      }));
-                    }}
-                    className="bg-transparent border-b border-current/20 px-1 py-0.5 focus:outline-none focus:border-current/40 w-32"
-                    placeholder="filter..."
-                    autoFocus
-                  />
-                </div>
-              ) : (
-                <button
-                  onClick={() => setGrepState(prev => ({ ...prev, isActive: true }))}
-                  className={themeColors}
-                >
-                  [GREP]
-                </button>
-              )}
+            <div className="flex items-center gap-2 text-sm">
               <button
                 onClick={onShowSettings}
-                className={themeColors}
+                className={`${themeColors} hover:opacity-75`}
               >
                 [SETTINGS]
               </button>
@@ -342,259 +387,213 @@ export function ShowPage({
                 [ESC]
               </button>
             </div>
+          </div>
+        </div>
 
-            <div className="sm:hidden">
-              <button 
-                onClick={handleClose}
-                className="opacity-75 hover:opacity-100"
+        {state.loading ? (
+          <div className="flex items-center justify-center h-full">
+            Loading Show HN stories...
+          </div>
+        ) : (
+          <div className="max-w-3xl mx-auto space-y-4">
+            {filteredStories.map((story, index) => (
+              <div 
+                key={story.id}
+                className="group relative"
               >
-                [ESC]
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile view */}
-          <div className="sm:hidden mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => navigate('/')}
-                  className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider hover:opacity-75 flex items-center`}
-                >
-                  <span>HN</span>
-                  <span className="text-2xl leading-[0] relative top-[1px] mx-[1px]">•</span>
-                  <span>LIVE</span>
-                </button>
-                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
-                  /
-                </span>
-                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
-                  SHOW HN
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm">
-                <button
-                  onClick={onShowSettings}
-                  className={`${themeColors} hover:opacity-75`}
-                >
-                  [SETTINGS]
-                </button>
-                <button 
-                  onClick={handleClose}
-                  className="opacity-75 hover:opacity-100"
-                >
-                  [ESC]
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {state.loading ? (
-            <div className="flex items-center justify-center h-full">
-              Loading Show HN stories...
-            </div>
-          ) : (
-            <div className="max-w-3xl mx-auto space-y-4">
-              {filteredStories.map((story, index) => (
-                <div 
-                  key={story.id}
-                  className="group relative"
-                >
-                  {classicLayout ? (
-                    <div className="flex items-baseline gap-2">
-                      <span className="opacity-50">{index + 1}.</span>
-                      <div className="space-y-1">
-                        <div>
-                          <a
-                            href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
-                            onClick={(e) => {
-                              if (!story.url) {
-                                e.preventDefault();
-                                navigate(`/item/${story.id}`);
-                              }
-                            }}
-                            className="group-hover:opacity-75"
-                            target={story.url ? "_blank" : undefined}
-                            rel={story.url ? "noopener noreferrer" : undefined}
-                          >
-                            {story.title}
-                          </a>
-                          {story.url && (
-                            <span className="ml-2 opacity-50 text-sm">
-                              ({new URL(story.url).hostname})
-                            </span>
-                          )}
+                {classicLayout ? (
+                  <div className="flex items-baseline gap-2">
+                    <span className="opacity-50">{index + 1}.</span>
+                    <div className="space-y-1">
+                      <div>
+                        <a
+                          href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
+                          onClick={(e) => {
+                            if (!story.url) {
+                              e.preventDefault();
+                              navigate(`/item/${story.id}`);
+                            }
+                          }}
+                          className="group-hover:opacity-75"
+                          target={story.url ? "_blank" : undefined}
+                          rel={story.url ? "noopener noreferrer" : undefined}
+                        >
+                          {story.title}
+                        </a>
+                        {story.url && (
+                          <span className="ml-2 opacity-50 text-sm">
+                            ({new URL(story.url).hostname})
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm opacity-75">
+                        {story.score} points by{' '}
+                        <a 
+                          href={`https://news.ycombinator.com/user?id=${story.by}`}
+                          className={`hover:underline ${
+                            colorizeUsernames 
+                              ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
+                              : 'opacity-75'
+                          }`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {story.by}
+                        </a>{' '}
+                        <span title={new Date(story.time * 1000).toLocaleString()}>
+                          {formatTimeAgo(story.time)}
+                        </span> • {' '}
+                        <button
+                          onClick={() => navigate(`/item/${story.id}`)}
+                          className="hover:underline"
+                        >
+                          {story.descendants || 0} comments
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-baseline gap-3">
+                    <span className={`${theme === 'green' ? 'text-green-500/50' : 'text-[#ff6600]/50'} text-sm font-mono`}>
+                      {(index + 1).toString().padStart(2, '0')}
+                    </span>
+                    <div className="space-y-2 flex-1">
+                      {story.url && (
+                        <div className="flex items-center text-sm opacity-50">
+                          <span className="truncate">
+                            {new URL(story.url).hostname.replace('www.', '')}
+                          </span>
+                          <span className="mx-2">•</span>
+                          <span className="shrink-0" title={new Date(story.time * 1000).toLocaleString()}>
+                            {formatTimeAgo(story.time)}
+                          </span>
                         </div>
-                        <div className="text-sm opacity-75">
-                          {story.score} points by{' '}
-                          <a 
-                            href={`https://news.ycombinator.com/user?id=${story.by}`}
-                            className={`hover:underline ${
-                              colorizeUsernames 
-                                ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
-                                : 'opacity-75'
-                            }`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {story.by}
-                          </a>{' '}
+                      )}
+                      {!story.url && (
+                        <div className="text-sm opacity-50">
                           <span title={new Date(story.time * 1000).toLocaleString()}>
                             {formatTimeAgo(story.time)}
-                          </span> • {' '}
-                          <button
-                            onClick={() => navigate(`/item/${story.id}`)}
-                            className="hover:underline"
-                          >
-                            {story.descendants || 0} comments
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-baseline gap-3">
-                      <span className={`${theme === 'green' ? 'text-green-500/50' : 'text-[#ff6600]/50'} text-sm font-mono`}>
-                        {(index + 1).toString().padStart(2, '0')}
-                      </span>
-                      <div className="space-y-2 flex-1">
-                        {story.url && (
-                          <div className="flex items-center text-sm opacity-50">
-                            <span className="truncate">
-                              {new URL(story.url).hostname.replace('www.', '')}
-                            </span>
-                            <span className="mx-2">•</span>
-                            <span className="shrink-0" title={new Date(story.time * 1000).toLocaleString()}>
-                              {formatTimeAgo(story.time)}
-                            </span>
-                          </div>
-                        )}
-                        {!story.url && (
-                          <div className="text-sm opacity-50">
-                            <span title={new Date(story.time * 1000).toLocaleString()}>
-                              {formatTimeAgo(story.time)}
-                            </span>
-                          </div>
-                        )}
-                        <div className="pr-4">
-                          <a
-                            href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
-                            onClick={(e) => {
-                              if (!story.url) {
-                                e.preventDefault();
-                                navigate(`/item/${story.id}`);
-                              }
-                            }}
-                            className="group-hover:opacity-75 font-medium"
-                            target={story.url ? "_blank" : undefined}
-                            rel={story.url ? "noopener noreferrer" : undefined}
-                          >
-                            <div className={`${
-                              theme === 'green'
-                                ? 'text-green-400'
-                                : theme === 'og'
-                                ? 'text-[#666666]'
-                                : 'text-[#a0a0a0]'
-                            }`}>
-                              {story.title}
-                            </div>
-                          </a>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                          <a 
-                            href={`https://news.ycombinator.com/user?id=${story.by}`}
-                            className={`hover:underline ${
-                              colorizeUsernames 
-                                ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
-                                : 'opacity-75'
-                            }`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {story.by}
-                          </a>
-                          <span className="opacity-75">•</span>
-                          <span className="font-mono opacity-75">
-                            {story.score} points
                           </span>
-                          <span className="opacity-75">•</span>
-                          <button
-                            onClick={() => navigate(`/item/${story.id}`)}
-                            className="opacity-75 hover:opacity-100 hover:underline"
-                          >
-                            {story.descendants 
-                              ? `${story.descendants} comment${story.descendants === 1 ? '' : 's'}`
-                              : 'discuss'
+                        </div>
+                      )}
+                      <div className="pr-4">
+                        <a
+                          href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
+                          onClick={(e) => {
+                            if (!story.url) {
+                              e.preventDefault();
+                              navigate(`/item/${story.id}`);
                             }
-                          </button>
-                        </div>
+                          }}
+                          className="group-hover:opacity-75 font-medium"
+                          target={story.url ? "_blank" : undefined}
+                          rel={story.url ? "noopener noreferrer" : undefined}
+                        >
+                          <div className={`${
+                            theme === 'green'
+                              ? 'text-green-400'
+                              : theme === 'og'
+                              ? 'text-[#666666]'
+                              : 'text-[#a0a0a0]'
+                          }`}>
+                            {story.title}
+                          </div>
+                        </a>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                        <a 
+                          href={`https://news.ycombinator.com/user?id=${story.by}`}
+                          className={`hover:underline ${
+                            colorizeUsernames 
+                              ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
+                              : 'opacity-75'
+                          }`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {story.by}
+                        </a>
+                        <span className="opacity-75">•</span>
+                        <span className="font-mono opacity-75">
+                          {story.score} points
+                        </span>
+                        <span className="opacity-75">•</span>
+                        <button
+                          onClick={() => navigate(`/item/${story.id}`)}
+                          className="opacity-75 hover:opacity-100 hover:underline"
+                        >
+                          {story.descendants 
+                            ? `${story.descendants} comment${story.descendants === 1 ? '' : 's'}`
+                            : 'discuss'
+                          }
+                        </button>
                       </div>
                     </div>
-                  )}
-                  <div className={`border-b ${
-                    theme === 'green' 
-                      ? 'border-green-500/10' 
-                      : theme === 'og'
-                      ? 'border-[#ff6600]/5'
-                      : 'border-[#828282]/10'
-                  } mt-4`} />
-                </div>
-              ))}
+                  </div>
+                )}
+                <div className={`border-b ${
+                  theme === 'green' 
+                    ? 'border-green-500/10' 
+                    : theme === 'og'
+                    ? 'border-[#ff6600]/5'
+                    : 'border-[#828282]/10'
+                } mt-4`} />
+              </div>
+            ))}
 
-              {!grepFilter && (
-                <div 
-                  ref={loadingRef} 
-                  className="text-center py-8"
-                >
-                  {state.loadingMore ? (
+            {!grepFilter && (
+              <div 
+                ref={loadingRef} 
+                className="text-center py-8"
+              >
+                {state.loadingMore ? (
+                  <div className={`${
+                    theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
+                  } opacity-75`}>
+                    Loading more stories...
+                  </div>
+                ) : state.hasMore ? (
+                  <div className="h-20 opacity-50">
+                    <span className="text-sm">Loading more...</span>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
                     <div className={`${
-                      theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
-                    } opacity-75`}>
-                      Loading more stories...
+                      theme === 'green' ? 'text-green-500/50' : 'text-[#ff6600]/50'
+                    } text-sm`}>
+                      That's all the Show HN posts for now!
                     </div>
-                  ) : state.hasMore ? (
-                    <div className="h-20 opacity-50">
-                      <span className="text-sm">Loading more...</span>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className={`${
-                        theme === 'green' ? 'text-green-500/50' : 'text-[#ff6600]/50'
-                      } text-sm`}>
-                        That's all the Show HN posts for now!
+                    <div className="text-sm space-y-2">
+                      <div>
+                        <button
+                          onClick={() => onShowSearch()}
+                          className={`${
+                            theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
+                          } hover:opacity-75`}
+                        >
+                          → Search all Show HN posts in history
+                        </button>
                       </div>
-                      <div className="text-sm space-y-2">
-                        <div>
-                          <button
-                            onClick={() => onShowSearch()}
-                            className={`${
-                              theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
-                            } hover:opacity-75`}
-                          >
-                            → Search all Show HN posts in history
-                          </button>
-                        </div>
-                        <div>
-                          <span className="opacity-50">or</span>
-                        </div>
-                        <div>
-                          <button
-                            onClick={() => navigate('/')}
-                            className={`${
-                              theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
-                            } hover:opacity-75`}
-                          >
-                            → Head back to the live feed to see real-time stories and discussions
-                          </button>
-                        </div>
+                      <div>
+                        <span className="opacity-50">or</span>
+                      </div>
+                      <div>
+                        <button
+                          onClick={() => navigate('/')}
+                          className={`${
+                            theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
+                          } hover:opacity-75`}
+                        >
+                          → Head back to the live feed to see real-time stories and discussions
+                        </button>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Mobile Bottom Bar */}
@@ -643,87 +642,11 @@ export function ShowPage({
               <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
             </svg>
 
-            {showMoreMenu && (
-              <div className={`
-                absolute bottom-full left-0 mb-2 w-48 py-2
-                border rounded-lg shadow-lg z-50
-                ${theme === 'green'
-                  ? 'bg-black border-green-500/30 text-green-400'
-                  : theme === 'og'
-                  ? 'bg-white border-[#ff6600]/30 text-[#828282]'
-                  : 'bg-black border-[#828282]/30 text-[#828282]'
-                }
-              `}>
-                <button
-                  onClick={(e) => { 
-                    e.stopPropagation();
-                    navigate('/show'); 
-                    setShowMoreMenu(false); 
-                  }}
-                  className={`w-full px-4 py-2 text-left font-normal
-                    ${theme === 'green'
-                      ? 'hover:bg-green-900 hover:text-green-400'
-                      : theme === 'og'
-                      ? 'hover:bg-gray-100 hover:text-[#828282]'
-                      : 'hover:bg-gray-900 hover:text-[#828282]'
-                    }
-                  `}
-                >
-                  Show HN
-                </button>
-                <button
-                  onClick={(e) => { 
-                    e.stopPropagation();
-                    navigate('/ask'); 
-                    setShowMoreMenu(false); 
-                  }}
-                  className={`w-full px-4 py-2 text-left font-normal
-                    ${theme === 'green'
-                      ? 'hover:bg-green-900 hover:text-green-400'
-                      : theme === 'og'
-                      ? 'hover:bg-gray-100 hover:text-[#828282]'
-                      : 'hover:bg-gray-900 hover:text-[#828282]'
-                    }
-                  `}
-                >
-                  Ask HN
-                </button>
-                <button
-                  onClick={(e) => { 
-                    e.stopPropagation();
-                    navigate('/jobs'); 
-                    setShowMoreMenu(false); 
-                  }}
-                  className={`w-full px-4 py-2 text-left font-normal
-                    ${theme === 'green'
-                      ? 'hover:bg-green-900 hover:text-green-400'
-                      : theme === 'og'
-                      ? 'hover:bg-gray-100 hover:text-[#828282]'
-                      : 'hover:bg-gray-900 hover:text-[#828282]'
-                    }
-                  `}
-                >
-                  Jobs
-                </button>
-                <button
-                  onClick={(e) => { 
-                    e.stopPropagation();
-                    navigate('/best'); 
-                    setShowMoreMenu(false); 
-                  }}
-                  className={`w-full px-4 py-2 text-left font-normal
-                    ${theme === 'green'
-                      ? 'hover:bg-green-900 hover:text-green-400'
-                      : theme === 'og'
-                      ? 'hover:bg-gray-100 hover:text-[#828282]'
-                      : 'hover:bg-gray-900 hover:text-[#828282]'
-                    }
-                  `}
-                >
-                  Best
-                </button>
-              </div>
-            )}
+            <MobileMoreMenu 
+              theme={theme}
+              showMenu={showMoreMenu}
+              onClose={() => setShowMoreMenu(false)}
+            />
           </button>
 
           {/* Search Button */}
@@ -747,6 +670,6 @@ export function ShowPage({
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 } 

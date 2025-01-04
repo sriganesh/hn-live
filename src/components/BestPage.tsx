@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTopUsers } from '../hooks/useTopUsers';
+import { MobileMoreMenu } from './MobileMoreMenu';
 
 interface BestPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -596,87 +597,11 @@ export function BestPage({
               <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
             </svg>
 
-            {showMoreMenu && (
-              <div className={`
-                absolute bottom-full left-0 mb-2 w-48 py-2
-                border rounded-lg shadow-lg z-50
-                ${theme === 'green'
-                  ? 'bg-black border-green-500/30 text-green-400'
-                  : theme === 'og'
-                  ? 'bg-white border-[#ff6600]/30 text-[#828282]'
-                  : 'bg-black border-[#828282]/30 text-[#828282]'
-                }
-              `}>
-                <button
-                  onClick={(e) => { 
-                    e.stopPropagation();
-                    navigate('/show'); 
-                    setShowMoreMenu(false); 
-                  }}
-                  className={`w-full px-4 py-2 text-left font-normal
-                    ${theme === 'green'
-                      ? 'hover:bg-green-900 hover:text-green-400'
-                      : theme === 'og'
-                      ? 'hover:bg-gray-100 hover:text-[#828282]'
-                      : 'hover:bg-gray-900 hover:text-[#828282]'
-                    }
-                  `}
-                >
-                  Show HN
-                </button>
-                <button
-                  onClick={(e) => { 
-                    e.stopPropagation();
-                    navigate('/ask'); 
-                    setShowMoreMenu(false); 
-                  }}
-                  className={`w-full px-4 py-2 text-left font-normal
-                    ${theme === 'green'
-                      ? 'hover:bg-green-900 hover:text-green-400'
-                      : theme === 'og'
-                      ? 'hover:bg-gray-100 hover:text-[#828282]'
-                      : 'hover:bg-gray-900 hover:text-[#828282]'
-                    }
-                  `}
-                >
-                  Ask HN
-                </button>
-                <button
-                  onClick={(e) => { 
-                    e.stopPropagation();
-                    navigate('/jobs'); 
-                    setShowMoreMenu(false); 
-                  }}
-                  className={`w-full px-4 py-2 text-left font-normal
-                    ${theme === 'green'
-                      ? 'hover:bg-green-900 hover:text-green-400'
-                      : theme === 'og'
-                      ? 'hover:bg-gray-100 hover:text-[#828282]'
-                      : 'hover:bg-gray-900 hover:text-[#828282]'
-                    }
-                  `}
-                >
-                  Jobs
-                </button>
-                <button
-                  onClick={(e) => { 
-                    e.stopPropagation();
-                    navigate('/best'); 
-                    setShowMoreMenu(false); 
-                  }}
-                  className={`w-full px-4 py-2 text-left font-normal
-                    ${theme === 'green'
-                      ? 'hover:bg-green-900 hover:text-green-400'
-                      : theme === 'og'
-                      ? 'hover:bg-gray-100 hover:text-[#828282]'
-                      : 'hover:bg-gray-900 hover:text-[#828282]'
-                    }
-                  `}
-                >
-                  Best
-                </button>
-              </div>
-            )}
+            <MobileMoreMenu 
+              theme={theme}
+              showMenu={showMoreMenu}
+              onClose={() => setShowMoreMenu(false)}
+            />
           </button>
 
           <button
