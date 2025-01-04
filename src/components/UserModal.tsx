@@ -172,16 +172,6 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
         `}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Add [x] close button */}
-        <button 
-          onClick={onClose}
-          className={`absolute top-4 right-4 px-2 py-1 hover:opacity-75 ${
-            theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
-          }`}
-        >
-          [x]
-        </button>
-
         {loading ? (
           <div className="flex items-center justify-center h-32">
             Loading user profile...
@@ -192,9 +182,9 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
           </div>
         ) : user && (
           <div className="space-y-6">
-            {/* User Info */}
-            <div className="space-y-4">
-              <div className="flex items-baseline gap-4">
+            {/* Header with username and buttons */}
+            <div className="flex justify-between">
+              <div className="space-y-1">
                 <h2 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} text-xl font-bold`}>
                   {user.id}
                 </h2>
@@ -202,12 +192,23 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
                   href={`https://news.ycombinator.com/user?id=${user.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm opacity-50 hover:opacity-75"
+                  className="text-sm opacity-50 hover:opacity-75 block"
                 >
                   [view on HN]
                 </a>
               </div>
+              <button 
+                onClick={onClose}
+                className={`px-2 hover:opacity-75 ${
+                  theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
+                }`}
+              >
+                [x]
+              </button>
+            </div>
 
+            {/* User Info */}
+            <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <div className="text-sm opacity-75">Joined</div>
