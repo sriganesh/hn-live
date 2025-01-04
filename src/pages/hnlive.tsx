@@ -12,6 +12,8 @@ import { BestPage } from '../components/BestPage';
 import { useTopUsers } from '../hooks/useTopUsers';
 import SettingsModal from '../components/SettingsModal';
 import { MobileBottomBar } from '../components/MobileBottomBar';
+import UserPage from '../components/UserPage';
+import { UserModal } from '../components/UserModal';
 
 interface HNItem {
   id: number;
@@ -222,12 +224,11 @@ export default function HNLiveTerminal() {
     };
     let parentStory = null;
     
-    // Always link username directly to HN
-    const userLink = `<a href="https://news.ycombinator.com/user?id=${item.by}" 
+    // Update the user link to use our modal instead of direct HN link
+    const userLink = `<a 
+      href="/user/${item.by}"
       class="hn-username hover:underline"
-      target="_blank"
-      rel="noopener noreferrer"
-      onclick="event.stopPropagation()"
+      data-username="${item.by}"
     >${item.by}</a>`;
     
     if (item.type === 'comment') {
@@ -887,6 +888,51 @@ export default function HNLiveTerminal() {
     }
   }, [options.showCommentParents]);
 
+  // Add state for user modal
+  const [viewingUser, setViewingUser] = useState<string | null>(null);
+
+  // Add event listener for the custom viewUser event
+  useEffect(() => {
+    const handleViewUser = (e: CustomEvent) => {
+      setViewingUser(e.detail);
+    };
+
+    window.addEventListener('viewUser', handleViewUser as EventListener);
+    return () => {
+      window.removeEventListener('viewUser', handleViewUser as EventListener);
+    };
+  }, []);
+
+  // Add a click handler to the container
+  useEffect(() => {
+    const handleContainerClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      
+      // Check if the clicked element is a username link
+      if (target.matches('a[data-username]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const username = target.getAttribute('data-username');
+        if (username) {
+          setViewingUser(username);
+        }
+      }
+    };
+
+    // Add the event listener to the container
+    const container = document.getElementById('terminal-container');
+    if (container) {
+      container.addEventListener('click', handleContainerClick);
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener('click', handleContainerClick);
+      }
+    };
+  }, []);
+
   return (
     <>
       <Helmet>
@@ -916,7 +962,7 @@ export default function HNLiveTerminal() {
         <style>{themeStyles}</style>
         <style>{mobileNavStyles}</style>
       </Helmet>
-      <div className={`fixed inset-0 ${themeBg} font-mono overflow-x-hidden`} data-theme={options.theme}>
+      <div id="terminal-container" className={`fixed inset-0 ${themeBg} font-mono overflow-x-hidden`} data-theme={options.theme}>
         <noscript>
           <div className="p-4">
             <h1>HN Live - Real-time Hacker News Feed</h1>
@@ -1297,7 +1343,7 @@ export default function HNLiveTerminal() {
 
         {location.pathname === '/front' && (
           <FrontPage 
-            theme={options.theme} 
+            theme={options.theme}
             fontSize={options.fontSize}
             colorizeUsernames={colorizeUsernames}
             classicLayout={options.classicLayout}
@@ -1306,6 +1352,7 @@ export default function HNLiveTerminal() {
             onShowSettings={() => setShowSettings(true)}
             isSettingsOpen={showSettings}
             isSearchOpen={showSearch}
+            onViewUser={(userId) => setViewingUser(userId)}
           />
         )}
 
@@ -1347,6 +1394,7 @@ export default function HNLiveTerminal() {
               onShowSettings={() => setShowSettings(true)}
               isSettingsOpen={showSettings}
               isSearchOpen={showSearch}
+              onViewUser={(userId) => setViewingUser(userId)}
             />
             <SearchModal 
               isOpen={showSearch}
@@ -1370,6 +1418,7 @@ export default function HNLiveTerminal() {
               onShowSettings={() => setShowSettings(true)}
               isSettingsOpen={showSettings}
               isSearchOpen={showSearch}
+              onViewUser={(userId) => setViewingUser(userId)}
             />
             <SearchModal 
               isOpen={showSearch}
@@ -1413,6 +1462,7 @@ export default function HNLiveTerminal() {
               onShowSettings={() => setShowSettings(true)}
               isSettingsOpen={showSettings}
               isSearchOpen={showSearch}
+              onViewUser={(userId) => setViewingUser(userId)}
             />
             <SearchModal 
               isOpen={showSearch}
@@ -1486,6 +1536,24 @@ export default function HNLiveTerminal() {
           theme={options.theme}
           onShowSearch={() => setShowSearch(true)}
           onShowSettings={() => setShowSettings(true)}
+        />
+
+        {location.pathname.startsWith('/user/') && (
+          <UserPage 
+            theme={options.theme}
+            fontSize={options.fontSize}
+            onShowSearch={() => setShowSearch(true)}
+            onShowSettings={() => setShowSettings(true)}
+          />
+        )}
+
+        {/* Add the UserModal component to the render */}
+        <UserModal
+          userId={viewingUser || ''}
+          isOpen={!!viewingUser}
+          onClose={() => setViewingUser(null)}
+          theme={options.theme}
+          fontSize={options.fontSize}
         />
       </div>
 

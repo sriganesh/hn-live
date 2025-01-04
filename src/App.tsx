@@ -6,6 +6,7 @@ import { ShowPage } from "./components/ShowPage";
 import { AskPage } from "./components/AskPage";
 import { JobsPage } from "./components/JobsPage";
 import { BestPage } from "./components/BestPage";
+import UserPage from "./components/UserPage";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
             <Route path="ask" element={null} />
             <Route path="jobs" element={null} />
             <Route path="best" element={null} />
+            <Route path="user/:userId" element={null} />
           </Route>
         </Routes>
       </Router>

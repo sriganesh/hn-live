@@ -13,6 +13,7 @@ interface FrontPageProps {
   onShowSettings: () => void;
   isSettingsOpen: boolean;
   isSearchOpen: boolean;
+  onViewUser: (userId: string) => void;
 }
 
 interface HNStory {
@@ -65,7 +66,8 @@ export function FrontPage({
   onShowGrep,
   onShowSettings,
   isSettingsOpen,
-  isSearchOpen
+  isSearchOpen,
+  onViewUser
 }: FrontPageProps) {
   const navigate = useNavigate();
   const [state, setState] = useState<FrontPageState>({
@@ -415,7 +417,11 @@ export function FrontPage({
                         <div className="text-sm opacity-75">
                           {story.score} points by{' '}
                           <a 
-                            href={`https://news.ycombinator.com/user?id=${story.by}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              onViewUser(story.by);
+                            }}
+                            href={`/user/${story.by}`}
                             className={`hover:underline ${
                               colorizeUsernames 
                                 ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
@@ -496,7 +502,11 @@ export function FrontPage({
                         {/* Bottom metadata line - without timestamp */}
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                           <a 
-                            href={`https://news.ycombinator.com/user?id=${story.by}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              onViewUser(story.by);
+                            }}
+                            href={`/user/${story.by}`}
                             className={`hover:underline ${
                               colorizeUsernames 
                                 ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
