@@ -12,6 +12,7 @@ import { BestPage } from '../components/BestPage';
 import { useTopUsers } from '../hooks/useTopUsers';
 import SettingsModal from '../components/SettingsModal';
 import { MobileBottomBar } from '../components/MobileBottomBar';
+import { GraveyardPage } from '../components/GraveyardPage';
 
 interface HNItem {
   id: number;
@@ -886,6 +887,18 @@ export default function HNLiveTerminal() {
       console.warn('Could not save comment parent preference');
     }
   }, [options.showCommentParents]);
+
+  if (location.pathname === '/graveyard') {
+    return (
+      <GraveyardPage 
+        theme={options.theme}
+        fontSize={options.fontSize}
+        colorizeUsernames={colorizeUsernames}
+        onShowSearch={() => setShowSearch(true)}
+        onShowSettings={() => setShowSettings(true)}
+      />
+    );
+  }
 
   return (
     <>
