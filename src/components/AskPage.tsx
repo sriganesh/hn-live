@@ -347,21 +347,6 @@ export function AskPage({
                   ASK HN
                 </span>
               </div>
-
-              <div className="flex items-center gap-2 text-sm">
-                <button
-                  onClick={onShowSettings}
-                  className={`${themeColors} hover:opacity-75`}
-                >
-                  [SETTINGS]
-                </button>
-                <button 
-                  onClick={handleClose}
-                  className="opacity-75 hover:opacity-100"
-                >
-                  [ESC]
-                </button>
-              </div>
             </div>
           </div>
 
