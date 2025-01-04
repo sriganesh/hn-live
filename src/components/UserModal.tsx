@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { topUsers } from '../data/top-users.json';
 
 interface UserModalProps {
   userId: string;
@@ -129,6 +130,9 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
     return 'just now';
   };
 
+  // Add function to check if user is in top 100
+  const isTopUser = (userId: string) => topUsers.includes(userId);
+
   if (!isOpen) return null;
 
   return (
@@ -182,12 +186,23 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
           </div>
         ) : user && (
           <div className="space-y-6">
-            {/* Header with username and buttons */}
+            {/* Header with username, top user badge, and buttons */}
             <div className="flex justify-between">
               <div className="space-y-1">
-                <h2 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} text-xl font-bold`}>
-                  {user.id}
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} text-xl font-bold`}>
+                    {user.id}
+                  </h2>
+                  {isTopUser(user.id) && (
+                    <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                      theme === 'green' 
+                        ? 'border-green-500/30 text-green-400' 
+                        : 'border-[#ff6600]/30 text-[#ff6600]'
+                    }`}>
+                      Top 100
+                    </span>
+                  )}
+                </div>
                 <a 
                   href={`https://news.ycombinator.com/user?id=${user.id}`}
                   target="_blank"
