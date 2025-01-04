@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { MobileMoreMenu } from './MobileMoreMenu';
 import { useState, useEffect } from 'react';
 
@@ -10,6 +10,7 @@ interface MobileBottomBarProps {
 
 export function MobileBottomBar({ theme, onShowSearch, onShowSettings }: MobileBottomBarProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   useEffect(() => {
@@ -22,6 +23,14 @@ export function MobileBottomBar({ theme, onShowSearch, onShowSettings }: MobileB
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, [showMoreMenu]);
+
+  const handleHomeClick = () => {
+    if (location.pathname === '/') {
+      window.location.reload();
+    } else {
+      navigate('/');
+    }
+  };
 
   return (
     <div className={`fixed sm:hidden bottom-0 left-0 right-0 mobile-bottom-bar z-50 border-t ${
@@ -47,7 +56,7 @@ export function MobileBottomBar({ theme, onShowSearch, onShowSettings }: MobileB
       >
         {/* Home Button */}
         <button
-          onClick={() => navigate('/')}
+          onClick={handleHomeClick}
           className="p-4 flex items-center justify-center relative"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
