@@ -886,6 +886,21 @@ export default function HNLiveTerminal() {
     }
   }, [options.showCommentParents]);
 
+  // Add state for the more menu
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+  // Add click outside handler to close more menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showMoreMenu && !(event.target as Element).closest('.more-menu-container')) {
+        setShowMoreMenu(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showMoreMenu]);
+
   return (
     <>
       <Helmet>
@@ -924,9 +939,10 @@ export default function HNLiveTerminal() {
         </noscript>
         {showAbout && <AboutOverlay />}
         <div className={`fixed top-0 left-0 right-0 z-50 ${themeHeaderBg} border-b ${themeColors} py-2 px-3 sm:py-4 sm:px-4`}>
-          {/* Mobile Layout */}
+          {/* Mobile Layout - Top Bar */}
           <div className="sm:hidden">
             <div className="flex items-center justify-between">
+              {/* Left side with logo and about */}
               <div className="flex items-center gap-4">
                 <span 
                   onClick={reloadSite}
@@ -956,24 +972,16 @@ export default function HNLiveTerminal() {
 
               {/* Right side controls */}
               <div className="flex items-center gap-2">
-                {/* Search button */}
-                <button 
-                  onClick={() => setShowSearch(true)}
-                  className={themeColors}
-                  title="Ctrl/Cmd + K"
-                >
-                  [SEARCH]
-                </button>
-
                 {/* Grep control */}
                 {showGrep ? (
                   <div className="flex items-center gap-2">
+                    <span>grep:</span>
                     <input
                       type="text"
                       value={filters.text}
                       onChange={(e) => setFilters(prev => ({...prev, text: e.target.value}))}
-                      className={`bg-transparent border-b border-current outline-none w-20 px-1 ${themeColors}`}
-                      placeholder="grep..."
+                      className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
+                      placeholder="search..."
                       autoFocus
                       onBlur={() => {
                         if (!filters.text) {
@@ -992,12 +1000,32 @@ export default function HNLiveTerminal() {
                   </button>
                 )}
 
-                {/* Settings button */}
+                {/* Start/Stop Button */}
                 <button
-                  onClick={() => setShowSettings(true)}
-                  className={`${themeColors} opacity-75 hover:opacity-100 transition-colors`}
+                  onClick={toggleFeed}
+                  className={`${
+                    isRunning 
+                      ? 'text-red-500' 
+                      : options.theme === 'green'
+                        ? 'text-green-400'
+                        : 'text-green-600'
+                  }`}
                 >
-                  [⚙️]
+                  [{isRunning ? 'STOP' : 'START'}]
+                </button>
+
+                {/* Clear Button */}
+                <button
+                  onClick={clearScreen}
+                  className={`${
+                    options.theme === 'green'
+                      ? 'text-yellow-400'
+                      : options.theme === 'dog'
+                      ? 'text-yellow-500'
+                      : 'text-yellow-600'
+                  }`}
+                >
+                  [CLEAR]
                 </button>
               </div>
             </div>
@@ -1087,32 +1115,34 @@ export default function HNLiveTerminal() {
               >
                 [SEARCH]
               </button>
-              {showGrep ? (
-                <div className="flex items-center gap-2">
-                  <span>grep:</span>
-                  <input
-                    type="text"
-                    value={filters.text}
-                    onChange={(e) => setFilters(prev => ({...prev, text: e.target.value}))}
-                    className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
-                    placeholder="search..."
-                    autoFocus
-                    onBlur={() => {
-                      if (!filters.text) {
-                        setShowGrep(false);
-                      }
-                    }}
-                  />
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowGrep(true)}
-                  className={themeColors}
-                  title="Ctrl/Cmd + F"
-                >
-                  [GREP]
-                </button>
-              )}
+              <div className="hidden sm:block">
+                {showGrep ? (
+                  <div className="flex items-center gap-2">
+                    <span>grep:</span>
+                    <input
+                      type="text"
+                      value={filters.text}
+                      onChange={(e) => setFilters(prev => ({...prev, text: e.target.value}))}
+                      className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
+                      placeholder="search..."
+                      autoFocus
+                      onBlur={() => {
+                        if (!filters.text) {
+                          setShowGrep(false);
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowGrep(true)}
+                    className={themeColors}
+                    title="Ctrl/Cmd + F"
+                  >
+                    [GREP]
+                  </button>
+                )}
+              </div>
 
               {/* Replace theme selector and settings with new Settings button and dropdown */}
               <div className="relative">
@@ -1465,58 +1495,155 @@ export default function HNLiveTerminal() {
           onColorizeUsernamesChange={setColorizeUsernames}
         />
 
-        {/* Mobile Bottom Bar - Only show on main feed page */}
+        {/* Mobile Bottom Bar */}
         {location.pathname === '/' && (
           <div className="fixed sm:hidden bottom-0 left-0 right-0 mobile-bottom-bar border-t z-50">
-            <div className={`${
-              options.theme === 'green'
-                ? 'bg-black/90 border-green-500/30'
+            <div className={`
+              ${options.theme === 'green'
+                ? 'bg-black/90 border-green-500/30 text-green-400'
                 : options.theme === 'og'
-                ? 'bg-[#f6f6ef]/90 border-[#ff6600]/30'
-                : 'bg-[#1a1a1a]/90 border-[#828282]/30'
-            } grid grid-cols-4 divide-x ${
-              options.theme === 'green'
-                ? 'divide-green-500/30'
-                : options.theme === 'og'
-                ? 'divide-[#ff6600]/30'
-                : 'divide-[#828282]/30'
-            }`}>
-              {/* Left: Start/Stop Button (1/4) */}
+                ? 'bg-[#f6f6ef]/90 border-[#ff6600]/30 text-[#828282]'
+                : 'bg-[#1a1a1a]/90 border-[#828282]/30 text-[#828282]'
+              } grid grid-cols-5 divide-x ${
+                options.theme === 'green'
+                  ? 'divide-green-500/30'
+                  : options.theme === 'og'
+                  ? 'divide-[#ff6600]/30'
+                  : 'divide-[#828282]/30'
+              }`}
+            >
+              {/* Home Button */}
               <button
-                onClick={toggleFeed}
-                className={`py-4 text-center transition-colors ${
-                  isRunning 
-                    ? options.theme === 'green'
-                      ? 'text-red-500'
-                      : 'text-red-500'
-                    : options.theme === 'green'
-                      ? 'text-green-400'
-                      : 'text-green-600'
-                }`}
+                onClick={() => navigate('/')}
+                className="p-4 flex items-center justify-center hover:opacity-75 transition-opacity"
               >
-                {isRunning ? 'STOP' : 'START'}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                </svg>
               </button>
 
-              {/* Middle: Front Page Button (2/4) */}
+              {/* Stories/Front Page Button */}
               <button
                 onClick={() => navigate('/front')}
-                className={`col-span-2 py-4 text-center ${themeColors} hover:opacity-75 transition-opacity`}
+                className="p-4 flex items-center justify-center hover:opacity-75 transition-opacity"
               >
-                FRONT PAGE
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M2 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 002 2H4a2 2 0 01-2-2V5zm3 1h6v4H5V6zm6 6H5v2h6v-2z" clipRule="evenodd" />
+                  <path d="M15 7h1a2 2 0 012 2v5.5a1.5 1.5 0 01-3 0V7z" />
+                </svg>
               </button>
 
-              {/* Right: Clear Button (1/4) */}
+              {/* More Menu Button */}
               <button
-                onClick={clearScreen}
-                className={`py-4 text-center transition-colors ${
-                  options.theme === 'green'
-                    ? 'text-yellow-400'
-                    : options.theme === 'dog'
-                    ? 'text-yellow-500'
-                    : 'text-yellow-600'
-                }`}
+                onClick={() => setShowMoreMenu(!showMoreMenu)}
+                className="p-4 flex items-center justify-center relative more-menu-container"
               >
-                CLEAR
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+                </svg>
+
+                {/* More Menu Popup */}
+                {showMoreMenu && (
+                  <div className={`
+                    absolute bottom-full left-0 mb-2 w-48 py-2
+                    border rounded-lg shadow-lg z-50
+                    ${options.theme === 'green'
+                      ? 'bg-black border-green-500/30 text-green-400'
+                      : options.theme === 'og'
+                      ? 'bg-white border-[#ff6600]/30 text-[#828282]'
+                      : 'bg-black border-[#828282]/30 text-[#828282]'
+                    }
+                  `}>
+                    <button
+                      onClick={(e) => { 
+                        e.stopPropagation();
+                        navigate('/show'); 
+                        setShowMoreMenu(false); 
+                      }}
+                      className={`w-full px-4 py-2 text-left font-normal
+                        ${options.theme === 'green'
+                          ? 'hover:bg-green-900 hover:text-green-400'
+                          : options.theme === 'og'
+                          ? 'hover:bg-gray-100 hover:text-[#828282]'
+                          : 'hover:bg-gray-900 hover:text-[#828282]'
+                        }
+                      `}
+                    >
+                      Show HN
+                    </button>
+                    <button
+                      onClick={(e) => { 
+                        e.stopPropagation();
+                        navigate('/ask'); 
+                        setShowMoreMenu(false); 
+                      }}
+                      className={`w-full px-4 py-2 text-left font-normal
+                        ${options.theme === 'green'
+                          ? 'hover:bg-green-900 hover:text-green-400'
+                          : options.theme === 'og'
+                          ? 'hover:bg-gray-100 hover:text-[#828282]'
+                          : 'hover:bg-gray-900 hover:text-[#828282]'
+                        }
+                      `}
+                    >
+                      Ask HN
+                    </button>
+                    <button
+                      onClick={(e) => { 
+                        e.stopPropagation();
+                        navigate('/jobs'); 
+                        setShowMoreMenu(false); 
+                      }}
+                      className={`w-full px-4 py-2 text-left font-normal
+                        ${options.theme === 'green'
+                          ? 'hover:bg-green-900 hover:text-green-400'
+                          : options.theme === 'og'
+                          ? 'hover:bg-gray-100 hover:text-[#828282]'
+                          : 'hover:bg-gray-900 hover:text-[#828282]'
+                        }
+                      `}
+                    >
+                      Jobs
+                    </button>
+                    <button
+                      onClick={(e) => { 
+                        e.stopPropagation();
+                        navigate('/best'); 
+                        setShowMoreMenu(false); 
+                      }}
+                      className={`w-full px-4 py-2 text-left font-normal
+                        ${options.theme === 'green'
+                          ? 'hover:bg-green-900 hover:text-green-400'
+                          : options.theme === 'og'
+                          ? 'hover:bg-gray-100 hover:text-[#828282]'
+                          : 'hover:bg-gray-900 hover:text-[#828282]'
+                        }
+                      `}
+                    >
+                      Best
+                    </button>
+                  </div>
+                )}
+              </button>
+
+              {/* Search Button */}
+              <button
+                onClick={() => setShowSearch(true)}
+                className="p-4 flex items-center justify-center hover:opacity-75 transition-opacity"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                </svg>
+              </button>
+
+              {/* Settings Button */}
+              <button
+                onClick={() => setShowSettings(true)}
+                className="p-4 flex items-center justify-center hover:opacity-75 transition-opacity"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                </svg>
               </button>
             </div>
           </div>
