@@ -255,7 +255,7 @@ export default function HNLiveTerminal() {
       // Then add the parent story info if available, respecting directLinks setting
       if (parentStory) {
         text += ` <span class="opacity-50">| re: </span><a href="https://news.ycombinator.com/item?id=${parentStory.id}" 
-          class="hover:underline opacity-75"
+          class="opacity-75 hover:opacity-100"
           target="_blank"
           rel="noopener noreferrer"
           onclick="event.stopPropagation()"
