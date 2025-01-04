@@ -24,7 +24,13 @@ export function MobileBottomBar({ theme, onShowSearch, onShowSettings }: MobileB
   }, [showMoreMenu]);
 
   return (
-    <div className="fixed sm:hidden bottom-0 left-0 right-0 mobile-bottom-bar border-t z-50">
+    <div className={`fixed sm:hidden bottom-0 left-0 right-0 mobile-bottom-bar z-50 border-t ${
+      theme === 'green'
+        ? 'border-green-500/30'
+        : theme === 'og'
+        ? 'border-[#ff6600]/30'
+        : 'border-[#828282]/30'
+    }`}>
       <div className={`
         ${theme === 'green'
           ? 'bg-black/90 border-green-500/30 text-green-400'
