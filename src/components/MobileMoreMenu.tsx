@@ -24,7 +24,7 @@ export function MobileMoreMenu({ theme, showMenu, onClose }: MobileMoreMenuProps
 
   return (
     <div className={`
-      absolute bottom-full left-0 mb-2 w-48 py-2
+      absolute bottom-full right-0 mb-2 w-48 py-2
       border rounded-lg shadow-lg z-50
       ${theme === 'green'
         ? 'bg-black border-green-500/30 text-green-400'
