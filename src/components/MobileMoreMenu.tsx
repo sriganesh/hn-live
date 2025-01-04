@@ -52,6 +52,15 @@ export function MobileMoreMenu({ theme, showMenu, onClose }: MobileMoreMenuProps
           )}
         </button>
       ))}
+      <button
+        onClick={() => {
+          navigate('/graveyard');
+          onClose();
+        }}
+        className="mobile-nav-button"
+      >
+        GRAVEYARD
+      </button>
     </div>
   );
 } 
