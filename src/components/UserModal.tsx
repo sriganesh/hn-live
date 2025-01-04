@@ -172,12 +172,14 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
         `}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
+        {/* Add [x] close button */}
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 opacity-75 hover:opacity-100"
+          className={`absolute top-4 right-4 px-2 py-1 hover:opacity-75 ${
+            theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
+          }`}
         >
-          [ESC]
+          [x]
         </button>
 
         {loading ? (
