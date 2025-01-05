@@ -35,7 +35,7 @@ interface HNComment {
   hasDeepReplies?: boolean;
 }
 
-const MAX_COMMENTS = 10;  // Maximum number of top-level comments to load
+const MAX_COMMENTS = 2;  // Reduced from 5 to 2 for faster initial load
 const MAX_DEPTH = 5;     // Maximum nesting depth for replies
 
 // Add this at the top of the file
@@ -399,18 +399,18 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
             requiredIds = new Set(targetCommentChain);
           }
 
-          // Always load first 10 comments
-          const firstTenComments = storyData.kids.slice(0, MAX_COMMENTS);
+          // Load first few comments instead of 10
+          const firstFewComments = storyData.kids.slice(0, MAX_COMMENTS);
           
-          // If our target comment's thread isn't in first 10, add it
+          // If our target comment's thread isn't in first 5, add it
           const topLevelParentId = targetCommentChain[0];
-          if (scrollToId && !firstTenComments.includes(topLevelParentId)) {
-            firstTenComments.push(topLevelParentId);
+          if (scrollToId && !firstFewComments.includes(topLevelParentId)) {
+            firstFewComments.push(topLevelParentId);
           }
 
           // Load all these comments
           initialComments = await fetchComments(
-            firstTenComments,
+            firstFewComments,
             0,
             requiredIds,
             true // Force load the entire chain
