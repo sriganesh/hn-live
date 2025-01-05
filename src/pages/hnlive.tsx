@@ -183,6 +183,9 @@ export default function HNLiveTerminal() {
   // Add abort controller ref
   const abortControllerRef = useRef<AbortController>();
 
+  // Add a ref to track the current timeout
+  const timeoutRef = useRef<NodeJS.Timeout>();
+
   const navigate = useNavigate();
   const { itemId, commentId } = useParams();
   const location = useLocation();
@@ -292,7 +295,28 @@ export default function HNLiveTerminal() {
 
   // Start/stop feed
   const toggleFeed = () => {
-    setIsRunning(prev => !prev);
+    setIsRunning(prev => {
+      if (prev) {
+        // If we're stopping, just stop processing and network calls
+        isProcessingRef.current = false;
+        
+        // Abort any ongoing fetches
+        abortControllerRef.current?.abort();
+        
+        // Clear the polling interval
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = undefined;
+        }
+
+        // Clear any pending timeout
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = undefined;
+        }
+      }
+      return !prev;
+    });
   };
 
   // Clear screen
@@ -315,11 +339,23 @@ export default function HNLiveTerminal() {
 
   // Simplify processQueue
   const processQueue = () => {
-    if (isProcessingRef.current || !itemQueueRef.current.length) return;
+    // Exit immediately if not running or already processing
+    if (!isRunning || isProcessingRef.current || !itemQueueRef.current.length) return;
     
     isProcessingRef.current = true;
     
     const processNext = () => {
+      // Exit the processing loop if stopped
+      if (!isRunning) {
+        isProcessingRef.current = false;
+        // Clear any pending timeout
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = undefined;
+        }
+        return;
+      }
+
       if (!itemQueueRef.current.length) {
         isProcessingRef.current = false;
         setQueueSize(itemQueueRef.current.length);
@@ -332,34 +368,34 @@ export default function HNLiveTerminal() {
       }
       setQueueSize(itemQueueRef.current.length);
 
-      // Calculate next update interval based on queue size
-      const queueSize = itemQueueRef.current.length;
-      let interval;
-      
-      if (queueSize > 20) {
-        // If queue is large, display faster
-        interval = MIN_DISPLAY_INTERVAL;
-      } else if (queueSize > 10) {
-        // Medium queue, moderate speed
-        interval = MIN_DISPLAY_INTERVAL + Math.random() * 500;
-      } else {
-        // Small queue, slower display to prevent empty periods
-        interval = MIN_DISPLAY_INTERVAL + Math.random() * (MAX_DISPLAY_INTERVAL - MIN_DISPLAY_INTERVAL);
-      }
+      // Only schedule next processing if still running
+      if (isRunning) {
+        const queueSize = itemQueueRef.current.length;
+        let interval;
+        
+        if (queueSize > 20) {
+          interval = MIN_DISPLAY_INTERVAL;
+        } else if (queueSize > 10) {
+          interval = MIN_DISPLAY_INTERVAL + Math.random() * 500;
+        } else {
+          interval = MIN_DISPLAY_INTERVAL + Math.random() * (MAX_DISPLAY_INTERVAL - MIN_DISPLAY_INTERVAL);
+        }
 
-      setTimeout(processNext, interval);
+        // Store the timeout reference
+        timeoutRef.current = setTimeout(processNext, interval);
+      }
     };
 
     processNext();
   };
 
-  // Replace the queueTrigger state and effect with this
+  // Update the effect to not trigger processQueue when stopping
   useEffect(() => {
-    // Start processing when items are added to queue
-    if (itemQueueRef.current.length > 0 && !isProcessingRef.current) {
+    // Only start processing when running is true
+    if (isRunning && itemQueueRef.current.length > 0 && !isProcessingRef.current) {
       processQueue();
     }
-  }, [isRunning]); // Only re-run when feed is started/stopped
+  }, [isRunning]);
 
   // Separate effect for cleaning up interval when stopped
   useEffect(() => {
@@ -928,7 +964,7 @@ export default function HNLiveTerminal() {
                     <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
                   </span>
                   LIVE
-                  {queueSize >= 100 && (
+                  {queueSize > 99 && (
                     <span className={`absolute -top-1 -right-4 min-w-[1.2rem] h-[1.2rem] 
                       ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
                       rounded text-xs flex items-center justify-center font-bold`}
@@ -1018,7 +1054,7 @@ export default function HNLiveTerminal() {
                   <span className={`inline-block w-2 h-2 rounded-full ${isRunning ? 'bg-red-500' : 'bg-gray-500'}`}></span>
                 </span>
                 LIVE
-                {queueSize >= 100 && (
+                {queueSize > 99 && (
                   <span className={`absolute -top-1 -right-4 min-w-[1.2rem] h-[1.2rem] 
                     ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
                     rounded text-xs flex items-center justify-center font-bold`}
