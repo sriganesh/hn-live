@@ -172,13 +172,13 @@ const fetchComments = async (
       let kids: HNComment[] = [];
       if (comment.kids) {
         const isRequired = requiredIds?.has(id) || 
-          comment.kids.some(kid => requiredIds?.has(kid));
+          comment.kids.some((kid: number) => requiredIds?.has(kid));
 
         kids = await fetchComments(
           comment.kids,
           depth + 1,
           requiredIds,
-          isRequired // Force load all children of required comments
+          isRequired
         );
       }
 
@@ -193,7 +193,7 @@ const fetchComments = async (
     })
   );
 
-  return comments.filter(Boolean);
+  return comments.filter((comment): comment is HNComment => comment !== null);
 };
 
 // Add a helper function to count total comments including replies
@@ -455,11 +455,10 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
 
   // Update the loadMore callback with stricter checks and logging
   const loadMore = useCallback(async () => {
-    // Prevent multiple simultaneous loads
     if (!story || commentState.isLoadingMore || isLoadingRef.current) return;
     
     // Check if we've already loaded everything
-    if (commentState.loadedTotal >= story.descendants) {
+    if (story.descendants && commentState.loadedTotal >= story.descendants) {
       setCommentState(prev => ({ ...prev, hasMore: false }));
       return;
     }
@@ -487,11 +486,10 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
       }
 
       const newComments = await fetchComments(nextBatch);
-      // Filter out any duplicates before adding
       const allComments = getUniqueComments([...commentState.loadedComments, ...newComments]);
       const newTotal = countCommentsInTree(allComments);
 
-      const isComplete = newTotal >= story.descendants;
+      const isComplete = story.descendants && newTotal >= story.descendants;
       const noNewComments = allComments.length === commentState.loadedComments.length;
 
       setCommentState(prev => ({
@@ -862,6 +860,17 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
                   {formatTimeAgo(story.time)}
                 </a>
                 {' • '}
+                {story.descendants !== undefined && (
+                  <>
+                    <span>
+                      {story.descendants 
+                        ? `${story.descendants} comment${story.descendants === 1 ? '' : 's'}`
+                        : 'no comments yet'
+                      }
+                    </span>
+                    {' • '}
+                  </>
+                )}
                 <CopyButton 
                   url={`https://hn.live/item/${story.id}`}
                   theme={theme}
@@ -912,11 +921,6 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
                   </div>
                 ) : (
                   <div className="text-center py-8 space-y-3">
-                    <div className={`${
-                      theme === 'green' ? 'text-green-500/50' : 'text-[#ff6600]/50'
-                    } text-sm`}>
-                      That's all the comments for now!
-                    </div>
                     <div className="text-sm space-y-2">
                       <div>
                         <a
