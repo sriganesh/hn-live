@@ -1201,8 +1201,10 @@ export default function HNLiveTerminal() {
         <div 
           ref={containerRef}
           className={`
-            min-h-screen pt-16 sm:pt-20 pb-20 sm:pb-4 px-3 sm:px-4 
-            overflow-y-auto overflow-x-hidden font-mono
+            fixed top-[60px] bottom-0 left-0 right-0 
+            overflow-y-auto overflow-x-hidden 
+            px-3 sm:px-4 pb-20 sm:pb-4
+            font-mono
             scrollbar-thin scrollbar-track-transparent
             ${options.theme === 'green'
               ? 'text-green-400 bg-black scrollbar-thumb-green-500/30'
