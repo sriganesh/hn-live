@@ -35,7 +35,7 @@ interface HNComment {
   hasDeepReplies?: boolean;
 }
 
-const MAX_COMMENTS = 2;  // Reduced from 5 to 2 for faster initial load
+const MAX_COMMENTS = 10;  
 const MAX_DEPTH = 5;     // Maximum nesting depth for replies
 
 // Add this at the top of the file
