@@ -14,6 +14,7 @@ interface ShowPageProps {
   onShowSettings: () => void;
   isSettingsOpen?: boolean;
   isSearchOpen?: boolean;
+  onViewUser: (userId: string) => void;
 }
 
 interface HNStory {
@@ -68,7 +69,8 @@ export function ShowPage({
   onShowGrep,
   onShowSettings,
   isSettingsOpen,
-  isSearchOpen
+  isSearchOpen,
+  onViewUser
 }: ShowPageProps) {
   const navigate = useNavigate();
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -416,7 +418,11 @@ export function ShowPage({
                         <div className="text-sm opacity-75">
                           {story.score} points by{' '}
                           <a 
-                            href={`https://news.ycombinator.com/user?id=${story.by}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              onViewUser(story.by);
+                            }}
+                            href={`/user/${story.by}`}
                             className={`hover:underline ${
                               colorizeUsernames 
                                 ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
@@ -489,7 +495,11 @@ export function ShowPage({
                         </div>
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                           <a 
-                            href={`https://news.ycombinator.com/user?id=${story.by}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              onViewUser(story.by);
+                            }}
+                            href={`/user/${story.by}`}
                             className={`hover:underline ${
                               colorizeUsernames 
                                 ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`

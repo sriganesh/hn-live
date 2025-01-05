@@ -12,6 +12,7 @@ interface BestPageProps {
   onShowSettings: () => void;
   isSettingsOpen?: boolean;
   isSearchOpen?: boolean;
+  onViewUser: (userId: string) => void;
 }
 
 interface HNStory {
@@ -65,7 +66,8 @@ export function BestPage({
   onShowSearch, 
   onShowSettings,
   isSettingsOpen,
-  isSearchOpen
+  isSearchOpen,
+  onViewUser
 }: BestPageProps) {
   const navigate = useNavigate();
   const [state, setState] = useState<BestPageState>({
@@ -388,14 +390,16 @@ export function BestPage({
                         <div className="text-sm opacity-75">
                           {story.score} points by{' '}
                           <a 
-                            href={`https://news.ycombinator.com/user?id=${story.by}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              onViewUser(story.by);
+                            }}
+                            href={`/user/${story.by}`}
                             className={`hover:underline ${
                               colorizeUsernames 
                                 ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
                                 : 'opacity-75'
                             }`}
-                            target="_blank"
-                            rel="noopener noreferrer"
                           >
                             {story.by}
                           </a>{' '}
@@ -470,14 +474,16 @@ export function BestPage({
                         {/* Bottom metadata line */}
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                           <a 
-                            href={`https://news.ycombinator.com/user?id=${story.by}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              onViewUser(story.by);
+                            }}
+                            href={`/user/${story.by}`}
                             className={`hover:underline ${
                               colorizeUsernames 
                                 ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
                                 : 'opacity-75'
                             }`}
-                            target="_blank"
-                            rel="noopener noreferrer"
                           >
                             {story.by}
                           </a>

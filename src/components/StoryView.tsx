@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTopUsers } from '../hooks/useTopUsers';
+import { UserModal } from './UserModal';
 
 interface StoryViewProps {
   itemId: number;
@@ -346,6 +347,9 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
     matchedComments: []
   });
 
+  // Add state for UserModal
+  const [viewingUser, setViewingUser] = useState<string | null>(null);
+
   // Add this inside StoryView component, after other state declarations
   const handleGrepToggle = () => {
     setGrepState(prev => ({
@@ -610,12 +614,14 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
         <div className="space-y-2">
           <div className="text-sm opacity-75 mb-1">
             <a 
-              href={`https://news.ycombinator.com/user?id=${comment.by}`}
+              onClick={(e) => {
+                e.preventDefault();
+                setViewingUser(comment.by);
+              }}
+              href={`/user/${comment.by}`}
               className={`hn-username hover:underline ${
                 isTopUser(comment.by) ? getTopUserClass(theme) : ''
               }`}
-              target="_blank"
-              rel="noopener noreferrer"
             >
               {comment.by}
             </a>
@@ -834,12 +840,14 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
               </div>
               <div className="text-sm opacity-75 mb-4">
                 <a 
-                  href={`https://news.ycombinator.com/user?id=${story.by}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setViewingUser(story.by);
+                  }}
+                  href={`/user/${story.by}`}
                   className={`hn-username hover:underline ${
                     isTopUser(story.by) ? getTopUserClass(theme) : ''
                   }`}
-                  target="_blank"
-                  rel="noopener noreferrer"
                 >
                   {story.by}
                 </a>
@@ -947,6 +955,17 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
           )}
         </div>
       </div>
+      
+      {/* Add UserModal */}
+      {viewingUser && (
+        <UserModal
+          userId={viewingUser}
+          isOpen={!!viewingUser}
+          onClose={() => setViewingUser(null)}
+          theme={theme}
+          fontSize={fontSize}
+        />
+      )}
     </>
   );
 } 
