@@ -41,6 +41,8 @@ interface HNItem {
   };
 }
 
+type FontOption = 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
+
 interface TerminalOptions {
   theme: 'green' | 'og' | 'dog';
   autoscroll: boolean;
@@ -48,6 +50,8 @@ interface TerminalOptions {
   fontSize: 'xs' | 'sm' | 'base';
   classicLayout: boolean;
   showCommentParents: boolean;
+  terminalFont: FontOption;
+  storyFont: FontOption;
 }
 
 interface SearchFilters {
@@ -133,6 +137,30 @@ const getStoredCommentParents = () => {
   return false; // Default to not showing parents
 };
 
+const getStoredTerminalFont = () => {
+  try {
+    const stored = localStorage.getItem('hn-live-terminal-font');
+    if (stored && ['mono', 'jetbrains', 'fira', 'source', 'sans', 'serif', 'system'].includes(stored)) {
+      return stored as FontOption;
+    }
+  } catch (e) {
+    console.warn('Could not access localStorage');
+  }
+  return 'mono';
+};
+
+const getStoredStoryFont = () => {
+  try {
+    const stored = localStorage.getItem('hn-live-story-font');
+    if (stored && ['mono', 'jetbrains', 'fira', 'source', 'sans', 'serif', 'system'].includes(stored)) {
+      return stored as FontOption;
+    }
+  } catch (e) {
+    console.warn('Could not access localStorage');
+  }
+  return 'mono';
+};
+
 // Update the style to handle both dark and green themes
 const themeStyles = `
   [data-theme='dog'] ::selection {
@@ -163,7 +191,9 @@ export default function HNLiveTerminal() {
     directLinks: getStoredDirectLinks(),
     fontSize: getStoredFontSize(),
     classicLayout: getStoredLayout(),
-    showCommentParents: getStoredCommentParents()
+    showCommentParents: getStoredCommentParents(),
+    terminalFont: getStoredTerminalFont(),
+    storyFont: getStoredStoryFont()
   });
   const [isRunning, setIsRunning] = useState(true);
   
@@ -845,6 +875,9 @@ export default function HNLiveTerminal() {
       localStorage.setItem('hn-live-autoscroll', String(newOptions.autoscroll));
       localStorage.setItem('hn-live-direct', String(newOptions.directLinks));
       localStorage.setItem('hn-live-classic-layout', String(newOptions.classicLayout));
+      localStorage.setItem('hn-live-comment-parents', String(newOptions.showCommentParents));
+      localStorage.setItem('hn-live-terminal-font', newOptions.terminalFont);
+      localStorage.setItem('hn-live-story-font', newOptions.storyFont);
     } catch (e) {
       console.warn('Could not save settings to localStorage');
     }
@@ -1204,7 +1237,13 @@ export default function HNLiveTerminal() {
             fixed top-[60px] bottom-0 left-0 right-0 
             overflow-y-auto overflow-x-hidden 
             px-3 sm:px-4 pb-20 sm:pb-4
-            font-mono
+            ${options.terminalFont === 'mono' ? 'font-mono' : 
+              options.terminalFont === 'jetbrains' ? 'font-jetbrains' :
+              options.terminalFont === 'fira' ? 'font-fira' :
+              options.terminalFont === 'source' ? 'font-source' :
+              options.terminalFont === 'sans' ? 'font-sans' :
+              options.terminalFont === 'serif' ? 'font-serif' :
+              'font-system'}
             scrollbar-thin scrollbar-track-transparent
             ${options.theme === 'green'
               ? 'text-green-400 bg-black scrollbar-thumb-green-500/30'
@@ -1338,13 +1377,14 @@ export default function HNLiveTerminal() {
         )}
 
         {/* Add the StoryView component to the render */}
-        {viewingStory && (
+        {location.pathname.startsWith('/item/') && (
           <StoryView
-            itemId={viewingStory.itemId}
-            scrollToId={viewingStory.scrollToId}
-            onClose={handleStoryClose}
+            itemId={Number(itemId)}
+            scrollToId={Number(commentId)}
+            onClose={() => navigate('/')}
             theme={options.theme}
             fontSize={options.fontSize}
+            storyFont={options.storyFont}
           />
         )}
 
