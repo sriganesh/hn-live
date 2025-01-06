@@ -41,6 +41,8 @@ interface HNItem {
   };
 }
 
+type FontOption = 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
+
 interface TerminalOptions {
   theme: 'green' | 'og' | 'dog';
   autoscroll: boolean;
@@ -48,8 +50,8 @@ interface TerminalOptions {
   fontSize: 'xs' | 'sm' | 'base';
   classicLayout: boolean;
   showCommentParents: boolean;
-  terminalFont: 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
-  storyFont: 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
+  terminalFont: FontOption;
+  storyFont: FontOption;
 }
 
 interface SearchFilters {
@@ -139,7 +141,7 @@ const getStoredTerminalFont = () => {
   try {
     const stored = localStorage.getItem('hn-live-terminal-font');
     if (stored && ['mono', 'jetbrains', 'fira', 'source', 'sans', 'serif', 'system'].includes(stored)) {
-      return stored as 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
+      return stored as FontOption;
     }
   } catch (e) {
     console.warn('Could not access localStorage');
@@ -151,12 +153,12 @@ const getStoredStoryFont = () => {
   try {
     const stored = localStorage.getItem('hn-live-story-font');
     if (stored && ['mono', 'jetbrains', 'fira', 'source', 'sans', 'serif', 'system'].includes(stored)) {
-      return stored as 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
+      return stored as FontOption;
     }
   } catch (e) {
     console.warn('Could not access localStorage');
   }
-  return 'mono'; // Changed default to system monospace
+  return 'mono';
 };
 
 // Update the style to handle both dark and green themes

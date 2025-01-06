@@ -10,7 +10,7 @@ interface StoryViewProps {
   onClose: () => void;
   theme: 'green' | 'og' | 'dog';
   fontSize: string;
-  storyFont: 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
+  storyFont: FontOption;
 }
 
 interface HNStory {

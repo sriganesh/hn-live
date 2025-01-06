@@ -11,8 +11,8 @@ interface SettingsModalProps {
     fontSize: 'xs' | 'sm' | 'base';
     classicLayout: boolean;
     showCommentParents: boolean;
-    terminalFont: 'mono' | 'jetbrains' | 'fira' | 'source';
-    storyFont: 'sans' | 'serif' | 'system';
+    terminalFont: FontOption;
+    storyFont: FontOption;
   };
   onUpdateOptions: (options: any) => void;
   colorizeUsernames: boolean;
