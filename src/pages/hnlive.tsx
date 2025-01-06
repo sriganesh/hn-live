@@ -144,7 +144,7 @@ const getStoredTerminalFont = () => {
   } catch (e) {
     console.warn('Could not access localStorage');
   }
-  return 'mono'; // Default to system monospace
+  return 'mono';
 };
 
 const getStoredStoryFont = () => {
@@ -873,6 +873,9 @@ export default function HNLiveTerminal() {
       localStorage.setItem('hn-live-autoscroll', String(newOptions.autoscroll));
       localStorage.setItem('hn-live-direct', String(newOptions.directLinks));
       localStorage.setItem('hn-live-classic-layout', String(newOptions.classicLayout));
+      localStorage.setItem('hn-live-comment-parents', String(newOptions.showCommentParents));
+      localStorage.setItem('hn-live-terminal-font', newOptions.terminalFont);
+      localStorage.setItem('hn-live-story-font', newOptions.storyFont);
     } catch (e) {
       console.warn('Could not save settings to localStorage');
     }
