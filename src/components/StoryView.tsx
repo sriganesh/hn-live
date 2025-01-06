@@ -9,7 +9,8 @@ interface StoryViewProps {
   scrollToId?: number;
   onClose: () => void;
   theme: 'green' | 'og' | 'dog';
-  fontSize: 'xs' | 'sm' | 'base';
+  fontSize: string;
+  storyFont: 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
 }
 
 interface HNStory {
@@ -326,7 +327,7 @@ const grepComments = (comments: HNComment[], searchTerm: string): HNComment[] =>
   return matches;
 };
 
-export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: StoryViewProps) {
+export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, storyFont }: StoryViewProps) {
   const navigate = useNavigate();
   const { isTopUser, getTopUserClass } = useTopUsers();
   
@@ -769,7 +770,22 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize }: Stor
           <link rel="canonical" href={`https://hn.live/item/${story.id}`} />
         </Helmet>
       )}
-      <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
+      <div className={`
+        fixed inset-0 z-50 overflow-hidden
+        ${storyFont === 'mono' ? 'font-mono' : 
+          storyFont === 'jetbrains' ? 'font-jetbrains' :
+          storyFont === 'fira' ? 'font-fira' :
+          storyFont === 'source' ? 'font-source' :
+          storyFont === 'sans' ? 'font-sans' :
+          storyFont === 'serif' ? 'font-serif' :
+          'font-system'}
+        ${theme === 'green'
+          ? 'bg-black text-green-400'
+          : theme === 'og'
+          ? 'bg-[#f6f6ef] text-[#828282]'
+          : 'bg-[#1a1a1a] text-[#828282]'}
+        text-${fontSize}
+      `}>
         <div className="story-container h-full overflow-y-auto overflow-x-hidden p-4 sm:p-4">
           <div className="flex items-center justify-between mb-8">
             <button 

@@ -11,15 +11,10 @@ interface SettingsModalProps {
     fontSize: 'xs' | 'sm' | 'base';
     classicLayout: boolean;
     showCommentParents: boolean;
+    terminalFont: 'mono' | 'jetbrains' | 'fira' | 'source';
+    storyFont: 'sans' | 'serif' | 'system';
   };
-  onUpdateOptions: (newOptions: {
-    theme: 'green' | 'og' | 'dog';
-    autoscroll: boolean;
-    directLinks: boolean;
-    fontSize: 'xs' | 'sm' | 'base';
-    classicLayout: boolean;
-    showCommentParents: boolean;
-  }) => void;
+  onUpdateOptions: (options: any) => void;
   colorizeUsernames: boolean;
   onColorizeUsernamesChange: (value: boolean) => void;
 }
@@ -190,6 +185,72 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 >
                   [{options.classicLayout ? 'x' : ' '}] Classic HN layout
                 </button>
+              </div>
+            </div>
+
+            <div className="space-y-4 mt-6">
+              <div className="text-sm opacity-75">FONTS</div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm mb-2">Terminal Font</label>
+                  <select
+                    value={options.terminalFont}
+                    onChange={(e) => onUpdateOptions({
+                      ...options,
+                      terminalFont: e.target.value
+                    })}
+                    className={`
+                      w-full px-3 py-2 rounded
+                      ${theme === 'green' 
+                        ? 'bg-black border border-green-500/30 text-green-400 focus:border-green-500/50' 
+                        : theme === 'og'
+                        ? 'bg-[#f6f6ef] border border-[#ff6600]/30 text-[#828282] focus:border-[#ff6600]/50'
+                        : 'bg-[#1a1a1a] border border-[#828282]/30 text-[#828282] focus:border-[#828282]/50'
+                      }
+                      appearance-none cursor-pointer hover:opacity-80 transition-opacity
+                      focus:outline-none
+                    `}
+                  >
+                    <option value="mono">System Monospace</option>
+                    <option value="jetbrains">JetBrains Mono</option>
+                    <option value="fira">Fira Code</option>
+                    <option value="source">Source Code Pro</option>
+                    <option value="sans">Sans Serif</option>
+                    <option value="serif">Serif</option>
+                    <option value="system">System Default</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-2">Story View Font</label>
+                  <select
+                    value={options.storyFont}
+                    onChange={(e) => onUpdateOptions({
+                      ...options,
+                      storyFont: e.target.value
+                    })}
+                    className={`
+                      w-full px-3 py-2 rounded
+                      ${theme === 'green' 
+                        ? 'bg-black border border-green-500/30 text-green-400 focus:border-green-500/50' 
+                        : theme === 'og'
+                        ? 'bg-[#f6f6ef] border border-[#ff6600]/30 text-[#828282] focus:border-[#ff6600]/50'
+                        : 'bg-[#1a1a1a] border border-[#828282]/30 text-[#828282] focus:border-[#828282]/50'
+                      }
+                      appearance-none cursor-pointer hover:opacity-80 transition-opacity
+                      focus:outline-none
+                    `}
+                  >
+                    <option value="mono">System Monospace</option>
+                    <option value="jetbrains">JetBrains Mono</option>
+                    <option value="fira">Fira Code</option>
+                    <option value="source">Source Code Pro</option>
+                    <option value="sans">Sans Serif</option>
+                    <option value="serif">Serif</option>
+                    <option value="system">System Default</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
