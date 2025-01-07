@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTopUsers } from '../hooks/useTopUsers';
 import { UserModal } from './UserModal';
+import { BookmarkButton } from './BookmarkButton';
 
 interface StoryViewProps {
   itemId: number;
@@ -646,6 +647,20 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, storyF
               {formatTimeAgo(comment.time)}
             </a>
             {' • '}
+            <BookmarkButton
+              item={{
+                id: comment.id,
+                type: 'comment',
+                text: comment.text,
+                by: comment.by,
+                time: comment.time
+              }}
+              storyId={story.id}
+              storyTitle={story.title}
+              theme={theme}
+              variant="text"
+            />
+            {' • '}
             <a
               href={`https://news.ycombinator.com/reply?id=${comment.id}&goto=item%3Fid%3D${story?.id}%23${comment.id}`}
               className="hover:underline"
@@ -786,7 +801,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, storyF
           : 'bg-[#1a1a1a] text-[#828282]'}
         text-${fontSize}
       `}>
-        <div className="story-container h-full overflow-y-auto overflow-x-hidden p-4 sm:p-4">
+        <div className="story-container h-full overflow-y-auto overflow-x-hidden p-4 pb-32">
           <div className="flex items-center justify-between mb-8">
             <button 
               onClick={handleClose}
@@ -819,7 +834,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, storyF
                 </button>
               )}
               <button 
-                onClick={handleClose}
+                onClick={() => navigate('/')}
                 className="opacity-75 hover:opacity-100"
               >
                 [ESC]
@@ -834,7 +849,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, storyF
           ) : story ? (
             <div className="max-w-4xl mx-auto px-0 sm:px-4">
               <div className="flex items-start justify-between gap-2">
-                <h1 className="text-xl font-bold mb-2">
+                <h1 className="text-xl font-bold mb-2 flex items-start gap-2">
                   {story.url ? (
                     <a
                       href={story.url}
@@ -887,6 +902,19 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, storyF
                     {' • '}
                   </>
                 )}
+                <BookmarkButton
+                  item={{
+                    id: story.id,
+                    type: 'story',
+                    title: story.title,
+                    by: story.by,
+                    time: story.time,
+                    url: story.url
+                  }}
+                  theme={theme}
+                  variant="text"
+                />
+                {' • '}
                 <CopyButton 
                   url={`https://hn.live/item/${story.id}`}
                   theme={theme}
