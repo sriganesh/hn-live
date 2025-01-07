@@ -967,6 +967,41 @@ export default function HNLiveTerminal() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [showMoreMenu]);
 
+  const hasLoggedRef = useRef(false);
+
+  useEffect(() => {
+    // Only log if we haven't logged before
+    if (hasLoggedRef.current) return;
+    hasLoggedRef.current = true;
+
+    const styles = [
+      'color: #ff6600',
+      'font-size: 20px',
+      'font-weight: bold',
+      'padding: 10px',
+    ].join(';');
+
+    const secondaryStyles = [
+      'color: #828282',
+      'font-size: 14px',
+      'padding: 5px',
+    ].join(';');
+
+    console.log('%c👋 Hello fellow hacker!', styles);
+    console.log(
+      '%c💡 Have ideas for making HN Live faster/better? Let us know!', 
+      secondaryStyles
+    );
+    console.log(
+      '%c🐛 Found a bug? Want to add a feature? PRs are welcome!', 
+      secondaryStyles
+    );
+    console.log(
+      '%c🌟 HN Live is open source: https://github.com/sriganesh/hn-live', 
+      secondaryStyles
+    );
+  }, []);
+
   return (
     <>
       <Helmet>
@@ -1615,6 +1650,7 @@ export default function HNLiveTerminal() {
         <MobileBottomBar 
           theme={options.theme}
           onShowSearch={() => setShowSearch(true)}
+          onCloseSearch={() => setShowSearch(false)}
           onShowSettings={() => setShowSettings(true)}
           isRunning={isRunning}
         />
@@ -1643,6 +1679,7 @@ export default function HNLiveTerminal() {
             theme={options.theme}
             fontSize={options.fontSize}
             onShowSearch={() => setShowSearch(true)}
+            onCloseSearch={() => setShowSearch(false)}
             onShowSettings={() => setShowSettings(true)}
             isRunning={isRunning}
           />

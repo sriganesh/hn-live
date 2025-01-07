@@ -7,6 +7,7 @@ interface BookmarksPageProps {
   theme: 'green' | 'og' | 'dog';
   fontSize: string;
   onShowSearch: () => void;
+  onCloseSearch: () => void;
   onShowSettings: () => void;
   isRunning: boolean;
 }
@@ -23,7 +24,7 @@ interface Bookmark {
   storyTitle?: string;
 }
 
-export function BookmarksPage({ theme, fontSize, onShowSearch, onShowSettings, isRunning }: BookmarksPageProps) {
+export function BookmarksPage({ theme, fontSize, onShowSearch, onCloseSearch, onShowSettings, isRunning }: BookmarksPageProps) {
   const navigate = useNavigate();
   const [bookmarks, setBookmarks] = useState<HNItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -269,6 +270,7 @@ export function BookmarksPage({ theme, fontSize, onShowSearch, onShowSettings, i
       <MobileBottomBar 
         theme={theme}
         onShowSearch={onShowSearch}
+        onCloseSearch={onCloseSearch}
         onShowSettings={onShowSettings}
         isRunning={isRunning}
       />

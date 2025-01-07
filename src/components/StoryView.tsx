@@ -255,11 +255,11 @@ const formatTimeAgo = (timestamp: number): string => {
   const days = Math.floor(hours / 24);
 
   if (days > 0) {
-    return `${days} day${days === 1 ? '' : 's'} ago`;
+    return `${days}d ago`;
   } else if (hours > 0) {
-    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    return `${hours}h ago`;
   } else if (minutes > 0) {
-    return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+    return `${minutes}m ago`;
   } else {
     return 'just now';
   }

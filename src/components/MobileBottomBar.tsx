@@ -1,22 +1,24 @@
-import { useNavigate, useLocation } from 'react-router-dom';
-import { MobileMoreMenu } from './MobileMoreMenu';
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { navigationItems } from '../config/navigation';
 
 interface MobileBottomBarProps {
   theme: 'green' | 'og' | 'dog';
   onShowSearch: () => void;
+  onCloseSearch: () => void;
   onShowSettings: () => void;
-  isRunning: boolean;
+  isRunning?: boolean;
 }
 
-export function MobileBottomBar({ theme, onShowSearch, onShowSettings, isRunning }: MobileBottomBarProps) {
+export function MobileBottomBar({ theme, onShowSearch, onCloseSearch, onShowSettings, isRunning }: MobileBottomBarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
+  // Handle clicking outside the more menu
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (showMoreMenu && !(event.target as Element).closest('.more-menu-container')) {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (showMoreMenu && !(e.target as Element).closest('.more-menu-container')) {
         setShowMoreMenu(false);
       }
     };
@@ -25,97 +27,155 @@ export function MobileBottomBar({ theme, onShowSearch, onShowSettings, isRunning
     return () => document.removeEventListener('click', handleClickOutside);
   }, [showMoreMenu]);
 
-  const handleHomeClick = () => {
-    if (location.pathname === '/') {
-      window.location.reload();
-    } else {
-      navigate('/');
-    }
-  };
+  const isActive = (path: string) => location.pathname === path;
+
+  const iconClass = `w-6 h-6 ${
+    theme === 'green' 
+      ? 'text-green-500' 
+      : 'text-[#ff6600]'
+  }`;
+
+  const labelClass = `text-xs mt-1 ${
+    theme === 'green'
+      ? 'text-green-400'
+      : theme === 'og'
+      ? 'text-[#828282]'
+      : 'text-[#828282]'
+  }`;
 
   return (
-    <div className={`fixed sm:hidden bottom-0 left-0 right-0 mobile-bottom-bar z-50 border-t ${
-      theme === 'green'
-        ? 'border-green-500/30'
-        : theme === 'og'
-        ? 'border-[#ff6600]/30'
-        : 'border-[#828282]/30'
-    }`}>
-      <div className={`
-        ${theme === 'green'
-          ? 'bg-black/90 border-green-500/30 text-green-400'
+    <div className="sm:hidden fixed bottom-0 left-0 right-0 border-t bg-inherit z-50">
+      <div className={`flex items-center justify-around py-2 px-4 ${
+        theme === 'green'
+          ? 'border-green-500/20 bg-black'
           : theme === 'og'
-          ? 'bg-[#f6f6ef]/90 border-[#ff6600]/30 text-[#828282]'
-          : 'bg-[#1a1a1a]/90 border-[#828282]/30 text-[#828282]'
-        } grid grid-cols-5 divide-x ${
-          theme === 'green'
-            ? 'divide-green-500/30'
-            : theme === 'og'
-            ? 'divide-[#ff6600]/30'
-            : 'divide-[#828282]/30'
-        }`}
-      >
-        {/* Home Button */}
-        <button
-          onClick={handleHomeClick}
-          className="p-4 flex items-center justify-center relative"
+          ? 'border-[#ff6600]/10 bg-[#f6f6ef]'
+          : 'border-[#828282]/20 bg-[#1a1a1a]'
+      }`}>
+        {/* Live Feed */}
+        <button 
+          onClick={() => {
+            onCloseSearch();
+            navigate('/');
+          }}
+          className="flex flex-col items-center"
         >
-          <div className="relative">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-            </svg>
-            <div className={`absolute -top-1 -right-1 w-2 h-2 rounded-full animate-pulse ${
-              isRunning ? 'bg-red-500' : 'bg-gray-500'
-            }`}></div>
+          <div className={`${iconClass} ${isActive('/') ? 'opacity-100' : 'opacity-50'}`}>
+            {isRunning ? (
+              <span className="relative flex h-6 w-6">
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${
+                  theme === 'green' ? 'bg-green-500' : 'bg-[#ff6600]'
+                } opacity-20`}></span>
+                <span className={`relative inline-flex rounded-full h-6 w-6 ${
+                  theme === 'green' ? 'bg-green-500' : 'bg-[#ff6600]'
+                } opacity-50`}></span>
+              </span>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+              </svg>
+            )}
           </div>
+          <span className={labelClass}>Live</span>
         </button>
 
-        {/* Stories/Front Page Button */}
-        <button
-          onClick={() => navigate('/front')}
-          className="p-4 flex items-center justify-center relative"
+        {/* Front Page */}
+        <button 
+          onClick={() => {
+            onCloseSearch();
+            navigate('/front');
+          }}
+          className="flex flex-col items-center"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M2 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 002 2H4a2 2 0 01-2-2V5zm3 1h6v4H5V6zm6 6H5v2h6v-2z" clipRule="evenodd" />
-            <path d="M15 7h1a2 2 0 012 2v5.5a1.5 1.5 0 01-3 0V7z" />
-          </svg>
+          <div className={`${iconClass} ${isActive('/front') ? 'opacity-100' : 'opacity-50'}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+            </svg>
+          </div>
+          <span className={labelClass}>Front</span>
         </button>
 
-        {/* Search Button */}
-        <button
+        {/* Search */}
+        <button 
           onClick={onShowSearch}
-          className="p-4 flex items-center justify-center relative"
+          className="flex flex-col items-center"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-          </svg>
+          <div className={`${iconClass} opacity-50 hover:opacity-75`}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+          </div>
+          <span className={labelClass}>Search</span>
         </button>
 
-        {/* Settings Button */}
-        <button
+        {/* Settings */}
+        <button 
           onClick={onShowSettings}
-          className="p-4 flex items-center justify-center relative"
+          className="flex flex-col items-center"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-          </svg>
+          <div className={`${iconClass} opacity-50 hover:opacity-75`}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <span className={labelClass}>Settings</span>
         </button>
 
-        {/* More Menu Button */}
-        <button
-          onClick={() => setShowMoreMenu(!showMoreMenu)}
-          className="p-4 flex items-center justify-center relative more-menu-container"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
-          </svg>
+        {/* More Menu */}
+        <div className="flex flex-col items-center more-menu-container">
+          <button 
+            onClick={() => setShowMoreMenu(!showMoreMenu)}
+            className="flex flex-col items-center"
+          >
+            <div className={`${iconClass} opacity-50 hover:opacity-75`}>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <span className={labelClass}>More</span>
+          </button>
 
-          <MobileMoreMenu 
-            theme={theme}
-            showMenu={showMoreMenu}
-            onClose={() => setShowMoreMenu(false)}
-          />
-        </button>
+          {/* More Menu Dropdown */}
+          {showMoreMenu && (
+            <div className={`absolute bottom-full right-0 mb-2 py-2 w-48 rounded-lg shadow-lg z-50 border ${
+              theme === 'green'
+                ? 'bg-black border-green-500/30 text-green-400'
+                : theme === 'og'
+                ? 'bg-[#f6f6ef] border-[#ff6600]/30 text-[#828282]'
+                : 'bg-[#1a1a1a] border-[#828282]/30 text-[#828282]'
+            }`}>
+              {navigationItems.map((item) => (
+                item.path === 'separator' ? (
+                  <div key="separator" className="border-t border-current/10 my-2" />
+                ) : item.external ? (
+                  <a
+                    key={item.path}
+                    href={item.path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-4 py-2 hover:opacity-75"
+                    onClick={() => setShowMoreMenu(false)}
+                  >
+                    {item.label}
+                  </a>
+                ) : (
+                  <button
+                    key={item.path}
+                    onClick={() => {
+                      onCloseSearch();
+                      navigate(item.path);
+                      setShowMoreMenu(false);
+                    }}
+                    className="w-full text-left px-4 py-2 hover:opacity-75"
+                  >
+                    {item.label}
+                  </button>
+                )
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
