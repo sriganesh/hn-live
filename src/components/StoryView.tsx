@@ -554,6 +554,18 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }
   // Update the ESC key handler useEffect
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Handle Ctrl+F or Cmd+F (Mac)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault(); // Prevent browser's default find
+        setGrepState(prev => ({
+          ...prev,
+          isActive: true,
+          searchTerm: prev.searchTerm // Preserve previous search term
+        }));
+        return;
+      }
+
+      // Handle ESC
       if (e.key === 'Escape') {
         if (grepState.isActive) {
           setGrepState(prev => ({
