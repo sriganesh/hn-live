@@ -16,6 +16,7 @@ interface SettingsModalProps {
   onUpdateOptions: (options: any) => void;
   colorizeUsernames: boolean;
   onColorizeUsernamesChange: (value: boolean) => void;
+  isMobile?: boolean;
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ 
@@ -25,7 +26,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   options,
   onUpdateOptions,
   colorizeUsernames,
-  onColorizeUsernamesChange
+  onColorizeUsernamesChange,
+  isMobile = window.innerWidth < 640
 }) => {
   // Add ESC key handler
   useEffect(() => {
@@ -44,6 +46,29 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
   // Add state for showing the reload message
   const [showReloadMessage, setShowReloadMessage] = useState(false);
+
+  // Add state for mobile notification
+  const [showMobileReloadNotif, setShowMobileReloadNotif] = useState(false);
+
+  // Handle the setting change
+  const handleCommentParentsChange = () => {
+    const newOptions = {
+      ...options,
+      showCommentParents: !options.showCommentParents
+    };
+    onUpdateOptions(newOptions);
+
+    // Show appropriate notification based on device
+    if (isMobile) {
+      setShowMobileReloadNotif(true);
+      // Hide after 3 seconds
+      setTimeout(() => setShowMobileReloadNotif(false), 3000);
+    } else {
+      // Show reload message for desktop
+      setShowReloadMessage(true);
+      setTimeout(() => setShowReloadMessage(false), 1000);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -187,18 +212,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   [{options.directLinks ? 'x' : ' '}] Direct HN links
                 </button>
                 <button
-                  onClick={() => {
-                    onUpdateOptions({ ...options, showCommentParents: !options.showCommentParents });
-                    setShowReloadMessage(true);
-                    setTimeout(() => setShowReloadMessage(false), 1000);
-                  }}
+                  onClick={handleCommentParentsChange}
                   className={`hover:opacity-75 transition-opacity block w-full text-left`}
                 >
                   <div className="flex items-center gap-2">
                     <span>[{options.showCommentParents ? 'x' : ' '}] Show story context</span>
-                    {showReloadMessage && (
+                    {!isMobile && showReloadMessage && (
                       <span className="text-sm opacity-75">
-                        [reload required]
+                        [page reload required]
                       </span>
                     )}
                   </div>
@@ -230,6 +251,25 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Add mobile notification overlay */}
+      {showMobileReloadNotif && (
+        <div className="fixed inset-0 flex items-center justify-center z-[9999] pointer-events-none">
+          <div className={`
+            text-sm animate-fade-out px-4 py-2 rounded-lg border
+            ${theme === 'og'
+              ? 'bg-[#1a1a1a] text-[#f6f6ef] border-[#ff6600]/30'
+              : theme === 'dog'
+              ? 'bg-[#f6f6ef] text-[#1a1a1a] border-[#ff6600]/30'
+              : theme === 'green'
+              ? 'bg-black/90 text-green-400 border-green-500/30'
+              : ''
+            }
+          `}>
+            Tap the Live button twice to apply changes
+          </div>
+        </div>
+      )}
     </div>
   );
 };
