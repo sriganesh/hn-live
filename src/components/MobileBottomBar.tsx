@@ -43,6 +43,15 @@ export function MobileBottomBar({ theme, onShowSearch, onCloseSearch, onShowSett
       : 'text-[#828282]'
   }`;
 
+  const handleLiveClick = () => {
+    if (location.pathname === '/') {
+      window.location.reload();
+    } else {
+      onCloseSearch();
+      navigate('/');
+    }
+  };
+
   return (
     <>
       {/* Background that extends to the bottom */}
@@ -75,10 +84,7 @@ export function MobileBottomBar({ theme, onShowSearch, onCloseSearch, onShowSett
         <div className="flex items-center justify-around py-2 px-4">
           {/* Live Feed */}
           <button 
-            onClick={() => {
-              onCloseSearch();
-              navigate('/');
-            }}
+            onClick={handleLiveClick}
             className="flex flex-col items-center"
           >
             <div className={`${iconClass} ${isActive('/') ? 'opacity-100' : 'opacity-50'}`}>

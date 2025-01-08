@@ -1632,6 +1632,7 @@ export default function HNLiveTerminal() {
           onUpdateOptions={handleSettingsUpdate}
           colorizeUsernames={colorizeUsernames}
           onColorizeUsernamesChange={setColorizeUsernames}
+          isMobile={window.innerWidth < 640}
         />
 
         {/* Replace the mobile bottom bar with the new component */}
