@@ -11,7 +11,7 @@ interface StoryViewProps {
   onClose: () => void;
   theme: 'green' | 'og' | 'dog';
   fontSize: string;
-  storyFont: FontOption;
+  font: FontOption;
 }
 
 interface HNStory {
@@ -37,7 +37,7 @@ interface HNComment {
   hasDeepReplies?: boolean;
 }
 
-const MAX_COMMENTS = 10;  
+const MAX_COMMENTS = 5;  
 const MAX_DEPTH = 5;     // Maximum nesting depth for replies
 
 // Add this at the top of the file
@@ -328,7 +328,7 @@ const grepComments = (comments: HNComment[], searchTerm: string): HNComment[] =>
   return matches;
 };
 
-export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, storyFont }: StoryViewProps) {
+export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }: StoryViewProps) {
   const navigate = useNavigate();
   const { isTopUser, getTopUserClass } = useTopUsers();
   
@@ -787,12 +787,12 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, storyF
       )}
       <div className={`
         fixed inset-0 z-50 overflow-hidden
-        ${storyFont === 'mono' ? 'font-mono' : 
-          storyFont === 'jetbrains' ? 'font-jetbrains' :
-          storyFont === 'fira' ? 'font-fira' :
-          storyFont === 'source' ? 'font-source' :
-          storyFont === 'sans' ? 'font-sans' :
-          storyFont === 'serif' ? 'font-serif' :
+        ${font === 'mono' ? 'font-mono' : 
+          font === 'jetbrains' ? 'font-jetbrains' :
+          font === 'fira' ? 'font-fira' :
+          font === 'source' ? 'font-source' :
+          font === 'sans' ? 'font-sans' :
+          font === 'serif' ? 'font-serif' :
           'font-system'}
         ${theme === 'green'
           ? 'bg-black text-green-400'

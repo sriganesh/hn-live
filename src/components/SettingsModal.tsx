@@ -11,8 +11,7 @@ interface SettingsModalProps {
     fontSize: 'xs' | 'sm' | 'base';
     classicLayout: boolean;
     showCommentParents: boolean;
-    terminalFont: FontOption;
-    storyFont: FontOption;
+    font: FontOption;
   };
   onUpdateOptions: (options: any) => void;
   colorizeUsernames: boolean;
@@ -106,27 +105,68 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
 
             {/* Font Size Selection */}
-            <div className="space-y-2">
-              <div className="text-sm opacity-75">FONT SIZE</div>
-              <div className="flex flex-wrap gap-4">
-                <button
-                  onClick={() => onUpdateOptions({ ...options, fontSize: 'xs' })}
-                  className={`hover:opacity-75 transition-opacity`}
-                >
-                  [{options.fontSize === 'xs' ? 'x' : ' '}] Small
-                </button>
-                <button
-                  onClick={() => onUpdateOptions({ ...options, fontSize: 'sm' })}
-                  className={`hover:opacity-75 transition-opacity`}
-                >
-                  [{options.fontSize === 'sm' ? 'x' : ' '}] Medium
-                </button>
-                <button
-                  onClick={() => onUpdateOptions({ ...options, fontSize: 'base' })}
-                  className={`hover:opacity-75 transition-opacity`}
-                >
-                  [{options.fontSize === 'base' ? 'x' : ' '}] Large
-                </button>
+            <div className="space-y-4 mt-6">
+              <div className="text-sm opacity-75">FONTS</div>
+              
+              <div className="space-y-4">
+                {/* Font Size */}
+                <div>
+                  <div className="flex flex-wrap gap-4">
+                    <button
+                      onClick={() => onUpdateOptions({ ...options, fontSize: 'xs' })}
+                      className="hover:opacity-75 transition-opacity"
+                    >
+                      [{options.fontSize === 'xs' ? 'x' : ' '}] Small
+                    </button>
+                    <button
+                      onClick={() => onUpdateOptions({ ...options, fontSize: 'sm' })}
+                      className="hover:opacity-75 transition-opacity"
+                    >
+                      [{options.fontSize === 'sm' ? 'x' : ' '}] Medium
+                    </button>
+                    <button
+                      onClick={() => onUpdateOptions({ ...options, fontSize: 'base' })}
+                      className="hover:opacity-75 transition-opacity"
+                    >
+                      [{options.fontSize === 'base' ? 'x' : ' '}] Large
+                    </button>
+                  </div>
+                </div>
+
+                {/* Font Family Selection */}
+                <div className="relative">
+                  <select
+                    value={options.font}
+                    onChange={(e) => onUpdateOptions({
+                      ...options,
+                      font: e.target.value
+                    })}
+                    className={`
+                      w-full px-3 py-2 pr-8 rounded
+                      ${theme === 'green' 
+                        ? 'bg-black border border-green-500/30 text-green-400 focus:border-green-500/50' 
+                        : theme === 'og'
+                        ? 'bg-[#f6f6ef] border border-[#ff6600]/30 text-[#828282] focus:border-[#ff6600]/50'
+                        : 'bg-[#1a1a1a] border border-[#828282]/30 text-[#828282] focus:border-[#828282]/50'
+                      }
+                      appearance-none cursor-pointer hover:opacity-80 transition-opacity
+                      focus:outline-none
+                    `}
+                  >
+                    <option value="mono">System Monospace</option>
+                    <option value="jetbrains">JetBrains Mono</option>
+                    <option value="fira">Fira Code</option>
+                    <option value="source">Source Code Pro</option>
+                    <option value="sans">Sans Serif</option>
+                    <option value="serif">Serif</option>
+                    <option value="system">System Default</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
+                    <svg className="h-4 w-4 fill-current opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                    </svg>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -185,72 +225,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 >
                   [{options.classicLayout ? 'x' : ' '}] Classic HN layout
                 </button>
-              </div>
-            </div>
-
-            <div className="space-y-4 mt-6">
-              <div className="text-sm opacity-75">FONTS</div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm mb-2">Terminal Font</label>
-                  <select
-                    value={options.terminalFont}
-                    onChange={(e) => onUpdateOptions({
-                      ...options,
-                      terminalFont: e.target.value
-                    })}
-                    className={`
-                      w-full px-3 py-2 rounded
-                      ${theme === 'green' 
-                        ? 'bg-black border border-green-500/30 text-green-400 focus:border-green-500/50' 
-                        : theme === 'og'
-                        ? 'bg-[#f6f6ef] border border-[#ff6600]/30 text-[#828282] focus:border-[#ff6600]/50'
-                        : 'bg-[#1a1a1a] border border-[#828282]/30 text-[#828282] focus:border-[#828282]/50'
-                      }
-                      appearance-none cursor-pointer hover:opacity-80 transition-opacity
-                      focus:outline-none
-                    `}
-                  >
-                    <option value="mono">System Monospace</option>
-                    <option value="jetbrains">JetBrains Mono</option>
-                    <option value="fira">Fira Code</option>
-                    <option value="source">Source Code Pro</option>
-                    <option value="sans">Sans Serif</option>
-                    <option value="serif">Serif</option>
-                    <option value="system">System Default</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-2">Story View Font</label>
-                  <select
-                    value={options.storyFont}
-                    onChange={(e) => onUpdateOptions({
-                      ...options,
-                      storyFont: e.target.value
-                    })}
-                    className={`
-                      w-full px-3 py-2 rounded
-                      ${theme === 'green' 
-                        ? 'bg-black border border-green-500/30 text-green-400 focus:border-green-500/50' 
-                        : theme === 'og'
-                        ? 'bg-[#f6f6ef] border border-[#ff6600]/30 text-[#828282] focus:border-[#ff6600]/50'
-                        : 'bg-[#1a1a1a] border border-[#828282]/30 text-[#828282] focus:border-[#828282]/50'
-                      }
-                      appearance-none cursor-pointer hover:opacity-80 transition-opacity
-                      focus:outline-none
-                    `}
-                  >
-                    <option value="mono">System Monospace</option>
-                    <option value="jetbrains">JetBrains Mono</option>
-                    <option value="fira">Fira Code</option>
-                    <option value="source">Source Code Pro</option>
-                    <option value="sans">Sans Serif</option>
-                    <option value="serif">Serif</option>
-                    <option value="system">System Default</option>
-                  </select>
-                </div>
               </div>
             </div>
           </div>

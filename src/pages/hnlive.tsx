@@ -52,8 +52,7 @@ interface TerminalOptions {
   fontSize: 'xs' | 'sm' | 'base';
   classicLayout: boolean;
   showCommentParents: boolean;
-  terminalFont: FontOption;
-  storyFont: FontOption;
+  font: FontOption;
 }
 
 interface SearchFilters {
@@ -139,28 +138,16 @@ const getStoredCommentParents = () => {
   return false; // Default to not showing parents
 };
 
-const getStoredTerminalFont = () => {
+const getStoredFont = () => {
   try {
-    const stored = localStorage.getItem('hn-live-terminal-font');
-    if (stored && ['mono', 'jetbrains', 'fira', 'source', 'sans', 'serif', 'system'].includes(stored)) {
-      return stored as FontOption;
+    const storedFont = localStorage.getItem('hn-live-font');
+    if (storedFont && ['mono', 'jetbrains', 'fira', 'source', 'sans', 'serif', 'system'].includes(storedFont)) {
+      return storedFont as FontOption;
     }
   } catch (e) {
     console.warn('Could not access localStorage');
   }
-  return 'mono';
-};
-
-const getStoredStoryFont = () => {
-  try {
-    const stored = localStorage.getItem('hn-live-story-font');
-    if (stored && ['mono', 'jetbrains', 'fira', 'source', 'sans', 'serif', 'system'].includes(stored)) {
-      return stored as FontOption;
-    }
-  } catch (e) {
-    console.warn('Could not access localStorage');
-  }
-  return 'mono';
+  return 'mono'; // Default to monospace
 };
 
 // Update the style to handle both dark and green themes
@@ -194,8 +181,7 @@ export default function HNLiveTerminal() {
     fontSize: getStoredFontSize(),
     classicLayout: getStoredLayout(),
     showCommentParents: getStoredCommentParents(),
-    terminalFont: getStoredTerminalFont(),
-    storyFont: getStoredStoryFont()
+    font: getStoredFont()
   });
   const [isRunning, setIsRunning] = useState(true);
   
@@ -878,8 +864,7 @@ export default function HNLiveTerminal() {
       localStorage.setItem('hn-live-direct', String(newOptions.directLinks));
       localStorage.setItem('hn-live-classic-layout', String(newOptions.classicLayout));
       localStorage.setItem('hn-live-comment-parents', String(newOptions.showCommentParents));
-      localStorage.setItem('hn-live-terminal-font', newOptions.terminalFont);
-      localStorage.setItem('hn-live-story-font', newOptions.storyFont);
+      localStorage.setItem('hn-live-font', newOptions.font);
     } catch (e) {
       console.warn('Could not save settings to localStorage');
     }
@@ -1331,12 +1316,12 @@ export default function HNLiveTerminal() {
             fixed top-[60px] bottom-0 left-0 right-0 
             overflow-y-auto overflow-x-hidden 
             px-3 sm:px-4 pb-20 sm:pb-4
-            ${options.terminalFont === 'mono' ? 'font-mono' : 
-              options.terminalFont === 'jetbrains' ? 'font-jetbrains' :
-              options.terminalFont === 'fira' ? 'font-fira' :
-              options.terminalFont === 'source' ? 'font-source' :
-              options.terminalFont === 'sans' ? 'font-sans' :
-              options.terminalFont === 'serif' ? 'font-serif' :
+            ${options.font === 'mono' ? 'font-mono' : 
+              options.font === 'jetbrains' ? 'font-jetbrains' :
+              options.font === 'fira' ? 'font-fira' :
+              options.font === 'source' ? 'font-source' :
+              options.font === 'sans' ? 'font-sans' :
+              options.font === 'serif' ? 'font-serif' :
               'font-system'}
             scrollbar-thin scrollbar-track-transparent
             ${options.theme === 'green'
@@ -1459,6 +1444,7 @@ export default function HNLiveTerminal() {
           <FrontPage 
             theme={options.theme}
             fontSize={options.fontSize}
+            font={options.font}
             colorizeUsernames={colorizeUsernames}
             classicLayout={options.classicLayout}
             onShowSearch={() => setShowSearch(true)}
@@ -1478,7 +1464,7 @@ export default function HNLiveTerminal() {
             onClose={() => navigate('/')}
             theme={options.theme}
             fontSize={options.fontSize}
-            storyFont={options.storyFont}
+            font={options.font}
           />
         )}
 
@@ -1502,6 +1488,7 @@ export default function HNLiveTerminal() {
             <ShowPage 
               theme={options.theme} 
               fontSize={options.fontSize}
+              font={options.font}
               colorizeUsernames={colorizeUsernames}
               classicLayout={options.classicLayout}
               onShowSearch={() => setShowSearch(true)}
@@ -1548,10 +1535,10 @@ export default function HNLiveTerminal() {
         {location.pathname === '/jobs' && (
           <>
             <JobsPage 
-              theme={options.theme} 
+              theme={options.theme}
               fontSize={options.fontSize}
+              font={options.font}
               onShowSearch={() => setShowSearch(true)}
-              onShowGrep={() => setShowGrep(true)}
               onShowSettings={() => setShowSettings(true)}
               isSettingsOpen={showSettings}
               isSearchOpen={showSearch}
@@ -1570,6 +1557,7 @@ export default function HNLiveTerminal() {
             <BestPage 
               theme={options.theme} 
               fontSize={options.fontSize}
+              font={options.font}
               colorizeUsernames={colorizeUsernames}
               classicLayout={options.classicLayout}
               onShowSearch={() => setShowSearch(true)}
@@ -1678,6 +1666,7 @@ export default function HNLiveTerminal() {
           <BookmarksPage 
             theme={options.theme}
             fontSize={options.fontSize}
+            font={options.font}
             onShowSearch={() => setShowSearch(true)}
             onCloseSearch={() => setShowSearch(false)}
             onShowSettings={() => setShowSettings(true)}

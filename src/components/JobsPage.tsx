@@ -4,13 +4,14 @@ import { MobileBottomBar } from './MobileBottomBar';
 
 interface JobsPageProps {
   theme: 'green' | 'og' | 'dog';
-  fontSize: 'xs' | 'sm' | 'base';
+  fontSize: string;
+  font: FontOption;
   colorizeUsernames: boolean;
   classicLayout: boolean;
   onShowSearch: () => void;
   onShowSettings: () => void;
-  isSettingsOpen?: boolean;
-  isSearchOpen?: boolean;
+  isSettingsOpen: boolean;
+  isSearchOpen: boolean;
 }
 
 interface HNJob {
@@ -58,6 +59,7 @@ interface GrepState {
 export function JobsPage({ 
   theme, 
   fontSize,
+  font,
   colorizeUsernames,
   classicLayout,
   onShowSearch,
@@ -142,30 +144,17 @@ export function JobsPage({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-        e.preventDefault();
-        setGrepState(prev => ({ ...prev, isActive: true }));
-      }
       if (e.key === 'Escape') {
         if (isSettingsOpen || isSearchOpen) {
           return;
         }
-        if (grepState.isActive) {
-          setGrepState(prev => ({
-            ...prev,
-            isActive: false,
-            searchTerm: '',
-            matchedStories: []
-          }));
-        } else {
-          navigate('/');
-        }
+        navigate('/');
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, grepState.isActive, isSettingsOpen, isSearchOpen]);
+  }, [navigate, isSettingsOpen, isSearchOpen]);
 
   const loadMore = () => {
     const nextPage = state.page + 1;
@@ -189,7 +178,22 @@ export function JobsPage({
 
   return (
     <>
-      <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
+      <div className={`
+        fixed inset-0 z-50 overflow-hidden
+        ${font === 'mono' ? 'font-mono' : 
+          font === 'jetbrains' ? 'font-jetbrains' :
+          font === 'fira' ? 'font-fira' :
+          font === 'source' ? 'font-source' :
+          font === 'sans' ? 'font-sans' :
+          font === 'serif' ? 'font-serif' :
+          'font-system'}
+        ${theme === 'green'
+          ? 'bg-black text-green-400'
+          : theme === 'og'
+          ? 'bg-[#f6f6ef] text-[#828282]'
+          : 'bg-[#1a1a1a] text-[#828282]'}
+        text-${fontSize}
+      `}>
         <div className="h-full overflow-y-auto p-4">
           <div className="hidden sm:flex items-center justify-between mb-8">
             <div className="flex items-center">

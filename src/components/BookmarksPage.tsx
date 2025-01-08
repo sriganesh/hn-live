@@ -6,6 +6,7 @@ import { MobileBottomBar } from './MobileBottomBar';
 interface BookmarksPageProps {
   theme: 'green' | 'og' | 'dog';
   fontSize: string;
+  font: FontOption;
   onShowSearch: () => void;
   onCloseSearch: () => void;
   onShowSettings: () => void;
@@ -24,7 +25,7 @@ interface Bookmark {
   storyTitle?: string;
 }
 
-export function BookmarksPage({ theme, fontSize, onShowSearch, onCloseSearch, onShowSettings, isRunning }: BookmarksPageProps) {
+export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSearch, onShowSettings, isRunning }: BookmarksPageProps) {
   const navigate = useNavigate();
   const [bookmarks, setBookmarks] = useState<HNItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,13 +134,22 @@ export function BookmarksPage({ theme, fontSize, onShowSearch, onCloseSearch, on
   }, [navigate]);
 
   return (
-    <div className={`fixed inset-0 z-50 ${
-      theme === 'green'
-        ? 'text-green-400 bg-black'
+    <div className={`
+      fixed inset-0 z-50 overflow-hidden
+      ${font === 'mono' ? 'font-mono' : 
+        font === 'jetbrains' ? 'font-jetbrains' :
+        font === 'fira' ? 'font-fira' :
+        font === 'source' ? 'font-source' :
+        font === 'sans' ? 'font-sans' :
+        font === 'serif' ? 'font-serif' :
+        'font-system'}
+      ${theme === 'green'
+        ? 'bg-black text-green-400'
         : theme === 'og'
-        ? 'text-[#828282] bg-[#f6f6ef]'
-        : 'text-[#828282] bg-[#1a1a1a]'
-    } overflow-hidden text-${fontSize}`}>
+        ? 'bg-[#f6f6ef] text-[#828282]'
+        : 'bg-[#1a1a1a] text-[#828282]'}
+      text-${fontSize}
+    `}>
       <div className="h-full overflow-y-auto p-4 pb-20">
         {/* Header */}
         <div className="max-w-3xl mx-auto mb-8">
@@ -171,7 +181,7 @@ export function BookmarksPage({ theme, fontSize, onShowSearch, onCloseSearch, on
         </div>
 
         {/* Bookmarks List */}
-        <div className="max-w-3xl mx-auto font-mono">
+        <div className="max-w-3xl mx-auto">
           {loading ? (
             <div className="opacity-75">
               Loading bookmarks...
