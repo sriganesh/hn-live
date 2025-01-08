@@ -15,6 +15,8 @@ import { MobileBottomBar } from '../components/MobileBottomBar';
 import UserPage from '../components/UserPage';
 import { UserModal } from '../components/UserModal';
 import { AboutOverlay } from '../content/about';
+import { BookmarksPage } from '../components/BookmarksPage';
+import { navigationItems } from '../config/navigation';
 
 interface HNItem {
   id: number;
@@ -50,8 +52,7 @@ interface TerminalOptions {
   fontSize: 'xs' | 'sm' | 'base';
   classicLayout: boolean;
   showCommentParents: boolean;
-  terminalFont: FontOption;
-  storyFont: FontOption;
+  font: FontOption;
 }
 
 interface SearchFilters {
@@ -137,28 +138,16 @@ const getStoredCommentParents = () => {
   return false; // Default to not showing parents
 };
 
-const getStoredTerminalFont = () => {
+const getStoredFont = () => {
   try {
-    const stored = localStorage.getItem('hn-live-terminal-font');
-    if (stored && ['mono', 'jetbrains', 'fira', 'source', 'sans', 'serif', 'system'].includes(stored)) {
-      return stored as FontOption;
+    const storedFont = localStorage.getItem('hn-live-font');
+    if (storedFont && ['mono', 'jetbrains', 'fira', 'source', 'sans', 'serif', 'system'].includes(storedFont)) {
+      return storedFont as FontOption;
     }
   } catch (e) {
     console.warn('Could not access localStorage');
   }
-  return 'mono';
-};
-
-const getStoredStoryFont = () => {
-  try {
-    const stored = localStorage.getItem('hn-live-story-font');
-    if (stored && ['mono', 'jetbrains', 'fira', 'source', 'sans', 'serif', 'system'].includes(stored)) {
-      return stored as FontOption;
-    }
-  } catch (e) {
-    console.warn('Could not access localStorage');
-  }
-  return 'mono';
+  return 'mono'; // Default to monospace
 };
 
 // Update the style to handle both dark and green themes
@@ -192,8 +181,7 @@ export default function HNLiveTerminal() {
     fontSize: getStoredFontSize(),
     classicLayout: getStoredLayout(),
     showCommentParents: getStoredCommentParents(),
-    terminalFont: getStoredTerminalFont(),
-    storyFont: getStoredStoryFont()
+    font: getStoredFont()
   });
   const [isRunning, setIsRunning] = useState(true);
   
@@ -876,8 +864,7 @@ export default function HNLiveTerminal() {
       localStorage.setItem('hn-live-direct', String(newOptions.directLinks));
       localStorage.setItem('hn-live-classic-layout', String(newOptions.classicLayout));
       localStorage.setItem('hn-live-comment-parents', String(newOptions.showCommentParents));
-      localStorage.setItem('hn-live-terminal-font', newOptions.terminalFont);
-      localStorage.setItem('hn-live-story-font', newOptions.storyFont);
+      localStorage.setItem('hn-live-font', newOptions.font);
     } catch (e) {
       console.warn('Could not save settings to localStorage');
     }
@@ -935,6 +922,69 @@ export default function HNLiveTerminal() {
         container.removeEventListener('click', handleContainerClick);
       }
     };
+  }, []);
+
+  // Add state for showing more menu
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+  // Add ESC key handler for the MORE dropdown
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showMoreMenu) {
+        setShowMoreMenu(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showMoreMenu]);
+
+  // Add click outside handler for the MORE dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.more-dropdown') && showMoreMenu) {
+        setShowMoreMenu(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showMoreMenu]);
+
+  const hasLoggedRef = useRef(false);
+
+  useEffect(() => {
+    // Only log if we haven't logged before
+    if (hasLoggedRef.current) return;
+    hasLoggedRef.current = true;
+
+    const styles = [
+      'color: #ff6600',
+      'font-size: 20px',
+      'font-weight: bold',
+      'padding: 10px',
+    ].join(';');
+
+    const secondaryStyles = [
+      'color: #828282',
+      'font-size: 14px',
+      'padding: 5px',
+    ].join(';');
+
+    console.log('%c👋 Hello fellow hacker!', styles);
+    console.log(
+      '%c💡 Have ideas for making HN Live faster/better? Let us know!', 
+      secondaryStyles
+    );
+    console.log(
+      '%c🐛 Found a bug? Want to add a feature? PRs are welcome!', 
+      secondaryStyles
+    );
+    console.log(
+      '%c🌟 HN Live is open source: https://github.com/sriganesh/hn-live', 
+      secondaryStyles
+    );
   }, []);
 
   return (
@@ -1121,37 +1171,62 @@ export default function HNLiveTerminal() {
               )}
             </div>
             <div className="flex items-center gap-4">
-              {/* Navigation buttons first */}
+              {/* Main navigation */}
               <button 
                 onClick={() => navigate('/front')}
-                className={`hidden sm:inline ${themeColors}`}
+                className="hidden sm:inline text-[#ff6600] font-bold"
               >
-                [FRONT PAGE]
+                [VIEW FRONT PAGE]
               </button>
-              <button 
-                onClick={() => navigate('/show')}
-                className={`hidden sm:inline ${themeColors}`}
-              >
-                [SHOW]
-              </button>
-              <button 
-                onClick={() => navigate('/ask')}
-                className={`hidden sm:inline ${themeColors}`}
-              >
-                [ASK]
-              </button>
-              <button 
-                onClick={() => navigate('/jobs')}
-                className={`hidden sm:inline ${themeColors}`}
-              >
-                [JOBS]
-              </button>
-              <button 
-                onClick={() => navigate('/best')}
-                className={`hidden sm:inline ${themeColors}`}
-              >
-                [BEST]
-              </button>
+
+              {/* More dropdown */}
+              <div className="relative hidden sm:inline-block more-dropdown">
+                <button 
+                  onClick={() => setShowMoreMenu(!showMoreMenu)}
+                  className={themeColors}
+                >
+                  [MORE]
+                </button>
+                
+                {showMoreMenu && (
+                  <div className={`absolute left-0 mt-2 py-2 w-48 rounded-lg shadow-lg z-50 border ${
+                    theme === 'green'
+                      ? 'bg-black border-green-500/30'
+                      : theme === 'og'
+                      ? 'bg-white border-[#ff6600]/30'
+                      : 'bg-[#1a1a1a] border-[#828282]/30'
+                  }`}>
+                    {navigationItems.map((item) => (
+                      item.path === 'separator' ? (
+                        <div key="separator" className="border-t border-current/10 my-2" />
+                      ) : item.external ? (
+                        <a
+                          key={item.path}
+                          href={item.path}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block px-4 py-2 hover:opacity-75"
+                        >
+                          [{item.label}]
+                        </a>
+                      ) : (
+                        <button
+                          key={item.path}
+                          onClick={() => {
+                            navigate(item.path);
+                            setShowMoreMenu(false);
+                          }}
+                          className="w-full text-left px-4 py-2 hover:opacity-75"
+                        >
+                          [{item.label}]
+                        </button>
+                      )
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Search and other controls */}
               <button 
                 onClick={() => setShowSearch(true)}
                 className={themeColors}
@@ -1159,6 +1234,8 @@ export default function HNLiveTerminal() {
               >
                 [SEARCH]
               </button>
+
+              {/* GREP control */}
               <div className="hidden sm:block">
                 {showGrep ? (
                   <div className="flex items-center gap-2">
@@ -1190,15 +1267,15 @@ export default function HNLiveTerminal() {
 
               {/* Replace theme selector and settings with new Settings button and dropdown */}
               <div className="relative">
-                <button
-                  onClick={() => setShowSettings(true)}
-                  className={`${themeColors} opacity-75 hover:opacity-100 transition-colors`}
-                >
-                  [SETTINGS]
-                </button>
+              <button
+                onClick={() => setShowSettings(true)}
+                className={`${themeColors} opacity-75 hover:opacity-100 transition-colors`}
+              >
+                [SETTINGS]
+              </button>
               </div>
 
-              {/* Controls */}
+              {/* Start/Stop control */}
               <button 
                 onClick={toggleFeed}
                 className={`${
@@ -1214,6 +1291,8 @@ export default function HNLiveTerminal() {
               >
                 [{isRunning ? 'STOP' : 'START'}]
               </button>
+
+              {/* Clear screen */}
               <button 
                 onClick={clearScreen}
                 className={`${
@@ -1237,12 +1316,12 @@ export default function HNLiveTerminal() {
             fixed top-[60px] bottom-0 left-0 right-0 
             overflow-y-auto overflow-x-hidden 
             px-3 sm:px-4 pb-20 sm:pb-4
-            ${options.terminalFont === 'mono' ? 'font-mono' : 
-              options.terminalFont === 'jetbrains' ? 'font-jetbrains' :
-              options.terminalFont === 'fira' ? 'font-fira' :
-              options.terminalFont === 'source' ? 'font-source' :
-              options.terminalFont === 'sans' ? 'font-sans' :
-              options.terminalFont === 'serif' ? 'font-serif' :
+            ${options.font === 'mono' ? 'font-mono' : 
+              options.font === 'jetbrains' ? 'font-jetbrains' :
+              options.font === 'fira' ? 'font-fira' :
+              options.font === 'source' ? 'font-source' :
+              options.font === 'sans' ? 'font-sans' :
+              options.font === 'serif' ? 'font-serif' :
               'font-system'}
             scrollbar-thin scrollbar-track-transparent
             ${options.theme === 'green'
@@ -1365,6 +1444,7 @@ export default function HNLiveTerminal() {
           <FrontPage 
             theme={options.theme}
             fontSize={options.fontSize}
+            font={options.font}
             colorizeUsernames={colorizeUsernames}
             classicLayout={options.classicLayout}
             onShowSearch={() => setShowSearch(true)}
@@ -1384,7 +1464,7 @@ export default function HNLiveTerminal() {
             onClose={() => navigate('/')}
             theme={options.theme}
             fontSize={options.fontSize}
-            storyFont={options.storyFont}
+            font={options.font}
           />
         )}
 
@@ -1408,6 +1488,7 @@ export default function HNLiveTerminal() {
             <ShowPage 
               theme={options.theme} 
               fontSize={options.fontSize}
+              font={options.font}
               colorizeUsernames={colorizeUsernames}
               classicLayout={options.classicLayout}
               onShowSearch={() => setShowSearch(true)}
@@ -1454,10 +1535,10 @@ export default function HNLiveTerminal() {
         {location.pathname === '/jobs' && (
           <>
             <JobsPage 
-              theme={options.theme} 
+              theme={options.theme}
               fontSize={options.fontSize}
+              font={options.font}
               onShowSearch={() => setShowSearch(true)}
-              onShowGrep={() => setShowGrep(true)}
               onShowSettings={() => setShowSettings(true)}
               isSettingsOpen={showSettings}
               isSearchOpen={showSearch}
@@ -1476,6 +1557,7 @@ export default function HNLiveTerminal() {
             <BestPage 
               theme={options.theme} 
               fontSize={options.fontSize}
+              font={options.font}
               colorizeUsernames={colorizeUsernames}
               classicLayout={options.classicLayout}
               onShowSearch={() => setShowSearch(true)}
@@ -1556,7 +1638,9 @@ export default function HNLiveTerminal() {
         <MobileBottomBar 
           theme={options.theme}
           onShowSearch={() => setShowSearch(true)}
+          onCloseSearch={() => setShowSearch(false)}
           onShowSettings={() => setShowSettings(true)}
+          isRunning={isRunning}
         />
 
         {location.pathname.startsWith('/user/') && (
@@ -1576,6 +1660,19 @@ export default function HNLiveTerminal() {
           theme={options.theme}
           fontSize={options.fontSize}
         />
+
+        {/* Add the BookmarksPage component to the render */}
+        {location.pathname === '/bookmarks' && (
+          <BookmarksPage 
+            theme={options.theme}
+            fontSize={options.fontSize}
+            font={options.font}
+            onShowSearch={() => setShowSearch(true)}
+            onCloseSearch={() => setShowSearch(false)}
+            onShowSettings={() => setShowSettings(true)}
+            isRunning={isRunning}
+          />
+        )}
       </div>
 
       <Outlet />
