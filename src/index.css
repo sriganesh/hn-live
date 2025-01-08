@@ -17,3 +17,20 @@ body {
 .hn-username {
   color: #ff6600 !important;
 }
+
+:root {
+  --sat: env(safe-area-inset-bottom);
+}
+
+/* Add this to handle mobile browser chrome and PWA display */
+@supports (-webkit-touch-callout: none) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Ensure the viewport height is correct on mobile */
+html, body {
+  height: 100%;
+  height: -webkit-fill-available;
+}
