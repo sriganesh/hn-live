@@ -49,7 +49,7 @@ interface TerminalOptions {
   theme: 'green' | 'og' | 'dog';
   autoscroll: boolean;
   directLinks: boolean;
-  fontSize: 'xs' | 'sm' | 'base';
+  fontSize: 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl';
   classicLayout: boolean;
   showCommentParents: boolean;
   font: FontOption;
@@ -101,8 +101,8 @@ const getStoredAutoscroll = () => {
 const getStoredFontSize = () => {
   try {
     const storedSize = localStorage.getItem('hn-live-font-size');
-    if (storedSize && ['xs', 'sm', 'base'].includes(storedSize)) {
-      return storedSize as 'xs' | 'sm' | 'base';
+    if (storedSize && ['xs', 'sm', 'base', 'lg', 'xl', '2xl'].includes(storedSize)) {
+      return storedSize as 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl';
     }
     
     // If no stored preference, check screen width for default
@@ -1513,6 +1513,7 @@ export default function HNLiveTerminal() {
             <AskPage 
               theme={options.theme} 
               fontSize={options.fontSize}
+              font={options.font}
               colorizeUsernames={colorizeUsernames}
               classicLayout={options.classicLayout}
               onShowSearch={() => setShowSearch(true)}
