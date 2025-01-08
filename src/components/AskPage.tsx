@@ -5,7 +5,8 @@ import { MobileBottomBar } from './MobileBottomBar';
 
 interface AskPageProps {
   theme: 'green' | 'og' | 'dog';
-  fontSize: 'xs' | 'sm' | 'base';
+  fontSize: 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl';
+  font: FontOption;
   colorizeUsernames: boolean;
   classicLayout: boolean;
   onShowSearch: () => void;
@@ -60,9 +61,12 @@ interface GrepState {
   matchedStories: HNStory[];
 }
 
+type FontOption = 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
+
 export function AskPage({ 
   theme, 
-  fontSize, 
+  fontSize,
+  font,
   colorizeUsernames,
   classicLayout,
   onShowSearch, 
@@ -227,7 +231,22 @@ export function AskPage({
 
   return (
     <>
-      <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
+      <div className={`
+        fixed inset-0 z-50 overflow-hidden
+        ${font === 'mono' ? 'font-mono' : 
+          font === 'jetbrains' ? 'font-jetbrains' :
+          font === 'fira' ? 'font-fira' :
+          font === 'source' ? 'font-source' :
+          font === 'sans' ? 'font-sans' :
+          font === 'serif' ? 'font-serif' :
+          'font-system'}
+        ${theme === 'green'
+          ? 'text-green-400 bg-black'
+          : theme === 'og'
+          ? 'text-[#828282] bg-[#f6f6ef]'
+          : 'text-[#828282] bg-[#1a1a1a]'}
+        text-${fontSize}
+      `}>
         <div className="h-full overflow-y-auto p-4">
           <div className="hidden sm:flex items-center justify-between mb-8">
             <div className="flex items-center">
