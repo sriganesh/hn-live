@@ -14,6 +14,7 @@ interface StoryViewProps {
   font: FontOption;
   onShowSettings: () => void;
   isSettingsOpen: boolean;
+  isRunning: boolean;
 }
 
 interface HNStory {
@@ -350,7 +351,7 @@ const countReplies = (comment: HNComment): number => {
   return count;
 };
 
-export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, onShowSettings, isSettingsOpen }: StoryViewProps) {
+export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, onShowSettings, isSettingsOpen, isRunning }: StoryViewProps) {
   const navigate = useNavigate();
   const { isTopUser, getTopUserClass } = useTopUsers();
   
@@ -926,7 +927,9 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
             >
               HN
               <span className="animate-pulse">
-                <span className={`inline-block w-2 h-2 rounded-full bg-current opacity-50`}></span>
+                <span className={`inline-block w-2 h-2 rounded-full ${
+                  isRunning ? 'bg-current' : 'bg-gray-500'
+                } opacity-50`}></span>
               </span>
               LIVE
             </button>

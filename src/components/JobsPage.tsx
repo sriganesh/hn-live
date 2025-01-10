@@ -12,6 +12,7 @@ interface JobsPageProps {
   onShowSettings: () => void;
   isSettingsOpen: boolean;
   isSearchOpen: boolean;
+  isRunning: boolean;
 }
 
 interface HNJob {
@@ -65,7 +66,8 @@ export function JobsPage({
   onShowSearch,
   onShowSettings,
   isSettingsOpen,
-  isSearchOpen
+  isSearchOpen,
+  isRunning
 }: JobsPageProps) {
   const navigate = useNavigate();
   const [state, setState] = useState<JobsPageState>({
@@ -199,12 +201,18 @@ export function JobsPage({
             <div className="flex items-center">
               <div className="flex items-center">
                 <button
-                  onClick={() => navigate('/')}
-                  className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider hover:opacity-75 flex items-center`}
+                  onClick={handleClose}
+                  className={`${
+                    theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
+                  } font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
                 >
-                  <span>HN</span>
-                  <span className="text-2xl leading-[0] relative top-[1px] mx-[1px]">•</span>
-                  <span>LIVE</span>
+                  HN
+                  <span className="animate-pulse">
+                    <span className={`inline-block w-2 h-2 rounded-full ${
+                      isRunning ? 'bg-current' : 'bg-gray-500'
+                    } opacity-50`}></span>
+                  </span>
+                  LIVE
                 </button>
                 <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
                   /
@@ -300,12 +308,18 @@ export function JobsPage({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => navigate('/')}
-                  className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider hover:opacity-75 flex items-center`}
+                  onClick={handleClose}
+                  className={`${
+                    theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
+                  } font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
                 >
-                  <span>HN</span>
-                  <span className="text-2xl leading-[0] relative top-[1px] mx-[1px]">•</span>
-                  <span>LIVE</span>
+                  HN
+                  <span className="animate-pulse">
+                    <span className={`inline-block w-2 h-2 rounded-full ${
+                      isRunning ? 'bg-current' : 'bg-gray-500'
+                    } opacity-50`}></span>
+                  </span>
+                  LIVE
                 </button>
                 <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
                   /
