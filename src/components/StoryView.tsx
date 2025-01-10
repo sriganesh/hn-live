@@ -12,6 +12,7 @@ interface StoryViewProps {
   theme: 'green' | 'og' | 'dog';
   fontSize: string;
   font: FontOption;
+  onShowSettings: () => void;
 }
 
 interface HNStory {
@@ -35,6 +36,7 @@ interface HNComment {
   comments?: HNComment[];
   level: number;
   hasDeepReplies?: boolean;
+  isCollapsed?: boolean;
 }
 
 const MAX_COMMENTS = 5;  
@@ -154,44 +156,50 @@ const findRequiredCommentIds = async (targetId: number): Promise<{
   return { parentChain, topLevelParentIndex };
 };
 
-// Update the fetchComments function
+// Update the fetchComments function to restore original behavior
 const fetchComments = async (
   commentIds: number[], 
   depth: number = 0,
   requiredIds?: Set<number>,
   forceLoad: boolean = false
 ): Promise<HNComment[]> => {
-  // Always load if it's required or forced
   if (depth > MAX_DEPTH && !requiredIds?.size && !forceLoad) return [];
 
   const comments = await Promise.all(
     commentIds.map(async id => {
-      const comment = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
-        .then(res => res.json());
-      
-      if (!comment || comment.dead || comment.deleted) return null;
+      try {
+        const comment = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
+          .then(res => res.json());
+        
+        if (!comment || comment.dead || comment.deleted) return null;
 
-      let kids: HNComment[] = [];
-      if (comment.kids) {
-        const isRequired = requiredIds?.has(id) || 
-          comment.kids.some((kid: number) => requiredIds?.has(kid));
+        let kids: HNComment[] = [];
+        if (comment.kids) {
+          const isRequired = requiredIds?.has(id) || 
+            comment.kids.some((kid: number) => requiredIds?.has(kid));
 
-        kids = await fetchComments(
-          comment.kids,
-          depth + 1,
-          requiredIds,
-          isRequired
-        );
+          kids = await fetchComments(
+            comment.kids,
+            depth + 1,
+            requiredIds,
+            isRequired
+          );
+        }
+
+        return {
+          id: comment.id,
+          text: comment.text || '',
+          by: comment.by || '[deleted]',
+          time: comment.time,
+          level: depth,
+          comments: kids,
+          kids: comment.kids,
+          hasDeepReplies: comment.kids?.length > kids.length
+        };
+      } catch (error) {
+        console.error('Error fetching comment:', error);
+        return null;
       }
-
-      return {
-        id: comment.id,
-        text: comment.text || '',
-        by: comment.by || '[deleted]',
-        time: comment.time,
-        level: depth,
-        comments: kids
-      };
     })
   );
 
@@ -212,6 +220,7 @@ interface StoryViewState {
   loadedTotal: number;  // New field to track total including replies
   hasMore: boolean;
   isLoadingMore: boolean;
+  collapsedComments: Set<number>;
 }
 
 // Add this near the top with other utility functions
@@ -255,13 +264,13 @@ const formatTimeAgo = (timestamp: number): string => {
   const days = Math.floor(hours / 24);
 
   if (days > 0) {
-    return `${days}d ago`;
+    return `${days}d`;
   } else if (hours > 0) {
-    return `${hours}h ago`;
+    return `${hours}h`;
   } else if (minutes > 0) {
-    return `${minutes}m ago`;
+    return `${minutes}m`;
   } else {
-    return 'just now';
+    return 'now';
   }
 };
 
@@ -328,7 +337,19 @@ const grepComments = (comments: HNComment[], searchTerm: string): HNComment[] =>
   return matches;
 };
 
-export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }: StoryViewProps) {
+// Add this helper function to count replies
+const countReplies = (comment: HNComment): number => {
+  let count = 0;
+  if (comment.comments) {
+    count += comment.comments.length;
+    for (const reply of comment.comments) {
+      count += countReplies(reply);
+    }
+  }
+  return count;
+};
+
+export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, onShowSettings }: StoryViewProps) {
   const navigate = useNavigate();
   const { isTopUser, getTopUserClass } = useTopUsers();
   
@@ -339,7 +360,8 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }
     loadedCount: 0,
     loadedTotal: 0,
     hasMore: false,
-    isLoadingMore: false
+    isLoadingMore: false,
+    collapsedComments: new Set()
   });
 
   // Add these inside the StoryView component, near other state declarations
@@ -351,6 +373,31 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }
 
   // Add state for UserModal
   const [viewingUser, setViewingUser] = useState<string | null>(null);
+
+  // Add this helper to collapse entire thread
+  const collapseEntireThread = useCallback((commentId: number) => {
+    setCommentState(prev => {
+      const newCollapsed = new Set(prev.collapsedComments);
+      
+      // Helper to recursively find all comment IDs in a thread
+      const addThreadToCollapsed = (comments: HNComment[]) => {
+        comments.forEach(comment => {
+          if (comment.id === commentId) {
+            newCollapsed.add(comment.id);
+            comment.comments?.forEach(reply => {
+              newCollapsed.add(reply.id);
+              if (reply.comments) addThreadToCollapsed(reply.comments);
+            });
+          } else if (comment.comments) {
+            addThreadToCollapsed(comment.comments);
+          }
+        });
+      };
+
+      addThreadToCollapsed(prev.loadedComments);
+      return { ...prev, collapsedComments: newCollapsed };
+    });
+  }, []);
 
   // Add this inside StoryView component, after other state declarations
   const handleGrepToggle = () => {
@@ -369,6 +416,16 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }
     }));
   };
 
+  // Add this handler outside renderComment
+  const handleCollapseComment = useCallback((commentId: number) => {
+    setCommentState(prev => ({
+      ...prev,
+      collapsedComments: prev.collapsedComments.has(commentId)
+        ? new Set([...prev.collapsedComments].filter(id => id !== commentId))
+        : new Set([...prev.collapsedComments, commentId])
+    }));
+  }, []);
+
   // Update the useEffect that handles initial data fetching
   useEffect(() => {
     const fetchData = async () => {
@@ -382,13 +439,13 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }
 
         if (storyData.kids) {
           // First, if we have a scrollToId, find its parent chain
-          let targetCommentChain: number[] = [];
           if (scrollToId) {
             const comment = await fetch(`https://hacker-news.firebaseio.com/v0/item/${scrollToId}.json`)
               .then(res => res.json());
             
             // Find the top-level parent of this comment
             let currentId = scrollToId;
+            let targetCommentChain: number[] = [];
             while (currentId) {
               targetCommentChain.unshift(currentId);
               const parent = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentId}.json`)
@@ -401,13 +458,15 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }
             requiredIds = new Set(targetCommentChain);
           }
 
-          // Load first few comments instead of 10
+          // Load first few comments
           const firstFewComments = storyData.kids.slice(0, MAX_COMMENTS);
           
-          // If our target comment's thread isn't in first 5, add it
-          const topLevelParentId = targetCommentChain[0];
-          if (scrollToId && !firstFewComments.includes(topLevelParentId)) {
-            firstFewComments.push(topLevelParentId);
+          // If our target comment's thread isn't in first batch, add it
+          if (scrollToId && requiredIds) {
+            const topLevelParentId = Array.from(requiredIds)[0];
+            if (!firstFewComments.includes(topLevelParentId)) {
+              firstFewComments.push(topLevelParentId);
+            }
           }
 
           // Load all these comments
@@ -424,7 +483,8 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }
           loadedCount: initialComments.length,
           loadedTotal: countCommentsInTree(initialComments),
           hasMore: (storyData.kids?.length || 0) > MAX_COMMENTS,
-          isLoadingMore: false
+          isLoadingMore: false,
+          collapsedComments: new Set()
         });
 
         if (scrollToId) {
@@ -495,11 +555,13 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }
       const noNewComments = allComments.length === commentState.loadedComments.length;
 
       setCommentState(prev => ({
+        ...prev,
         loadedComments: allComments,
         loadedCount: allComments.length,
         loadedTotal: newTotal,
         hasMore: !isComplete && !noNewComments,
-        isLoadingMore: false
+        isLoadingMore: false,
+        collapsedComments: prev.collapsedComments // Preserve collapsed state
       }));
     } catch (error) {
       console.error('Error loading more comments:', error);
@@ -597,7 +659,8 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }
     ? 'text-[#828282] bg-[#f6f6ef]'
     : 'text-[#828282] bg-[#1a1a1a]';
 
-  const renderComment = (comment: HNComment, path: string = '') => (
+  // Update the renderComment function
+  const renderComment = useCallback((comment: HNComment, path: string = '') => (
     <Fragment key={`${comment.id}-${path}`}>
       <div 
         id={`comment-${comment.id}`}
@@ -618,126 +681,141 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }
             ? theme === 'og'
               ? 'border-l border-current/10'
               : theme === 'green'
-              ? 'border-l border-green-900'  // Much darker green for terminal mode
-              : 'border-l border-gray-700'   // Darker gray for dark mode
+              ? 'border-l border-green-900'
+              : 'border-l border-gray-700'
             : ''
         }`}
       >
         <div className="space-y-2">
-          <div className="text-sm opacity-75 mb-1">
-            <a 
-              onClick={(e) => {
-                e.preventDefault();
-                setViewingUser(comment.by);
-              }}
-              href={`/user/${comment.by}`}
-              className={`hn-username hover:underline ${
-                isTopUser(comment.by) ? getTopUserClass(theme) : ''
-              }`}
-            >
-              {comment.by}
-            </a>
-            {story && comment.by === story.by && (
-              <span className={`ml-1 text-xs ${
-                theme === 'green' 
-                  ? 'text-green-500/75' 
-                  : theme === 'og'
-                  ? 'text-[#ff6600]/75'
-                  : 'text-[#828282]/75'
-              }`}>
-                [OP]
-              </span>
-            )}
-            {' • '}
-            <a
-              href={`https://news.ycombinator.com/item?id=${story?.id}#${comment.id}`}
-              className="hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-              title={new Date(comment.time * 1000).toLocaleString()}
-            >
-              {formatTimeAgo(comment.time)}
-            </a>
-            {' • '}
-            <BookmarkButton
-              item={{
-                id: comment.id,
-                type: 'comment',
-                text: comment.text,
-                by: comment.by,
-                time: comment.time
-              }}
-              storyId={story.id}
-              storyTitle={story.title}
-              theme={theme}
-              variant="text"
-            />
-            {' • '}
-            <a
-              href={`https://news.ycombinator.com/reply?id=${comment.id}&goto=item%3Fid%3D${story?.id}%23${comment.id}`}
-              className="hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              reply
-            </a>
+          <div className={`text-${fontSize}`}>
+            <div className="flex items-center justify-between gap-2 mb-1 opacity-75">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <div className="flex items-center gap-2 min-w-0">
+                  <a 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setViewingUser(comment.by);
+                    }}
+                    href={`/user/${comment.by}`}
+                    className={`hn-username hover:underline truncate ${
+                      isTopUser(comment.by) ? getTopUserClass(theme) : ''
+                    }`}
+                  >
+                    {comment.by}
+                  </a>
+                  {story && comment.by === story.by && (
+                    <span className={`shrink-0 ${
+                      theme === 'green' 
+                        ? 'text-green-500/75' 
+                        : theme === 'og'
+                        ? 'text-[#ff6600]/75'
+                        : 'text-[#828282]/75'
+                    }`}>
+                      [OP]
+                    </span>
+                  )}
+                </div>
+
+                <span>•</span>
+                <a
+                  href={`https://news.ycombinator.com/item?id=${story?.id}#${comment.id}`}
+                  className="hover:underline shrink-0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={new Date(comment.time * 1000).toLocaleString()}
+                >
+                  {formatTimeAgo(comment.time)}
+                </a>
+                <span>•</span>
+                <BookmarkButton
+                  item={{
+                    id: comment.id,
+                    type: 'comment',
+                    text: comment.text,
+                    by: comment.by,
+                    time: comment.time
+                  }}
+                  storyId={story.id}
+                  storyTitle={story.title}
+                  theme={theme}
+                  variant="text"
+                />
+                <span>•</span>
+                <a
+                  href={`https://news.ycombinator.com/reply?id=${comment.id}&goto=item%3Fid%3D${story?.id}%23${comment.id}`}
+                  className="hover:underline shrink-0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  reply
+                </a>
+              </div>
+
+              <button
+                onClick={() => handleCollapseComment(comment.id)}
+                className={`shrink-0 ${
+                  theme === 'green' 
+                    ? 'text-green-500/50 hover:text-green-500' 
+                    : 'text-[#ff6600]/50 hover:text-[#ff6600]'
+                } font-mono`}
+              >
+                {commentState?.collapsedComments?.has(comment.id) ? '[+]' : '[-]'}
+              </button>
+            </div>
           </div>
-          <div 
-            className="prose max-w-none mb-4 break-words whitespace-pre-wrap overflow-hidden"
-            dangerouslySetInnerHTML={{ 
-              __html: addTargetBlankToLinks(comment.text) 
-            }} 
-          />
+
+          {!commentState?.collapsedComments?.has(comment.id) && (
+            <>
+              <div 
+                className="prose max-w-none mb-4 break-words whitespace-pre-wrap overflow-hidden"
+                dangerouslySetInnerHTML={{ 
+                  __html: addTargetBlankToLinks(comment.text) 
+                }} 
+              />
+
+              {/* Nested comments */}
+              {comment.comments?.map((reply, index) => 
+                renderComment(reply, `${path}-${index}`)
+              )}
+            </>
+          )}
+
+          {/* Show reply count when collapsed */}
+          {commentState?.collapsedComments?.has(comment.id) && comment.comments && comment.comments.length > 0 && (
+            <div className="text-sm opacity-50">
+              <button 
+                onClick={() => handleCollapseComment(comment.id)}
+                className="hover:opacity-75"
+              >
+                {countReplies(comment)} hidden replies
+              </button>
+            </div>
+          )}
+
+          {/* Load more replies button */}
+          {!commentState?.collapsedComments?.has(comment.id) && comment.hasDeepReplies && comment.kids && (
+            <div className="mt-2 text-sm">
+              <button
+                onClick={async () => {
+                  const moreReplies = await fetchComments(comment.kids || [], comment.level, undefined, true);
+                  setCommentState(prev => ({
+                    ...prev,
+                    loadedComments: updateCommentTree(prev.loadedComments, comment.id, moreReplies)
+                  }));
+                }}
+                className={`${
+                  theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
+                } opacity-75 hover:opacity-100`}
+              >
+                Load more replies...
+              </button>
+            </div>
+          )}
         </div>
-
-        {/* Nested comments */}
-        {comment.comments?.map((reply, index) => 
-          renderComment(reply, `${path}-${index}`)
-        )}
-        {comment.hasDeepReplies && comment.kids && (
-          <div className="mt-2 text-sm">
-            <button
-              onClick={async () => {
-                // Load more replies for this comment
-                const moreReplies = await fetchComments(comment.kids || [], comment.level, undefined, true);
-                
-                // Update the comment tree with new replies
-                const updateCommentTree = (comments: HNComment[]): HNComment[] => {
-                  return comments.map(c => {
-                    if (c.id === comment.id) {
-                      return {
-                        ...c,
-                        comments: moreReplies,
-                        hasDeepReplies: false
-                      };
-                    }
-                    if (c.comments) {
-                      return {
-                        ...c,
-                        comments: updateCommentTree(c.comments)
-                      };
-                    }
-                    return c;
-                  });
-                };
-
-                setCommentState(prev => ({
-                  ...prev,
-                  loadedComments: updateCommentTree(prev.loadedComments)
-                }));
-              }}
-              className={`${
-                theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
-              } opacity-75 hover:opacity-100`}
-            >
-              Load more replies...
-            </button>
-          </div>
-        )}
       </div>
       
       {/* Move separator outside the comment div and only show for root comments */}
-      {comment.level === 0 && (
+      {comment.level === 0 && !commentState?.collapsedComments?.has(comment.id) && (
         <div className={`border-b w-full ${
           theme === 'green' 
             ? 'border-green-500/10' 
@@ -747,7 +825,27 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }
         } my-4`} />
       )}
     </Fragment>
-  );
+  ), [commentState, theme, scrollToId, story, handleCollapseComment, fontSize]);
+
+  // Add this helper function for updating the comment tree
+  const updateCommentTree = (comments: HNComment[], targetId: number, newReplies: HNComment[]): HNComment[] => {
+    return comments.map(c => {
+      if (c.id === targetId) {
+        return {
+          ...c,
+          comments: newReplies,
+          hasDeepReplies: false
+        };
+      }
+      if (c.comments) {
+        return {
+          ...c,
+          comments: updateCommentTree(c.comments, targetId, newReplies)
+        };
+      }
+      return c;
+    });
+  };
 
   const handleClose = () => {
     navigate('/');
@@ -845,6 +943,12 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }
                   [GREP]
                 </button>
               )}
+              <button 
+                onClick={onShowSettings}
+                className="opacity-75 hover:opacity-100 hidden sm:block"
+              >
+                [SETTINGS]
+              </button>
               <button 
                 onClick={() => navigate('/')}
                 className="opacity-75 hover:opacity-100"

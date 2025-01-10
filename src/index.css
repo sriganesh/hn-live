@@ -34,3 +34,21 @@ html, body {
   height: 100%;
   height: -webkit-fill-available;
 }
+
+/* Add to src/index.css */
+@supports (padding: env(safe-area-inset-top)) {
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Fallback padding for non-supporting browsers */
+.pt-safe {
+  padding-top: max(env(safe-area-inset-top), 16px);
+}
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 16px);
+}

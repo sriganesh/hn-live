@@ -158,22 +158,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     <span className="text-sm">Size: {fontSizeOptions[options.fontSize]}</span>
                   </div>
                   <div className="relative">
-                    {/* Add step markers */}
-                    <div className="absolute w-full flex justify-between -mt-1 pointer-events-none">
-                      {Object.keys(fontSizeOptions).map((_, index) => (
-                        <div 
-                          key={index}
-                          className={`w-0.5 h-0.5 rounded-full ${
-                            theme === 'green'
-                              ? 'bg-green-500/50'
-                              : theme === 'og'
-                              ? 'bg-[#ff6600]/50'
-                              : 'bg-[#828282]/50'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    
                     <input
                       type="range"
                       min="0"
@@ -185,7 +169,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         onUpdateOptions({ ...options, fontSize: newSize });
                       }}
                       className={`
-                        w-full h-1 rounded-lg appearance-none cursor-pointer
+                        w-full h-2 rounded-lg appearance-none cursor-pointer
                         ${theme === 'green'
                           ? 'bg-green-500/30'
                           : theme === 'og'
@@ -193,25 +177,25 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                           : 'bg-[#828282]/30'
                         }
                         [&::-webkit-slider-thumb]:appearance-none
-                        [&::-webkit-slider-thumb]:w-4
-                        [&::-webkit-slider-thumb]:h-4
+                        [&::-webkit-slider-thumb]:w-6
+                        [&::-webkit-slider-thumb]:h-6
                         [&::-webkit-slider-thumb]:rounded-full
                         [&::-webkit-slider-thumb]:cursor-pointer
                         [&::-webkit-slider-thumb]:transition-all
-                        [&::-webkit-slider-thumb]:-mt-1.5
+                        [&::-webkit-slider-thumb]:-mt-2
                         ${theme === 'green'
                           ? '[&::-webkit-slider-thumb]:bg-green-500 [&::-webkit-slider-thumb]:hover:bg-green-400'
                           : theme === 'og'
                           ? '[&::-webkit-slider-thumb]:bg-[#ff6600] [&::-webkit-slider-thumb]:hover:bg-[#ff6600]/80'
                           : '[&::-webkit-slider-thumb]:bg-[#828282] [&::-webkit-slider-thumb]:hover:bg-[#828282]/80'
                         }
-                        [&::-moz-range-thumb]:w-4
-                        [&::-moz-range-thumb]:h-4
+                        [&::-moz-range-thumb]:w-6
+                        [&::-moz-range-thumb]:h-6
                         [&::-moz-range-thumb]:rounded-full
                         [&::-moz-range-thumb]:border-0
                         [&::-moz-range-thumb]:cursor-pointer
                         [&::-moz-range-thumb]:transition-all
-                        [&::-moz-range-thumb]:-mt-1.5
+                        [&::-moz-range-thumb]:-mt-2
                         ${theme === 'green'
                           ? '[&::-moz-range-thumb]:bg-green-500 [&::-moz-range-thumb]:hover:bg-green-400'
                           : theme === 'og'
@@ -221,8 +205,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       `}
                     />
                     
-                    {/* Adjust the label positioning */}
-                    <div className="flex justify-between text-[10px] mt-2 opacity-50">
+                    <div className="flex justify-between text-xs mt-2 opacity-75">
                       {Object.keys(fontSizeOptions).map((size, index) => (
                         <span 
                           key={size}
