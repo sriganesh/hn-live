@@ -1499,9 +1499,10 @@ export default function HNLiveTerminal() {
             itemId={Number(itemId)}
             scrollToId={Number(commentId)}
             onClose={() => navigate('/')}
-            theme={options.theme}
+            theme={theme}
             fontSize={options.fontSize}
             font={options.font}
+            onShowSettings={() => setShowSettings(true)}
           />
         )}
 

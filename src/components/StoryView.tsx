@@ -12,6 +12,7 @@ interface StoryViewProps {
   theme: 'green' | 'og' | 'dog';
   fontSize: string;
   font: FontOption;
+  onShowSettings: () => void;
 }
 
 interface HNStory {
@@ -348,7 +349,7 @@ const countReplies = (comment: HNComment): number => {
   return count;
 };
 
-export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }: StoryViewProps) {
+export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, onShowSettings }: StoryViewProps) {
   const navigate = useNavigate();
   const { isTopUser, getTopUserClass } = useTopUsers();
   
@@ -942,6 +943,12 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }
                   [GREP]
                 </button>
               )}
+              <button 
+                onClick={onShowSettings}
+                className="opacity-75 hover:opacity-100 hidden sm:block"
+              >
+                [SETTINGS]
+              </button>
               <button 
                 onClick={() => navigate('/')}
                 className="opacity-75 hover:opacity-100"
