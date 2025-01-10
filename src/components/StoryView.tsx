@@ -1042,7 +1042,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
                   dangerouslySetInnerHTML={{ __html: addTargetBlankToLinks(story.text) }}
                 />
               )}
-              <div className="border-t border-current opacity-10 my-8" />
+              <div className="border-t border-current opacity-10 my-4" />
               <div className="space-y-4">
                 {grepState.isActive && grepState.searchTerm ? (
                   grepState.matchedComments.length > 0 ? (
