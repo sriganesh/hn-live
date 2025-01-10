@@ -436,7 +436,7 @@ export function AskPage({
                       </span>
 
                       {/* Right column - content */}
-                      <div className="space-y-2 flex-1">
+                      <div className="space-y-1 flex-1">
                         {/* Top line - timestamp */}
                         <div className="text-sm opacity-50">
                           <span title={new Date(story.time * 1000).toLocaleString()}>
@@ -454,15 +454,7 @@ export function AskPage({
                             }}
                             className="group-hover:opacity-75 font-medium"
                           >
-                            <div className={`${
-                              theme === 'green'
-                                ? 'text-green-400'
-                                : theme === 'og'
-                                ? 'text-[#666666]'
-                                : 'text-[#a0a0a0]'
-                            }`}>
-                              {story.title}
-                            </div>
+                            {story.title}
                           </a>
                         </div>
 
