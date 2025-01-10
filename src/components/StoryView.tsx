@@ -263,13 +263,13 @@ const formatTimeAgo = (timestamp: number): string => {
   const days = Math.floor(hours / 24);
 
   if (days > 0) {
-    return `${days}d ago`;
+    return `${days}d`;
   } else if (hours > 0) {
-    return `${hours}h ago`;
+    return `${hours}h`;
   } else if (minutes > 0) {
-    return `${minutes}m ago`;
+    return `${minutes}m`;
   } else {
-    return 'just now';
+    return 'now';
   }
 };
 
@@ -686,33 +686,70 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }
         }`}
       >
         <div className="space-y-2">
-          <div className="text-sm opacity-75">
-            <div className="flex items-center justify-between gap-2 mb-1">
-              <div className="flex items-center gap-2 min-w-0">
-                <a 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setViewingUser(comment.by);
-                  }}
-                  href={`/user/${comment.by}`}
-                  className={`hn-username hover:underline truncate ${
-                    isTopUser(comment.by) ? getTopUserClass(theme) : ''
-                  }`}
+          <div className={`text-${fontSize}`}>
+            <div className="flex items-center justify-between gap-2 mb-1 opacity-75">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <div className="flex items-center gap-2 min-w-0">
+                  <a 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setViewingUser(comment.by);
+                    }}
+                    href={`/user/${comment.by}`}
+                    className={`hn-username hover:underline truncate ${
+                      isTopUser(comment.by) ? getTopUserClass(theme) : ''
+                    }`}
+                  >
+                    {comment.by}
+                  </a>
+                  {story && comment.by === story.by && (
+                    <span className={`shrink-0 ${
+                      theme === 'green' 
+                        ? 'text-green-500/75' 
+                        : theme === 'og'
+                        ? 'text-[#ff6600]/75'
+                        : 'text-[#828282]/75'
+                    }`}>
+                      [OP]
+                    </span>
+                  )}
+                </div>
+
+                <span>•</span>
+                <a
+                  href={`https://news.ycombinator.com/item?id=${story?.id}#${comment.id}`}
+                  className="hover:underline shrink-0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={new Date(comment.time * 1000).toLocaleString()}
                 >
-                  {comment.by}
+                  {formatTimeAgo(comment.time)}
                 </a>
-                {story && comment.by === story.by && (
-                  <span className={`shrink-0 text-xs ${
-                    theme === 'green' 
-                      ? 'text-green-500/75' 
-                      : theme === 'og'
-                      ? 'text-[#ff6600]/75'
-                      : 'text-[#828282]/75'
-                  }`}>
-                    [OP]
-                  </span>
-                )}
+                <span>•</span>
+                <BookmarkButton
+                  item={{
+                    id: comment.id,
+                    type: 'comment',
+                    text: comment.text,
+                    by: comment.by,
+                    time: comment.time
+                  }}
+                  storyId={story.id}
+                  storyTitle={story.title}
+                  theme={theme}
+                  variant="text"
+                />
+                <span>•</span>
+                <a
+                  href={`https://news.ycombinator.com/reply?id=${comment.id}&goto=item%3Fid%3D${story?.id}%23${comment.id}`}
+                  className="hover:underline shrink-0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  reply
+                </a>
               </div>
+
               <button
                 onClick={() => handleCollapseComment(comment.id)}
                 className={`shrink-0 ${
@@ -723,41 +760,6 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }
               >
                 {commentState?.collapsedComments?.has(comment.id) ? '[+]' : '[-]'}
               </button>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <a
-                href={`https://news.ycombinator.com/item?id=${story?.id}#${comment.id}`}
-                className="hover:underline"
-                target="_blank"
-                rel="noopener noreferrer"
-                title={new Date(comment.time * 1000).toLocaleString()}
-              >
-                {formatTimeAgo(comment.time)}
-              </a>
-              <span className="opacity-50">•</span>
-              <BookmarkButton
-                item={{
-                  id: comment.id,
-                  type: 'comment',
-                  text: comment.text,
-                  by: comment.by,
-                  time: comment.time
-                }}
-                storyId={story.id}
-                storyTitle={story.title}
-                theme={theme}
-                variant="text"
-              />
-              <span className="opacity-50">•</span>
-              <a
-                href={`https://news.ycombinator.com/reply?id=${comment.id}&goto=item%3Fid%3D${story?.id}%23${comment.id}`}
-                className="hover:underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                reply
-              </a>
             </div>
           </div>
 
@@ -822,7 +824,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font }
         } my-4`} />
       )}
     </Fragment>
-  ), [commentState, theme, scrollToId, story, handleCollapseComment]);
+  ), [commentState, theme, scrollToId, story, handleCollapseComment, fontSize]);
 
   // Add this helper function for updating the comment tree
   const updateCommentTree = (comments: HNComment[], targetId: number, newReplies: HNComment[]): HNComment[] => {
