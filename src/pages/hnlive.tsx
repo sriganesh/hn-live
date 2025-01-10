@@ -248,9 +248,10 @@ export default function HNLiveTerminal() {
     
     // Update the user link to use our modal instead of direct HN link
     const userLink = `<a 
-      href="/user/${item.by}"
+      href="#"
       class="hn-username hover:underline"
       data-username="${item.by}"
+      onclick="event.preventDefault(); event.stopPropagation(); window.dispatchEvent(new CustomEvent('viewUser', { detail: '${item.by}' }))"
     >${item.by}</a>`;
     
     if (item.type === 'comment') {
