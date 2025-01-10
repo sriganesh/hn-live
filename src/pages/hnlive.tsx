@@ -987,6 +987,21 @@ export default function HNLiveTerminal() {
     );
   }, []);
 
+  // Add this effect to update theme-color meta tag when theme changes
+  useEffect(() => {
+    const themeColor = {
+      'og': '#ff6600',    // Keep orange for OG theme
+      'dog': '#1a1a1a',   // Dark for dog theme
+      'green': '#000000'  // Black for green theme
+    }[options.theme];
+
+    // Update theme-color meta tag
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', themeColor);
+    }
+  }, [options.theme]);
+
   return (
     <>
       <Helmet>
@@ -1016,7 +1031,21 @@ export default function HNLiveTerminal() {
         <style>{themeStyles}</style>
         <style>{mobileNavStyles}</style>
       </Helmet>
-      <div id="terminal-container" className={`fixed inset-0 ${themeBg} font-mono overflow-x-hidden`} data-theme={options.theme}>
+      <div className={`
+        min-h-screen flex flex-col
+        ${theme === 'green' ? 'bg-black text-green-400' : theme === 'og' ? 'bg-[#f6f6ef] text-[#111]' : 'bg-[#1a1a1a] text-[#c9d1d9]'}
+        mt-[env(safe-area-inset-top)]
+        pb-[env(safe-area-inset-bottom)]
+        ${options.font === 'mono' ? 'font-mono' : 
+          options.font === 'jetbrains' ? 'font-jetbrains' :
+          options.font === 'fira' ? 'font-fira' :
+          options.font === 'source' ? 'font-source' :
+          options.font === 'sans' ? 'font-sans' :
+          options.font === 'serif' ? 'font-serif' :
+          options.font === 'system' ? 'font-system' :
+          'font-sans'}
+        ${options.fontSize}
+      `}>
         <noscript>
           <div className="p-4">
             <h1>HN Live - Real-time Hacker News Feed</h1>
@@ -1032,7 +1061,14 @@ export default function HNLiveTerminal() {
             onClose={() => setShowAbout(false)}
           />
         )}
-        <div className={`fixed top-0 left-0 right-0 z-50 ${themeHeaderBg} border-b ${themeColors} py-2 px-3 sm:py-4 sm:px-4`}>
+        <div className={`
+          fixed top-0 left-0 right-0 z-50 
+          ${themeHeaderBg} ${themeColors}
+          px-4 sm:px-6
+          pt-[max(20px,env(safe-area-inset-top))]
+          pb-2
+          sm:py-4
+        `}>
           {/* Mobile Layout - Top Bar */}
           <div className="sm:hidden">
             <div className="flex items-center justify-between">
