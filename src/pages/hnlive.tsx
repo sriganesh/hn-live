@@ -1503,6 +1503,7 @@ export default function HNLiveTerminal() {
             fontSize={options.fontSize}
             font={options.font}
             onShowSettings={() => setShowSettings(true)}
+            isSettingsOpen={showSettings}
           />
         )}
 

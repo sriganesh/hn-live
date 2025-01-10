@@ -13,6 +13,7 @@ interface StoryViewProps {
   fontSize: string;
   font: FontOption;
   onShowSettings: () => void;
+  isSettingsOpen: boolean;
 }
 
 interface HNStory {
@@ -349,7 +350,7 @@ const countReplies = (comment: HNComment): number => {
   return count;
 };
 
-export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, onShowSettings }: StoryViewProps) {
+export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, onShowSettings, isSettingsOpen }: StoryViewProps) {
   const navigate = useNavigate();
   const { isTopUser, getTopUserClass } = useTopUsers();
   
@@ -636,6 +637,10 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
             searchTerm: '',
             matchedComments: []
           }));
+        } else if (viewingUser) {
+          setViewingUser(null);
+        } else if (isSettingsOpen) {
+          onShowSettings(); // Close settings modal
         } else {
           navigate('/');
         }
@@ -644,7 +649,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, grepState.isActive]);
+  }, [navigate, grepState.isActive, viewingUser, isSettingsOpen, onShowSettings]);
 
   useEffect(() => {
     // Track story view
@@ -767,7 +772,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
           {!commentState?.collapsedComments?.has(comment.id) && (
             <>
               <div 
-                className="prose max-w-none mb-4 break-words whitespace-pre-wrap overflow-hidden"
+                className="prose max-w-none mb-4 break-words whitespace-pre-wrap overflow-x-auto px-2 max-w-full"
                 dangerouslySetInnerHTML={{ 
                   __html: addTargetBlankToLinks(comment.text) 
                 }} 
@@ -963,7 +968,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
               Loading...
             </div>
           ) : story ? (
-            <div className="max-w-4xl mx-auto px-0 sm:px-4">
+            <div className="max-w-4xl mx-auto px-2 sm:px-4">
               <div className="flex items-start justify-between gap-2">
                 <h1 className="text-xl font-bold mb-2 flex items-start gap-2">
                   {story.url ? (
@@ -1038,7 +1043,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
               </div>
               {story.text && (
                 <div 
-                  className="prose max-w-none mb-8 break-words whitespace-pre-wrap overflow-hidden"
+                  className="prose max-w-none mb-8 break-words whitespace-pre-wrap overflow-x-auto px-2 max-w-full"
                   dangerouslySetInnerHTML={{ __html: addTargetBlankToLinks(story.text) }}
                 />
               )}
