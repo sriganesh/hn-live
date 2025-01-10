@@ -11,6 +11,11 @@ HN Live shows you what's happening on Hacker News right now. Instead of refreshi
 - Live feed of new stories and comments
 - Front page view with infinite scrolling (just like HN's front page!)
 - Show HN, Ask HN, Jobs, and Best sections
+- Bookmark stories and comments for later reading
+- User profiles with karma history
+- Multiple font choices (system, mono, JetBrains, Fira Code, etc.)
+- Adjustable font sizes for better readability
+- Collapsible comment threads with reply counts
 - Three themes to choose from:
   - Classic HN orange
   - Dark mode
@@ -43,7 +48,7 @@ You can share these URLs directly and they will load the appropriate content.
 - `⌘/Ctrl + L` - Clear the screen
 - `⌘/Ctrl + F` - Filter live feed (grep)
 - `⌘/Ctrl + K` - Search all HN content
-- `ESC` - Close story view or return to feed
+- `ESC` - Close modals or return to feed
 
 ## Development Notes
 
