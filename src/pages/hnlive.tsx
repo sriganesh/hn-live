@@ -1490,6 +1490,7 @@ export default function HNLiveTerminal() {
             isSettingsOpen={showSettings}
             isSearchOpen={showSearch}
             onViewUser={(userId) => setViewingUser(userId)}
+            isRunning={isRunning}
           />
         )}
 
@@ -1504,6 +1505,7 @@ export default function HNLiveTerminal() {
             font={options.font}
             onShowSettings={() => setShowSettings(true)}
             isSettingsOpen={showSettings}
+            isRunning={isRunning}
           />
         )}
 
@@ -1536,6 +1538,7 @@ export default function HNLiveTerminal() {
               isSettingsOpen={showSettings}
               isSearchOpen={showSearch}
               onViewUser={(userId) => setViewingUser(userId)}
+              isRunning={isRunning}
             />
             <SearchModal 
               isOpen={showSearch}
@@ -1550,7 +1553,7 @@ export default function HNLiveTerminal() {
         {location.pathname === '/ask' && (
           <>
             <AskPage 
-              theme={options.theme} 
+              theme={options.theme}
               fontSize={options.fontSize}
               font={options.font}
               colorizeUsernames={colorizeUsernames}
@@ -1561,6 +1564,7 @@ export default function HNLiveTerminal() {
               isSettingsOpen={showSettings}
               isSearchOpen={showSearch}
               onViewUser={(userId) => setViewingUser(userId)}
+              isRunning={isRunning}
             />
             <SearchModal 
               isOpen={showSearch}
@@ -1582,6 +1586,7 @@ export default function HNLiveTerminal() {
               onShowSettings={() => setShowSettings(true)}
               isSettingsOpen={showSettings}
               isSearchOpen={showSearch}
+              isRunning={isRunning}
             />
             <SearchModal 
               isOpen={showSearch}
@@ -1606,6 +1611,7 @@ export default function HNLiveTerminal() {
               isSettingsOpen={showSettings}
               isSearchOpen={showSearch}
               onViewUser={(userId) => setViewingUser(userId)}
+              isRunning={isRunning}
             />
             <SearchModal 
               isOpen={showSearch}
