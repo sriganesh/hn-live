@@ -13,6 +13,7 @@ interface StoryViewProps {
   fontSize: string;
   font: FontOption;
   onShowSettings: () => void;
+  isSettingsOpen: boolean;
 }
 
 interface HNStory {
@@ -349,7 +350,7 @@ const countReplies = (comment: HNComment): number => {
   return count;
 };
 
-export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, onShowSettings }: StoryViewProps) {
+export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, onShowSettings, isSettingsOpen }: StoryViewProps) {
   const navigate = useNavigate();
   const { isTopUser, getTopUserClass } = useTopUsers();
   
@@ -636,6 +637,10 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
             searchTerm: '',
             matchedComments: []
           }));
+        } else if (viewingUser) {
+          setViewingUser(null);
+        } else if (isSettingsOpen) {
+          onShowSettings(); // Close settings modal
         } else {
           navigate('/');
         }
@@ -644,7 +649,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, grepState.isActive]);
+  }, [navigate, grepState.isActive, viewingUser, isSettingsOpen, onShowSettings]);
 
   useEffect(() => {
     // Track story view
