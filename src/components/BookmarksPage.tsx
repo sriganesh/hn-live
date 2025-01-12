@@ -180,6 +180,13 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
           </div>
         </div>
 
+        {/* Add the note about local storage at the top */}
+        <div className="max-w-3xl mx-auto mb-8">
+          <div className="text-sm opacity-75">
+            Note: Bookmarks are stored locally in your browser. They may be lost if you clear browser data. Use the [EXPORT] button above to save your bookmarks.
+          </div>
+        </div>
+
         {/* Bookmarks List */}
         <div className="max-w-3xl mx-auto">
           {loading ? (
@@ -187,17 +194,11 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
               Loading bookmarks...
             </div>
           ) : bookmarks.length === 0 ? (
-            <div className="opacity-75 space-y-2">
-              <p>
-                No bookmarks yet. Use the bookmark button on stories or comments to save them here.
-              </p>
-              <p>
-                Note: Bookmarks are stored locally in your browser. They may be lost if you clear browser data. 
-                Use the [EXPORT] button above to save your bookmarks.
-              </p>
+            <div className="text-center py-8 opacity-75">
+              No bookmarks yet. Use the bookmark button on stories or comments to save them here.
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {bookmarks.map(bookmark => (
                 <div key={bookmark.id} className="leading-relaxed">
                   {bookmark.type === 'comment' ? (

@@ -53,6 +53,7 @@ interface TerminalOptions {
   classicLayout: boolean;
   showCommentParents: boolean;
   font: FontOption;
+  showBackToTop: boolean;
 }
 
 interface SearchFilters {
@@ -150,6 +151,15 @@ const getStoredFont = () => {
   return 'mono'; // Default to monospace
 };
 
+const getStoredBackToTop = () => {
+  const stored = localStorage.getItem('hn-show-back-to-top');
+  return stored === null ? true : stored === 'true';
+};
+
+const setStoredBackToTop = (value: boolean) => {
+  localStorage.setItem('hn-show-back-to-top', value.toString());
+};
+
 // Update the style to handle both dark and green themes
 const themeStyles = `
   [data-theme='dog'] ::selection {
@@ -170,6 +180,16 @@ const mobileNavStyles = `
   }
 `;
 
+const defaultSettings = {
+  theme: 'og' as const,
+  fontSize: 'base',
+  font: 'system' as FontOption,
+  classicLayout: false,
+  colorizeUsernames: true,
+  showCommentParents: true,
+  showBackToTop: true,
+};
+
 export default function HNLiveTerminal() {
   useDocumentTitle('Hacker News Live');
   
@@ -181,7 +201,8 @@ export default function HNLiveTerminal() {
     fontSize: getStoredFontSize(),
     classicLayout: getStoredLayout(),
     showCommentParents: getStoredCommentParents(),
-    font: getStoredFont()
+    font: getStoredFont(),
+    showBackToTop: getStoredBackToTop(),
   });
   const [isRunning, setIsRunning] = useState(true);
   
@@ -1506,6 +1527,7 @@ export default function HNLiveTerminal() {
             onShowSettings={() => setShowSettings(true)}
             isSettingsOpen={showSettings}
             isRunning={isRunning}
+            showBackToTop={options.showBackToTop}
           />
         )}
 
@@ -1673,12 +1695,12 @@ export default function HNLiveTerminal() {
         <SettingsModal
           isOpen={showSettings}
           onClose={() => setShowSettings(false)}
-          theme={options.theme}
+          theme={theme}
           options={options}
           onUpdateOptions={handleSettingsUpdate}
           colorizeUsernames={colorizeUsernames}
           onColorizeUsernamesChange={setColorizeUsernames}
-          isMobile={window.innerWidth < 640}
+          setStoredBackToTop={setStoredBackToTop}
         />
 
         {/* Replace the mobile bottom bar with the new component */}

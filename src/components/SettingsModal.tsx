@@ -12,11 +12,13 @@ interface SettingsModalProps {
     classicLayout: boolean;
     showCommentParents: boolean;
     font: FontOption;
+    showBackToTop: boolean;
   };
   onUpdateOptions: (options: any) => void;
   colorizeUsernames: boolean;
   onColorizeUsernamesChange: (value: boolean) => void;
   isMobile?: boolean;
+  setStoredBackToTop: (value: boolean) => void;
 }
 
 const fontSizeOptions = {
@@ -45,7 +47,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onUpdateOptions,
   colorizeUsernames,
   onColorizeUsernamesChange,
-  isMobile = window.innerWidth < 640
+  isMobile = window.innerWidth < 640,
+  setStoredBackToTop
 }) => {
   // Add ESC key handler
   useEffect(() => {
@@ -308,6 +311,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   className={`hover:opacity-75 transition-opacity block`}
                 >
                   [{options.classicLayout ? 'x' : ' '}] Classic HN layout
+                </button>
+                <button
+                  onClick={() => {
+                    const newValue = !options.showBackToTop;
+                    setStoredBackToTop(newValue);
+                    onUpdateOptions({
+                      ...options,
+                      showBackToTop: newValue
+                    });
+                  }}
+                  className="hover:opacity-75 transition-opacity block"
+                >
+                  [{options.showBackToTop ? 'x' : ' '}] Show scroll to top
                 </button>
               </div>
             </div>
