@@ -15,6 +15,7 @@ interface StoryViewProps {
   onShowSettings: () => void;
   isSettingsOpen: boolean;
   isRunning: boolean;
+  showBackToTop: boolean;
 }
 
 interface HNStory {
@@ -236,11 +237,14 @@ const copyToClipboard = async (text: string) => {
   }
 };
 
-// Update the CopyButton component to be more minimal
+// Update the CopyButton component
 const CopyButton = ({ url, theme }: { url: string; theme: 'green' | 'og' | 'dog' }) => {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = async () => {
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     const success = await copyToClipboard(url);
     if (success) {
       setCopied(true);
@@ -251,9 +255,25 @@ const CopyButton = ({ url, theme }: { url: string; theme: 'green' | 'og' | 'dog'
   return (
     <button
       onClick={handleCopy}
-      className="hover:underline"
+      className={`hover:opacity-75 transition-opacity flex items-center ${
+        copied ? (theme === 'green' ? 'text-green-500' : 'text-[#ff6600]') : ''
+      }`}
+      title={copied ? 'Copied!' : 'Copy link'}
     >
-      {copied ? 'copied!' : 'copy'}
+      <svg 
+        className="w-5 h-5" 
+        fill="none" 
+        stroke="currentColor" 
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path 
+          stroke="currentColor" 
+          strokeLinejoin="round" 
+          strokeWidth={2} 
+          d="M14 4v3a1 1 0 0 1-1 1h-3m4 10v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1h2m11-3v10a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1V7.87a1 1 0 0 1 .24-.65l2.46-2.87a1 1 0 0 1 .76-.35H18a1 1 0 0 1 1 1Z"
+        />
+      </svg>
     </button>
   );
 };
@@ -351,7 +371,7 @@ const countReplies = (comment: HNComment): number => {
   return count;
 };
 
-export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, onShowSettings, isSettingsOpen, isRunning }: StoryViewProps) {
+export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, onShowSettings, isSettingsOpen, isRunning, showBackToTop }: StoryViewProps) {
   const navigate = useNavigate();
   const { isTopUser, getTopUserClass } = useTopUsers();
   
@@ -375,6 +395,31 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
 
   // Add state for UserModal
   const [viewingUser, setViewingUser] = useState<string | null>(null);
+
+  // Add this near the top with other state declarations
+  const [isBackToTopVisible, setIsBackToTopVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Add this useEffect to handle scroll detection
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      setIsBackToTopVisible(container.scrollTop > 500);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Add this function to handle the scroll to top
+  const scrollToTop = () => {
+    containerRef.current?.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   // Add this helper to collapse entire thread
   const collapseEntireThread = useCallback((commentId: number) => {
@@ -695,8 +740,8 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
         <div className="space-y-2">
           <div className={`text-${fontSize}`}>
             <div className="flex items-center justify-between gap-2 mb-1 opacity-75">
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-1 min-w-0 flex-1">
+                <div className="flex items-center gap-1 min-w-0">
                   <a 
                     onClick={(e) => {
                       e.preventDefault();
@@ -720,53 +765,65 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
                       [OP]
                     </span>
                   )}
+                  <span>•</span>
+                  <a
+                    href={`https://news.ycombinator.com/item?id=${comment.id}`}
+                    className="hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={new Date(comment.time * 1000).toLocaleString()}
+                  >
+                    {formatTimeAgo(comment.time)}
+                  </a>
+                  <span>•</span>
+                  <BookmarkButton
+                    item={{
+                      id: comment.id,
+                      type: 'comment',
+                      text: comment.text,
+                      by: comment.by,
+                      time: comment.time
+                    }}
+                    storyId={story.id}
+                    storyTitle={story.title}
+                    theme={theme}
+                  />
                 </div>
-
-                <span>•</span>
-                <a
-                  href={`https://news.ycombinator.com/item?id=${story?.id}#${comment.id}`}
-                  className="hover:underline shrink-0"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={new Date(comment.time * 1000).toLocaleString()}
-                >
-                  {formatTimeAgo(comment.time)}
-                </a>
-                <span>•</span>
-                <BookmarkButton
-                  item={{
-                    id: comment.id,
-                    type: 'comment',
-                    text: comment.text,
-                    by: comment.by,
-                    time: comment.time
-                  }}
-                  storyId={story.id}
-                  storyTitle={story.title}
-                  theme={theme}
-                  variant="text"
-                />
-                <span>•</span>
-                <a
-                  href={`https://news.ycombinator.com/reply?id=${comment.id}&goto=item%3Fid%3D${story?.id}%23${comment.id}`}
-                  className="hover:underline shrink-0"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  reply
-                </a>
               </div>
 
-              <button
-                onClick={() => handleCollapseComment(comment.id)}
-                className={`shrink-0 ${
-                  theme === 'green' 
-                    ? 'text-green-500/50 hover:text-green-500' 
-                    : 'text-[#ff6600]/50 hover:text-[#ff6600]'
-                } font-mono`}
-              >
-                {commentState?.collapsedComments?.has(comment.id) ? '[+]' : '[-]'}
-              </button>
+              <div className="flex items-center gap-2">
+                <a
+                  href={`https://news.ycombinator.com/reply?id=${comment.id}&goto=item%3Fid%3D${story?.id}%23${comment.id}`}
+                  className="hover:opacity-75 transition-opacity flex items-center"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Reply on Hacker News"
+                >
+                  <svg 
+                    className="w-4 h-4" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                    />
+                  </svg>
+                </a>
+                <button
+                  onClick={() => handleCollapseComment(comment.id)}
+                  className={`shrink-0 ${
+                    theme === 'green' 
+                      ? 'text-green-500/50 hover:text-green-500' 
+                      : 'text-[#ff6600]/50 hover:text-[#ff6600]'
+                  } font-mono`}
+                >
+                  {commentState?.collapsedComments?.has(comment.id) ? '[+]' : '[-]'}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -867,21 +924,57 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
           </div>
 
           {/* Metadata row */}
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm opacity-75">
-            <span>{story.by}</span>
+          <div className="text-sm opacity-75 mb-4 flex items-center flex-wrap gap-1">
+            <a 
+              onClick={(e) => {
+                e.preventDefault();
+                setViewingUser(story.by);
+              }}
+              href={`/user/${story.by}`}
+              className={`hn-username hover:underline ${
+                isTopUser(story.by) ? getTopUserClass(theme) : ''
+              }`}
+            >
+              {story.by}
+            </a>
             <span>•</span>
-            <span>{formatTimeAgo(story.time)}</span>
+            <a
+              href={`https://news.ycombinator.com/item?id=${story.id}`}
+              className="hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+              title={new Date(story.time * 1000).toLocaleString()}
+            >
+              {formatTimeAgo(story.time)}
+            </a>
+            <span>•</span>
             {story.descendants !== undefined && (
               <>
-                <span>•</span>
                 <span>
                   {story.descendants 
                     ? `${story.descendants} comment${story.descendants === 1 ? '' : 's'}`
-                    : 'discuss'
+                    : 'no comments yet'
                   }
                 </span>
+                <span>•</span>
               </>
             )}
+            <BookmarkButton
+              item={{
+                id: story.id,
+                type: 'story',
+                title: story.title,
+                by: story.by,
+                time: story.time,
+                url: story.url
+              }}
+              theme={theme}
+            />
+            <span>•</span>
+            <CopyButton 
+              url={`https://hn.live/item/${itemId}`}
+              theme={theme}
+            />
           </div>
         </div>
       </div>
@@ -917,7 +1010,10 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
           : 'bg-[#1a1a1a] text-[#828282]'}
         text-${fontSize}
       `}>
-        <div className="story-container h-full overflow-y-auto overflow-x-hidden p-4 pb-32">
+        <div 
+          ref={containerRef}
+          className="h-full overflow-y-auto p-4"
+        >
           <div className="flex items-center justify-between mb-8">
             <button 
               onClick={handleClose}
@@ -991,7 +1087,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
                   )}
                 </h1>
               </div>
-              <div className="text-sm opacity-75 mb-4">
+              <div className="text-sm opacity-75 mb-4 flex items-center flex-wrap gap-1">
                 <a 
                   onClick={(e) => {
                     e.preventDefault();
@@ -1004,7 +1100,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
                 >
                   {story.by}
                 </a>
-                {' • '}
+                <span>•</span>
                 <a
                   href={`https://news.ycombinator.com/item?id=${story.id}`}
                   className="hover:underline"
@@ -1014,7 +1110,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
                 >
                   {formatTimeAgo(story.time)}
                 </a>
-                {' • '}
+                <span>•</span>
                 {story.descendants !== undefined && (
                   <>
                     <span>
@@ -1023,7 +1119,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
                         : 'no comments yet'
                       }
                     </span>
-                    {' • '}
+                    <span>•</span>
                   </>
                 )}
                 <BookmarkButton
@@ -1036,11 +1132,10 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
                     url: story.url
                   }}
                   theme={theme}
-                  variant="text"
                 />
-                {' • '}
+                <span>•</span>
                 <CopyButton 
-                  url={`https://hn.live/item/${story.id}`}
+                  url={`https://hn.live/item/${itemId}`}
                   theme={theme}
                 />
               </div>
@@ -1137,6 +1232,36 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
           theme={theme}
           fontSize={fontSize}
         />
+      )}
+
+      {/* Back to top button */}
+      {showBackToTop && isBackToTopVisible && (
+        <button
+          onClick={scrollToTop}
+          className={`fixed bottom-28 right-8 p-2 rounded-full shadow-lg z-[60] 
+            ${theme === 'green' 
+              ? 'bg-green-500/10 hover:bg-green-500/20 text-green-400' 
+              : theme === 'og'
+              ? 'bg-[#ff6600]/10 hover:bg-[#ff6600]/20 text-[#ff6600]'
+              : 'bg-gray-800 hover:bg-gray-700 text-gray-200'
+            }
+            transition-all duration-200 opacity-90 hover:opacity-100`}
+          aria-label="Back to top"
+        >
+          <svg 
+            className="w-6 h-6" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M5 10l7-7m0 0l7 7m-7-7v18"
+            />
+          </svg>
+        </button>
       )}
     </>
   );
