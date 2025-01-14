@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTopUsers } from '../hooks/useTopUsers';
 import { MobileBottomBar } from './MobileBottomBar';
+import { FontOption } from '../types/hn';
 
 interface ShowPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -10,7 +11,6 @@ interface ShowPageProps {
   colorizeUsernames: boolean;
   classicLayout: boolean;
   onShowSearch: () => void;
-  onShowGrep: () => void;
   onShowSettings: () => void;
   isSettingsOpen: boolean;
   isSearchOpen: boolean;
@@ -68,7 +68,6 @@ export function ShowPage({
   colorizeUsernames,
   classicLayout,
   onShowSearch,
-  onShowGrep,
   onShowSettings,
   isSettingsOpen,
   isSearchOpen,
@@ -86,8 +85,6 @@ export function ShowPage({
     page: 0,
     hasMore: true
   });
-  const [showGrep, setShowGrep] = useState(false);
-  const [grepFilter, setGrepFilter] = useState('');
   const { isTopUser, getTopUserClass } = useTopUsers();
   const [grepState, setGrepState] = useState<GrepState>({
     isActive: false,
@@ -560,7 +557,7 @@ export function ShowPage({
                 </div>
               ))}
 
-              {!grepFilter && (
+              {!grepState.searchTerm && (
                 <div 
                   ref={loadingRef} 
                   className="text-center py-8"
@@ -620,6 +617,7 @@ export function ShowPage({
         theme={theme}
         onShowSearch={onShowSearch}
         onShowSettings={onShowSettings}
+        onCloseSearch={() => setGrepState(prev => ({ ...prev, isActive: false, searchTerm: '' }))}
       />
     </>
   );

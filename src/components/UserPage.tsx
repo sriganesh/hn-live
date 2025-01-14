@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MobileBottomBar } from './MobileBottomBar';
+import { FontSize } from '../types/hn';
 
 interface UserPageProps {
   theme: 'green' | 'og' | 'dog';
-  fontSize: 'xs' | 'sm' | 'base';
+  fontSize: FontSize;
   onShowSearch: () => void;
   onShowSettings: () => void;
 }
@@ -283,6 +284,7 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
         theme={theme}
         onShowSearch={onShowSearch}
         onShowSettings={onShowSettings}
+        onCloseSearch={() => {}}
       />
     </>
   );

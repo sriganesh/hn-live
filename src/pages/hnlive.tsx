@@ -17,178 +17,26 @@ import { UserModal } from '../components/UserModal';
 import { AboutOverlay } from '../content/about';
 import { BookmarksPage } from '../components/BookmarksPage';
 import { navigationItems } from '../config/navigation';
-
-interface HNItem {
-  id: number;
-  title?: string;
-  text?: string;
-  by: string;
-  time: number;
-  url?: string;
-  score?: number;
-  kids?: number[];
-  type: 'story' | 'comment' | 'job' | 'poll' | 'pollopt';
-  parent?: number;
-  dead?: boolean;
-  formatted?: {
-    timestamp: {
-      time: string;
-      fullDate: string;
-    };
-    text: string;
-    links: {
-      main: string;
-      comments: string;
-    };
-  };
-}
-
-type FontOption = 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
-
-interface TerminalOptions {
-  theme: 'green' | 'og' | 'dog';
-  autoscroll: boolean;
-  directLinks: boolean;
-  fontSize: 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl';
-  classicLayout: boolean;
-  showCommentParents: boolean;
-  font: FontOption;
-  showBackToTop: boolean;
-}
-
-interface SearchFilters {
-  text: string;
-}
+import { TimeStamp } from '../components/TimeStamp';
+import { formatTimestamp } from '../utils/formatters';
+import { HNItem, TerminalOptions, SearchFilters } from '../types/hn';
+import { fetchItem, fetchMaxItem, isValidItem } from '../utils/hnApi';
+import { themeStyles, mobileNavStyles } from '../styles/theme';
+import {
+  getStoredTheme,
+  getStoredDirectLinks,
+  getStoredAutoscroll,
+  getStoredFontSize,
+  getStoredLayout,
+  getStoredCommentParents,
+  getStoredFont,
+  getStoredBackToTop,
+  setStoredBackToTop
+} from '../utils/storage';
 
 const INITIAL_BUFFER_SIZE = 60;  // Number of items to fetch initially
-const UPDATE_INTERVAL = 30000;   // How often to fetch new items (30 seconds)
 const MIN_DISPLAY_INTERVAL = 800;  // Minimum time between displaying items
 const MAX_DISPLAY_INTERVAL = 2000; // Maximum time between displaying items
-
-const getStoredTheme = () => {
-  try {
-    const storedTheme = localStorage.getItem('hn-live-theme');
-    if (storedTheme && ['green', 'og', 'dog'].includes(storedTheme)) {
-      return storedTheme as 'green' | 'og' | 'dog';
-    }
-  } catch (e) {
-    // Handle cases where localStorage might be unavailable
-    console.warn('Could not access localStorage');
-  }
-  return 'og'; // Default theme if nothing is stored
-};
-
-const getStoredDirectLinks = () => {
-  try {
-    const storedDirectLinks = localStorage.getItem('hn-live-direct');
-    return storedDirectLinks === 'true';
-  } catch (e) {
-    console.warn('Could not access localStorage');
-  }
-  return false; // Default to our site view
-};
-
-const getStoredAutoscroll = () => {
-  try {
-    const storedAutoscroll = localStorage.getItem('hn-live-autoscroll');
-    // Return false if no value is stored (first visit) or if the stored value is 'false'
-    return storedAutoscroll === 'true';
-  } catch (e) {
-    console.warn('Could not access localStorage');
-  }
-  return false; // Default to autoscroll off
-};
-
-const getStoredFontSize = () => {
-  try {
-    const storedSize = localStorage.getItem('hn-live-font-size');
-    if (storedSize && ['xs', 'sm', 'base', 'lg', 'xl', '2xl'].includes(storedSize)) {
-      return storedSize as 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl';
-    }
-    
-    // If no stored preference, check screen width for default
-    const isMobile = window.innerWidth < 640; // 640px is Tailwind's 'sm' breakpoint
-    return isMobile ? 'sm' : 'base'; // 'sm' for mobile, 'base' for desktop
-    
-  } catch (e) {
-    console.warn('Could not access localStorage');
-    // Fallback to same mobile check if localStorage fails
-    const isMobile = window.innerWidth < 640;
-    return isMobile ? 'sm' : 'base';
-  }
-};
-
-const getStoredLayout = () => {
-  try {
-    const storedLayout = localStorage.getItem('hn-live-classic-layout');
-    // Return false only if explicitly set to 'false'
-    return storedLayout === null ? true : storedLayout === 'true';
-  } catch (e) {
-    console.warn('Could not access localStorage');
-  }
-  return true; // Default to classic HN layout
-};
-
-const getStoredCommentParents = () => {
-  try {
-    const stored = localStorage.getItem('hn-live-comment-parents');
-    return stored === 'true';
-  } catch (e) {
-    console.warn('Could not access localStorage');
-  }
-  return false; // Default to not showing parents
-};
-
-const getStoredFont = () => {
-  try {
-    const storedFont = localStorage.getItem('hn-live-font');
-    if (storedFont && ['mono', 'jetbrains', 'fira', 'source', 'sans', 'serif', 'system'].includes(storedFont)) {
-      return storedFont as FontOption;
-    }
-  } catch (e) {
-    console.warn('Could not access localStorage');
-  }
-  return 'mono'; // Default to monospace
-};
-
-const getStoredBackToTop = () => {
-  const stored = localStorage.getItem('hn-show-back-to-top');
-  return stored === null ? true : stored === 'true';
-};
-
-const setStoredBackToTop = (value: boolean) => {
-  localStorage.setItem('hn-show-back-to-top', value.toString());
-};
-
-// Update the style to handle both dark and green themes
-const themeStyles = `
-  [data-theme='dog'] ::selection {
-    background: rgba(255, 255, 255, 0.1);
-    color: inherit;
-  }
-  
-  [data-theme='green'] ::selection {
-    background: rgba(34, 197, 94, 0.2); /* green-500 with low opacity */
-    color: inherit;
-  }
-`;
-
-// Add this near other style definitions at the top
-const mobileNavStyles = `
-  .mobile-nav-button {
-    @apply flex-1 py-3 flex items-center justify-center transition-colors border-r last:border-r-0 border-current/30;
-  }
-`;
-
-const defaultSettings = {
-  theme: 'og' as const,
-  fontSize: 'base',
-  font: 'system' as FontOption,
-  classicLayout: false,
-  colorizeUsernames: true,
-  showCommentParents: true,
-  showBackToTop: true,
-};
 
 export default function HNLiveTerminal() {
   useDocumentTitle('Hacker News Live');
@@ -230,29 +78,6 @@ export default function HNLiveTerminal() {
   const location = useLocation();
 
   const { isTopUser, getTopUserClass } = useTopUsers();
-
-  // Format timestamp
-  const formatTimestamp = (timestamp: number) => {
-    const date = new Date(timestamp * 1000);
-    return {
-      time: date.toLocaleTimeString('en-US', { 
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      }),
-      fullDate: date.toLocaleString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      })
-    };
-  };
 
   // Format item for display
   const formatItem = async (item: HNItem) => {
@@ -447,20 +272,10 @@ export default function HNLiveTerminal() {
 
   // Update polling logic
   useEffect(() => {
-    const fetchMaxItem = async () => {
-      abortControllerRef.current = new AbortController();
-      
+    const startFetching = async () => {
       try {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = undefined;
-        }
-
-        // Initial fetch with larger buffer
-        const response = await fetch('https://hacker-news.firebaseio.com/v0/maxitem.json', {
-          signal: abortControllerRef.current.signal
-        });
-        const maxItem = await response.json();
+        abortControllerRef.current = new AbortController();
+        const maxItem = await fetchMaxItem(abortControllerRef.current.signal);
         maxItemRef.current = maxItem;
         
         // Fetch more items initially to build a buffer
@@ -471,66 +286,29 @@ export default function HNLiveTerminal() {
         
         for (const id of itemIds) {
           if (!isRunning) return;
-          const itemResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`, {
-            signal: abortControllerRef.current.signal
-          });
-          const item = await itemResponse.json();
-          if (item && 
-              (item.type === 'story' || item.type === 'comment') && 
-              item.by && 
-              item.text !== '[deleted]' && 
-              item.text !== '[dead]' &&
-              !item.dead) {
-            addToQueue(item);
+          const item = await fetchItem(id, abortControllerRef.current.signal);
+          
+          if (isValidItem(item)) {
+            const formatted = await formatItem(item);
+            if (formatted) {
+              item.formatted = formatted;
+              itemQueueRef.current.push(item);
+            }
           }
         }
         
-        // Regular polling interval
-        if (isRunning) {
-          intervalRef.current = setInterval(async () => {
-            try {
-              const response = await fetch('https://hacker-news.firebaseio.com/v0/maxitem.json', {
-                signal: abortControllerRef.current?.signal
-              });
-              const newMaxItem = await response.json();
-              
-              if (newMaxItem > maxItemRef.current) {
-                const itemIds = Array.from(
-                  {length: newMaxItem - maxItemRef.current}, 
-                  (_, i) => maxItemRef.current + 1 + i
-                );
-                
-                for (const id of itemIds) {
-                  if (!isRunning) return;
-                  const itemResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`, {
-                    signal: abortControllerRef.current?.signal
-                  });
-                  const item = await itemResponse.json();
-                  if (item && 
-                      (item.type === 'story' || item.type === 'comment') && 
-                      item.by && 
-                      item.text !== '[deleted]' && 
-                      item.text !== '[dead]' &&
-                      !item.dead) {
-                    addToQueue(item);
-                  }
-                }
-                maxItemRef.current = newMaxItem;
-              }
-            } catch (error: unknown) {
-              if (error instanceof Error && error.name === 'AbortError') return;
-              console.error('Error in interval:', error);
-            }
-          }, UPDATE_INTERVAL);
-        }
+        processQueue();
       } catch (error: unknown) {
-        if (error instanceof Error && error.name === 'AbortError') return;
+        if (error instanceof Error && error.name === 'AbortError') {
+          // Ignore abort errors
+          return;
+        }
         console.error('Error fetching items:', error);
       }
     };
 
     if (isRunning) {
-      fetchMaxItem();
+      startFetching();
     } else {
       abortControllerRef.current?.abort();
       if (intervalRef.current) {
@@ -672,31 +450,7 @@ export default function HNLiveTerminal() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showGrep, showAbout]); // Add showAbout to dependencies
 
-  // Add back the TimeStamp component
-  const TimeStamp = ({ time, fullDate }: { time: string; fullDate: string }) => {
-    const [showTooltip, setShowTooltip] = useState(false);
-
-    return (
-      <div className="relative">
-        <span 
-          className="opacity-50 shrink-0"
-          onMouseEnter={() => setShowTooltip(true)}
-          onMouseLeave={() => setShowTooltip(false)}
-        >
-          {time}
-        </span>
-        {showTooltip && (
-          <div className="absolute left-0 bottom-full mb-1 z-50 animate-fade-in">
-            <div className="bg-black border border-current px-2 py-1 rounded whitespace-nowrap text-xs">
-              {fullDate}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Add an effect to save theme changes
+  // Add effect to save theme changes
   useEffect(() => {
     try {
       localStorage.setItem('hn-live-theme', options.theme);
@@ -1409,12 +1163,12 @@ export default function HNLiveTerminal() {
                       href={item.formatted?.links.main}
                       className={`${themeColors} transition-colors cursor-pointer`}
                       dangerouslySetInnerHTML={{ 
-                        __html: item.type === 'story' 
-                          ? item.formatted?.text.replace(
-                              item.title || '',
+                        __html: item.type === 'story' && item.formatted?.text
+                          ? item.formatted.text.replace(
+                              item.title ?? '',
                               `<span class="font-bold">${item.title || ''}</span>`
                             ) 
-                          : item.formatted?.text || '' 
+                          : item.formatted?.text ?? ''
                       }}
                     />
                     {/* Add discuss/comments link for all stories */}
@@ -1450,12 +1204,12 @@ export default function HNLiveTerminal() {
                       href={item.formatted?.links.main}
                       className={`${themeColors} transition-colors cursor-pointer`}
                       dangerouslySetInnerHTML={{ 
-                        __html: item.type === 'story' 
-                          ? item.formatted?.text.replace(
-                              item.title || '',
+                        __html: item.type === 'story' && item.formatted?.text
+                          ? item.formatted.text.replace(
+                              item.title ?? '',
                               `<span class="font-bold">${item.title || ''}</span>`
                             ) 
-                          : item.formatted?.text || '' 
+                          : item.formatted?.text ?? ''
                       }}
                     />
                     {/* Add discuss/comments link for mobile view too */}
@@ -1491,7 +1245,10 @@ export default function HNLiveTerminal() {
               <span className="animate-pulse">█</span>
             </div>
             <div className="sm:hidden flex items-center gap-2 text-sm">
-              <span className="opacity-50">{formatTimestamp(Date.now() / 1000).time}</span>
+              <TimeStamp 
+                time={formatTimestamp(Date.now() / 1000).time}
+                fullDate={formatTimestamp(Date.now() / 1000).fullDate}
+              />
               <span>{'>'}</span>
               <span className="animate-pulse">█</span>
             </div>
@@ -1581,7 +1338,6 @@ export default function HNLiveTerminal() {
               colorizeUsernames={colorizeUsernames}
               classicLayout={options.classicLayout}
               onShowSearch={() => setShowSearch(true)}
-              onShowGrep={() => setShowGrep(true)}
               onShowSettings={() => setShowSettings(true)}
               isSettingsOpen={showSettings}
               isSearchOpen={showSearch}
@@ -1604,6 +1360,8 @@ export default function HNLiveTerminal() {
               theme={options.theme}
               fontSize={options.fontSize}
               font={options.font}
+              colorizeUsernames={colorizeUsernames}
+              classicLayout={options.classicLayout}
               onShowSearch={() => setShowSearch(true)}
               onShowSettings={() => setShowSettings(true)}
               isSettingsOpen={showSettings}

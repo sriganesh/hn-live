@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { topUsers } from '../data/top-users.json';
+import { FontSize } from '../types/hn';
 
 interface UserModalProps {
   userId: string;
   isOpen: boolean;
   onClose: () => void;
   theme: 'green' | 'og' | 'dog';
-  fontSize: 'xs' | 'sm' | 'base';
+  fontSize: FontSize;
 }
 
 interface HNUser {
@@ -37,7 +38,6 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recentActivity, setRecentActivity] = useState<HNItem | null>(null);
-  const [parentStory, setParentStory] = useState<HNItem | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Add focus management
@@ -70,9 +70,7 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
               setRecentActivity(itemData);
 
               if (itemData.type === 'comment' && itemData.parent) {
-                const parentResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${itemData.parent}.json`);
-                const parentData = await parentResponse.json();
-                setParentStory(parentData);
+                // No need to fetch parent data
               }
               break;
             }

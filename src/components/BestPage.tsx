@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTopUsers } from '../hooks/useTopUsers';
 import { MobileBottomBar } from './MobileBottomBar';
+import { FontOption } from '../types/hn';
 
 interface BestPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -562,6 +563,13 @@ export function BestPage({
         theme={theme}
         onShowSearch={onShowSearch}
         onShowSettings={onShowSettings}
+        onCloseSearch={() => {
+          setGrepState({
+            isActive: false,
+            searchTerm: '',
+            matchedStories: []
+          });
+        }}
       />
     </>
   );

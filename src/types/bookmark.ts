@@ -16,4 +16,11 @@ export interface FullBookmark extends BookmarkMetadata {
   text?: string;      // Full comment text
   score?: number;     // For stories
   descendants?: number; // For stories
+}
+
+export interface BookmarkEntry {
+  id: number;
+  type: 'story' | 'comment';
+  storyId?: number;  // Only for comments, to link back to parent story
+  timestamp: number;  // When the bookmark was created
 } 

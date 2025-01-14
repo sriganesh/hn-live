@@ -1,16 +1,10 @@
-import { useState } from 'react';
-
 interface BookmarkEntry {
   id: number;
   type: 'story' | 'comment';
   storyId?: number;  // Only for comments, to link back to parent story
 }
 
-interface BookmarkManagerProps {
-  theme: 'green' | 'og' | 'dog';
-}
-
-export function BookmarkManager({ theme }: BookmarkManagerProps) {
+export function BookmarkManager() {
   const exportBookmarks = () => {
     // Just get the raw bookmarks data from localStorage
     const bookmarks: BookmarkEntry[] = JSON.parse(localStorage.getItem('hn-bookmarks') || '[]');

@@ -2,6 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookmarkManager } from './BookmarkManager';
 import { MobileBottomBar } from './MobileBottomBar';
+import { FontOption, HNItem } from '../types/hn';
+import { BookmarkEntry } from '../types/bookmark';
+
+interface BookmarkedItem extends HNItem {
+  storyId?: number;
+  story?: HNItem;
+}
 
 interface BookmarksPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -13,21 +20,9 @@ interface BookmarksPageProps {
   isRunning: boolean;
 }
 
-interface Bookmark {
-  id: number;
-  type: 'story' | 'comment';
-  title?: string;
-  text?: string;
-  by: string;
-  time: number;
-  url?: string;
-  storyId?: number;
-  storyTitle?: string;
-}
-
 export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSearch, onShowSettings, isRunning }: BookmarksPageProps) {
   const navigate = useNavigate();
-  const [bookmarks, setBookmarks] = useState<HNItem[]>([]);
+  const [bookmarks, setBookmarks] = useState<BookmarkedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -169,7 +164,7 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
             </div>
             
             <div className="flex items-center gap-4">
-              <BookmarkManager theme={theme} />
+              <BookmarkManager />
               <button 
                 onClick={() => navigate(-1)}
                 className="opacity-75 hover:opacity-100"

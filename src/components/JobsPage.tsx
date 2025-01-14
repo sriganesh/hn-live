@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MobileBottomBar } from './MobileBottomBar';
+import { FontOption, FontSize } from '../types/hn';
 
 interface JobsPageProps {
   theme: 'green' | 'og' | 'dog';
-  fontSize: string;
+  fontSize: FontSize;
   font: FontOption;
-  colorizeUsernames: boolean;
-  classicLayout: boolean;
   onShowSearch: () => void;
   onShowSettings: () => void;
   isSettingsOpen: boolean;
@@ -61,8 +60,6 @@ export function JobsPage({
   theme, 
   fontSize,
   font,
-  colorizeUsernames,
-  classicLayout,
   onShowSearch,
   onShowSettings,
   isSettingsOpen,
@@ -399,6 +396,7 @@ export function JobsPage({
         theme={theme}
         onShowSearch={onShowSearch}
         onShowSettings={onShowSettings}
+        onCloseSearch={() => setGrepState(prev => ({ ...prev, isActive: false, searchTerm: '' }))}
       />
     </>
   );

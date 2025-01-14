@@ -2,15 +2,15 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTopUsers } from '../hooks/useTopUsers';
 import { MobileBottomBar } from './MobileBottomBar';
+import { FontOption, FontSize } from '../types/hn';
 
 interface AskPageProps {
   theme: 'green' | 'og' | 'dog';
-  fontSize: string;
+  fontSize: FontSize;
   font: FontOption;
   colorizeUsernames: boolean;
   classicLayout: boolean;
   onShowSearch: () => void;
-  onShowGrep: () => void;
   onShowSettings: () => void;
   isSettingsOpen: boolean;
   isSearchOpen: boolean;
@@ -63,8 +63,6 @@ interface GrepState {
   matchedStories: HNStory[];
 }
 
-type FontOption = 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
-
 export function AskPage({ 
   theme, 
   fontSize,
@@ -72,7 +70,6 @@ export function AskPage({
   colorizeUsernames,
   classicLayout,
   onShowSearch, 
-  onShowGrep,
   onShowSettings,
   isSettingsOpen,
   isSearchOpen,
@@ -578,6 +575,13 @@ export function AskPage({
         theme={theme}
         onShowSearch={onShowSearch}
         onShowSettings={onShowSettings}
+        onCloseSearch={() => {
+          setGrepState({
+            isActive: false,
+            searchTerm: '',
+            matchedStories: []
+          });
+        }}
       />
     </>
   );

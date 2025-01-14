@@ -2,15 +2,15 @@ import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTopUsers } from '../hooks/useTopUsers';
+import { FontOption, FontSize } from '../types/hn';
 import { UserModal } from './UserModal';
 import { BookmarkButton } from './BookmarkButton';
 
 interface StoryViewProps {
   itemId: number;
   scrollToId?: number;
-  onClose: () => void;
   theme: 'green' | 'og' | 'dog';
-  fontSize: string;
+  fontSize: FontSize;
   font: FontOption;
   onShowSettings: () => void;
   isSettingsOpen: boolean;
@@ -35,18 +35,16 @@ interface HNComment {
   text: string;
   by: string;
   time: number;
-  kids?: number[];
-  comments?: HNComment[];
+  kids: number[];
+  comments: HNComment[];
   level: number;
-  hasDeepReplies?: boolean;
-  isCollapsed?: boolean;
+  hasDeepReplies: boolean;
+  isCollapsed: boolean;
 }
 
 const MAX_COMMENTS = 5;  
 const MAX_DEPTH = 5;     // Maximum nesting depth for replies
 
-// Add this at the top of the file
-const isDev = import.meta.env.DEV;
 
 // Story fetching function
 const fetchStory = async (storyId: number) => {
@@ -93,72 +91,6 @@ const getIndentClass = (level: number) => {
   return indentClasses[Math.min(level, indentClasses.length - 1)];
 };
 
-// Add this helper function to find the complete path to a comment
-const findCommentPath = async (commentId: number): Promise<number[]> => {
-  const path: number[] = [];
-  let currentId = commentId;
-
-  while (currentId) {
-    path.unshift(currentId);
-    const comment = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentId}.json`)
-      .then(res => res.json());
-    
-    if (!comment.parent) break; // Stop if we reach the story (no parent)
-    currentId = comment.parent;
-  }
-
-  return path;
-};
-
-// Add a helper to track loaded comment IDs
-const getCommentIds = (comments: HNComment[]): Set<number> => {
-  const ids = new Set<number>();
-  const addIds = (comment: HNComment) => {
-    ids.add(comment.id);
-    comment.comments?.forEach(addIds);
-  };
-  comments.forEach(addIds);
-  return ids;
-};
-
-// Update the fetchComment function to remove caching
-const fetchComment = async (commentId: number) => {
-  const response = await fetch(`https://hacker-news.firebaseio.com/v0/item/${commentId}.json`);
-  return response.json();
-};
-
-// Add this helper to find all necessary comment IDs to load
-const findRequiredCommentIds = async (targetId: number): Promise<{
-  parentChain: number[];
-  topLevelParentIndex: number;
-}> => {
-  const parentChain: number[] = [];
-  let currentId = targetId;
-  let topLevelParentIndex = -1;
-
-  while (currentId) {
-    const comment = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentId}.json`)
-      .then(res => res.json());
-    
-    parentChain.unshift(currentId);
-    
-    if (!comment.parent || comment.type === 'story') {
-      break;
-    }
-    currentId = comment.parent;
-  }
-
-  // Get the story to find the index of the top-level parent
-  const story = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentId}.json`)
-    .then(res => res.json());
-  
-  if (story.kids) {
-    topLevelParentIndex = story.kids.indexOf(parentChain[0]);
-  }
-
-  return { parentChain, topLevelParentIndex };
-};
-
 // Update the fetchComments function to restore original behavior
 const fetchComments = async (
   commentIds: number[], 
@@ -195,9 +127,10 @@ const fetchComments = async (
           by: comment.by || '[deleted]',
           time: comment.time,
           level: depth,
-          comments: kids,
-          kids: comment.kids,
-          hasDeepReplies: comment.kids?.length > kids.length
+          comments: kids || [],
+          kids: comment.kids || [],
+          hasDeepReplies: comment.kids?.length > kids.length,
+          isCollapsed: false
         };
       } catch (error) {
         console.error('Error fetching comment:', error);
@@ -206,7 +139,7 @@ const fetchComments = async (
     })
   );
 
-  return comments.filter((comment): comment is HNComment => comment !== null);
+  return comments.filter((c): c is HNComment => c !== null);
 };
 
 // Add a helper function to count total comments including replies
@@ -371,7 +304,7 @@ const countReplies = (comment: HNComment): number => {
   return count;
 };
 
-export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, onShowSettings, isSettingsOpen, isRunning, showBackToTop }: StoryViewProps) {
+export function StoryView({ itemId, scrollToId, theme, fontSize, font, onShowSettings, isSettingsOpen, isRunning, showBackToTop }: StoryViewProps) {
   const navigate = useNavigate();
   const { isTopUser, getTopUserClass } = useTopUsers();
   
@@ -421,31 +354,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
     });
   };
 
-  // Add this helper to collapse entire thread
-  const collapseEntireThread = useCallback((commentId: number) => {
-    setCommentState(prev => {
-      const newCollapsed = new Set(prev.collapsedComments);
-      
-      // Helper to recursively find all comment IDs in a thread
-      const addThreadToCollapsed = (comments: HNComment[]) => {
-        comments.forEach(comment => {
-          if (comment.id === commentId) {
-            newCollapsed.add(comment.id);
-            comment.comments?.forEach(reply => {
-              newCollapsed.add(reply.id);
-              if (reply.comments) addThreadToCollapsed(reply.comments);
-            });
-          } else if (comment.comments) {
-            addThreadToCollapsed(comment.comments);
-          }
-        });
-      };
-
-      addThreadToCollapsed(prev.loadedComments);
-      return { ...prev, collapsedComments: newCollapsed };
-    });
-  }, []);
-
+ 
   // Add this inside StoryView component, after other state declarations
   const handleGrepToggle = () => {
     setGrepState(prev => ({
@@ -487,8 +396,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
         if (storyData.kids) {
           // First, if we have a scrollToId, find its parent chain
           if (scrollToId) {
-            const comment = await fetch(`https://hacker-news.firebaseio.com/v0/item/${scrollToId}.json`)
-              .then(res => res.json());
+            await fetch(`https://hacker-news.firebaseio.com/v0/item/${scrollToId}.json`);
             
             // Find the top-level parent of this comment
             let currentId = scrollToId;
@@ -704,12 +612,6 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
     });
   }, [itemId]);
 
-  const themeColors = theme === 'green'
-    ? 'text-green-400 bg-black'
-    : theme === 'og'
-    ? 'text-[#828282] bg-[#f6f6ef]'
-    : 'text-[#828282] bg-[#1a1a1a]';
-
   // Update the renderComment function
   const renderComment = useCallback((comment: HNComment, path: string = '') => (
     <Fragment key={`${comment.id}-${path}`}>
@@ -754,7 +656,7 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
                   >
                     {comment.by}
                   </a>
-                  {story && comment.by === story.by && (
+                  {story?.by && comment.by === story.by && (
                     <span className={`shrink-0 ${
                       theme === 'green' 
                         ? 'text-green-500/75' 
@@ -784,8 +686,8 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
                       by: comment.by,
                       time: comment.time
                     }}
-                    storyId={story.id}
-                    storyTitle={story.title}
+                    storyId={story?.id ?? 0}
+                    storyTitle={story?.title ?? ''}
                     theme={theme}
                   />
                 </div>
@@ -912,73 +814,6 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
 
   const handleClose = () => {
     navigate('/');
-  };
-
-  const renderStoryPreview = (story: HNStory) => {
-    return (
-      <div className="group">
-        <div className="space-y-1">
-          {/* Title as main content */}
-          <div className="font-medium">
-            {story.title}
-          </div>
-
-          {/* Metadata row */}
-          <div className="text-sm opacity-75 mb-4 flex items-center flex-wrap gap-1">
-            <a 
-              onClick={(e) => {
-                e.preventDefault();
-                setViewingUser(story.by);
-              }}
-              href={`/user/${story.by}`}
-              className={`hn-username hover:underline ${
-                isTopUser(story.by) ? getTopUserClass(theme) : ''
-              }`}
-            >
-              {story.by}
-            </a>
-            <span>•</span>
-            <a
-              href={`https://news.ycombinator.com/item?id=${story.id}`}
-              className="hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-              title={new Date(story.time * 1000).toLocaleString()}
-            >
-              {formatTimeAgo(story.time)}
-            </a>
-            <span>•</span>
-            {story.descendants !== undefined && (
-              <>
-                <span>
-                  {story.descendants 
-                    ? `${story.descendants} comment${story.descendants === 1 ? '' : 's'}`
-                    : 'no comments yet'
-                  }
-                </span>
-                <span>•</span>
-              </>
-            )}
-            <BookmarkButton
-              item={{
-                id: story.id,
-                type: 'story',
-                title: story.title,
-                by: story.by,
-                time: story.time,
-                url: story.url
-              }}
-              theme={theme}
-            />
-            <span>•</span>
-            <CopyButton 
-              url={`https://hn.live/item/${itemId}`}
-              theme={theme}
-            />
-          </div>
-        </div>
-      </div>
-    );
   };
 
   return (
@@ -1124,12 +959,11 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
                 )}
                 <BookmarkButton
                   item={{
-                    id: story.id,
-                    type: 'story',
-                    title: story.title,
-                    by: story.by,
-                    time: story.time,
-                    url: story.url
+                    id: story?.id ?? 0,
+                    title: story?.title ?? '',
+                    by: story?.by ?? '',
+                    time: story?.time ?? 0,
+                    url: story?.url
                   }}
                   theme={theme}
                 />

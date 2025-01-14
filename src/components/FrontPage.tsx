@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTopUsers } from '../hooks/useTopUsers';
 import { MobileBottomBar } from './MobileBottomBar';
+import { FontOption } from '../types/hn';
 
 interface FrontPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -613,6 +614,10 @@ export function FrontPage({
         theme={theme}
         onShowSearch={onShowSearch}
         onShowSettings={onShowSettings}
+        onCloseSearch={() => {
+          setGrepFilter('');
+          setShowGrep(false);
+        }}
       />
     </>
   );

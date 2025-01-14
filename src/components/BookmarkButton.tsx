@@ -10,20 +10,19 @@ interface BookmarkEntry {
 interface BookmarkButtonProps {
   item: {
     id: number;
-    type: 'story' | 'comment';
+    type?: 'story' | 'comment';
     title?: string;
     text?: string;
     by: string;
     time: number;
     url?: string;
   };
+  theme: 'green' | 'og' | 'dog';
   storyId?: number;
   storyTitle?: string;
-  theme: 'green' | 'og' | 'dog';
-  variant?: 'icon' | 'text';
 }
 
-export function BookmarkButton({ item, storyId, storyTitle, theme, variant = 'icon' }: BookmarkButtonProps) {
+export function BookmarkButton({ item, storyId, theme, variant = 'icon' }: BookmarkButtonProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   useEffect(() => {
