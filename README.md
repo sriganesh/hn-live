@@ -86,7 +86,7 @@ This project is deployed on [Cloudflare Pages](https://pages.cloudflare.com/).
 
 If you find any bugs (especially with different screen sizes - I've only tested on my laptop and phone), please let me know in the issues! Would love to fix them and make this better for everyone.
 
-Also welcome suggestions on the UI/UX.  While I built it for my personal browsing style, I'm sure there are ways to make it work better for everyone while keeping the minimal aesthetic.
+Also welcome suggestions on the UI/UX. While I built it for my personal browsing style, I'm sure there are ways to make it work better for everyone while keeping the minimal aesthetic.
 
 ## Credits
 
