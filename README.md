@@ -1,6 +1,6 @@
 # HN Live
 
-A real-time terminal interface for Hacker News. Watch stories and discussions unfold live as they happen.
+A real-time terminal interface for Hacker News that lets you watch stories and discussions unfold live.
 
 ## What is this?
 
@@ -20,7 +20,7 @@ HN Live shows you what's happening on Hacker News right now. Instead of refreshi
   - Classic HN orange
   - Dark mode
   - Terminal green (for that retro feel)
-- Works great on mobile and desktop
+- Works great on mobile and desktop (atleast on mine 😉)
 - Live search (grep) to filter content
 - Auto-scrolling (can be toggled)
 - Click on stories to view them without leaving the site
@@ -52,15 +52,17 @@ You can share these URLs directly and they will load the appropriate content.
 
 ## Development Notes
 
-I'm primarily a backend developer who loves building things. This project started as a way to browse HN the way I personally enjoy - with a clean, terminal-like interface and real-time updates.
+I'm primarily a backend developer who loves building things. This project started as a way to browse HN the way I personally enjoy with a clean, terminal like interface and real time updates.
 
-The design is intentionally minimalist, inspired by both HN's simplicity and old-school terminal UIs. Since I'm not a designer by trade, I built it based on how I like to browse HN - but I'm always open to suggestions for improvements!
+The design is intentionally minimalist, inspired by both HN's simplicity and old school terminal UIs. Since I'm not a designer by trade, I built it based on how I like to browse HN but I'm always open to suggestions for improvements!
 
 What made this project possible was the amazing AI tooling available today. As someone more comfortable with backend work, tools like Claude and ChatGPT were invaluable in helping me debug frontend issues and implement UI features. They really helped bridge the gap between my backend expertise and frontend needs.
 
-These AI tools have been game-changing for someone like me - they complement my existing skills and help me ship full-stack projects that I wouldn't have attempted before. While they don't replace proper engineering knowledge, they're incredible at helping you learn and implement things outside your core expertise.
+These AI tools have been game changing for someone like me  they complement my existing skills and help me ship full stack projects that I wouldn't have attempted before. While they don't replace proper engineering knowledge, they're incredible at helping you learn and implement things outside your core expertise. They're surprisingly good at helping you figure out tricky UI problems or debugging weird edge cases. Not gonna lie, without them, I probably would've given up on the frontend parts pretty early on.
 
-The implementation here reflects my current understanding of frontend development and the solutions I've learned along the way - both through AI assistance and general research. There might be more efficient or elegant ways to accomplish some things, but I've focused on making it work reliably with the knowledge and tools at hand. I'm always learning and open to better approaches!
+Is the code perfect? Probably not. But it works, and I learned a ton building it. 
+
+The implementation here reflects my current understanding of frontend development and the solutions I've learned along the way both through AI assistance and general research. There might be more efficient or elegant ways to accomplish some things, but I've focused on making it work reliably with the knowledge and tools at hand. I'm always learning and open to better approaches!
 
 ## Development
 
@@ -84,7 +86,7 @@ This project is deployed on [Cloudflare Pages](https://pages.cloudflare.com/).
 
 If you find any bugs (especially with different screen sizes - I've only tested on my laptop and phone), please let me know in the issues! Would love to fix them and make this better for everyone.
 
-Also welcome suggestions on the UI/UX - while I built it for my personal browsing style, I'm sure there are ways to make it work better for everyone while keeping the minimal aesthetic.
+Also welcome suggestions on the UI/UX. While I built it for my personal browsing style, I'm sure there are ways to make it work better for everyone while keeping the minimal aesthetic.
 
 ## Credits
 
@@ -101,7 +103,7 @@ Special thanks to:
 - [Claude](https://anthropic.com/claude) & [ChatGPT](https://chat.openai.com) - Sometimes I had to jump directly to them to brainstorm ideas or debug tricky errors.
 - [Cloudflare Pages](https://pages.cloudflare.com/) - For making deployment super easy.
 
-These tools helped me build and debug this way faster than I could have imagined. They turned what could have been weeks of debugging and learning into a fun weekend project. It's amazing how they can help you quickly turn ideas into working products!
+These tools helped me build and debug this way faster than I could have imagined. They turned what could have been weeks of debugging and learning into a fun ~~weekend~~ project (it turned into several weekends because I wanted to refine and add more features). It's amazing how they can help you quickly turn ideas into working products!
 
 ## License
 
