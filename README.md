@@ -52,7 +52,7 @@ You can share these URLs directly and they will load the appropriate content.
 
 ## Development Notes
 
-I'm primarily a backend developer who loves building things. This project started as a way to browse HN the way I personally enjoy with a clean, terminal like interface and real time updates.
+I'm primarily a backend developer who loves building things. This project started as a way to browse HN the way I personally enjoy with a clean, terminal like interface and real time updates. Viewing these real time comments has made me want to revisit threads and engage in discussions more often than I used to, which has been unexpectedly rewarding.
 
 The design is intentionally minimalist, inspired by both HN's simplicity and old school terminal UIs. Since I'm not a designer by trade, I built it based on how I like to browse HN but I'm always open to suggestions for improvements!
 
