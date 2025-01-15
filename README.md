@@ -105,8 +105,6 @@ Special thanks to:
 
 These tools helped me build and debug this way faster than I could have imagined. They turned what could have been weeks of debugging and learning into a fun ~~weekend~~ project (it turned into several weekends because I wanted to refine and add more features). It's amazing how they can help you quickly turn ideas into working products!
 
-'This project is tested with BrowserStack'
-
 ## License
 
 MIT
