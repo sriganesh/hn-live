@@ -125,24 +125,6 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
               
               <div className="hidden sm:flex items-center gap-4">
                 <button 
-                  onClick={() => navigate('/front')}
-                  className={themeColors}
-                >
-                  [FRONT PAGE]
-                </button>
-                <button 
-                  onClick={onShowSearch}
-                  className={themeColors}
-                >
-                  [SEARCH]
-                </button>
-                <button
-                  onClick={onShowSettings}
-                  className={themeColors}
-                >
-                  [SETTINGS]
-                </button>
-                <button 
                   onClick={() => navigate(-1)}
                   className="opacity-75 hover:opacity-100"
                 >
@@ -283,6 +265,7 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
         theme={theme}
         onShowSearch={onShowSearch}
         onShowSettings={onShowSettings}
+        onCloseSearch={onShowSearch}
       />
     </>
   );
