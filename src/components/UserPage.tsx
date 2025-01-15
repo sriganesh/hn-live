@@ -37,7 +37,6 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recentActivity, setRecentActivity] = useState<HNItem | null>(null);
-  const [parentStory, setParentStory] = useState<HNItem | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -56,12 +55,6 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
             
             if (itemData && !itemData.dead && !itemData.deleted) {
               setRecentActivity(itemData);
-
-              if (itemData.type === 'comment' && itemData.parent) {
-                const parentResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${itemData.parent}.json`);
-                const parentData = await parentResponse.json();
-                setParentStory(parentData);
-              }
               break;
             }
           }
@@ -222,22 +215,16 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <div className="opacity-75">{recentActivity.text}</div>
-                        {parentStory && (
-                          <div className="text-sm">
-                            <span className="opacity-50">on: </span>
-                            <a
-                              href={`/item/${parentStory.id}`}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                navigate(`/item/${parentStory.id}`);
-                              }}
-                              className="hover:opacity-75"
-                            >
-                              {parentStory.title}
-                            </a>
-                          </div>
-                        )}
+                        <a
+                          href={`/item/${recentActivity.id}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigate(`/item/${recentActivity.id}`);
+                          }}
+                          className="opacity-75 hover:opacity-100"
+                        >
+                          {recentActivity.text}
+                        </a>
                       </div>
                     )}
                   </div>
