@@ -145,7 +145,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="space-y-6">
             {/* Theme Selection */}
             <div className="space-y-2">
-              <div className="text-sm font-bold uppercase tracking-wider border-b border-current/20 pb-1 mb-2">THEME</div>
+              <div className="text-sm font-bold uppercase tracking-wider mb-2">THEME</div>
               <div className="flex flex-wrap gap-4">
                 <button
                   onClick={() => onUpdateOptions({ ...options, theme: 'og' })}
@@ -170,7 +170,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
             {/* Font Size Selection */}
             <div className="space-y-4 mt-6">
-              <div className="text-sm font-bold uppercase tracking-wider border-b border-current/20 pb-1 mb-2">FONTS</div>
+              <div className="text-sm font-bold uppercase tracking-wider mb-2">FONTS</div>
               
               <div className="space-y-4">
                 {/* Font Size Slider */}
@@ -283,7 +283,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="space-y-2">
               <button 
                 onClick={() => toggleSection('terminal')}
-                className="w-full flex items-center justify-between text-sm font-bold uppercase tracking-wider border-b border-current/20 pb-1 mb-2"
+                className="w-full flex items-center justify-between text-sm font-bold uppercase tracking-wider mb-2"
               >
                 <span>TERMINAL BEHAVIOR</span>
                 <svg 
@@ -328,7 +328,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="space-y-2">
               <button 
                 onClick={() => toggleSection('feedView')}
-                className="w-full flex items-center justify-between text-sm font-bold uppercase tracking-wider border-b border-current/20 pb-1 mb-2"
+                className="w-full flex items-center justify-between text-sm font-bold uppercase tracking-wider mb-2"
               >
                 <span>FEED VIEW OPTIONS</span>
                 <svg 
@@ -363,7 +363,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="space-y-2">
               <button 
                 onClick={() => toggleSection('storyView')}
-                className="w-full flex items-center justify-between text-sm font-bold uppercase tracking-wider border-b border-current/20 pb-1 mb-2"
+                className="w-full flex items-center justify-between text-sm font-bold uppercase tracking-wider mb-2"
               >
                 <span>STORY VIEW OPTIONS</span>
                 <svg 

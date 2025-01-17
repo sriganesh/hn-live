@@ -19,6 +19,8 @@ interface StoryViewProps {
   useAlgoliaApi: boolean;
 }
 
+type CommentSortMode = 'nested' | 'recent';
+
 interface HNStory {
   id: number;
   title: string;
@@ -372,28 +374,28 @@ interface GrepState {
 const highlightText = (text: string, searchTerm: string): string => {
   if (!searchTerm) return text;
   const regex = new RegExp(`(${searchTerm})`, 'gi');
-  return text.replace(regex, '<mark class="bg-current/20">$1</mark>');
+  return text.replace(regex, '<mark style="background-color: rgba(255, 255, 0, 0.3)">$1</mark>');
 };
 
 // Update the grepComments function to include the full comment path and highlight matches
-const grepComments = (comments: HNComment[], searchTerm: string): HNComment[] => {
+const grepComments = (comments: HNComment[], term: string): HNComment[] => {
   const matches: HNComment[] = [];
   
   const search = (comment: HNComment) => {
-    const textContent = comment.text?.toLowerCase() || '';
-    const authorContent = comment.by.toLowerCase();
-    const searchLower = searchTerm.toLowerCase();
-    
-    if (textContent.includes(searchLower) || authorContent.includes(searchLower)) {
+    if ((comment.text?.toLowerCase().includes(term.toLowerCase()) ||
+         comment.by?.toLowerCase().includes(term.toLowerCase()))) {
       // Create a new comment object with highlighted text
       const highlightedComment = {
         ...comment,
-        text: comment.text ? highlightText(comment.text, searchTerm) : ''
+        text: comment.text ? highlightText(comment.text, term) : ''
       };
       matches.push(highlightedComment);
     }
     
-    comment.comments?.forEach(search);
+    // Also search through nested comments
+    if (comment.comments) {
+      comment.comments.forEach(search);
+    }
   };
   
   comments.forEach(search);
@@ -447,6 +449,7 @@ const convertAlgoliaComments = (comments: AlgoliaComment[], depth: number): HNCo
     time: comment.created_at_i,
     level: depth,
     kids: comment.children?.map(c => c.id),
+    parent_id: comment.parent_id,
     comments: convertAlgoliaComments(comment.children || [], depth + 1)
   }));
 };
@@ -497,6 +500,25 @@ export function StoryView({
   // Add this near the top with other state declarations
   const [isBackToTopVisible, setIsBackToTopVisible] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Add state for sort mode
+  const [sortMode, setSortMode] = useState<CommentSortMode>('nested');
+
+  // Add function to get flattened and sorted comments
+  const getFlattenedComments = (comments: HNComment[]): HNComment[] => {
+    const flattened: HNComment[] = [];
+    const flatten = (comment: HNComment, parentTitle?: string) => {
+      // Add parent reference to the comment
+      const commentWithParent = {
+        ...comment,
+        parentTitle: parentTitle || story?.title
+      };
+      flattened.push(commentWithParent);
+      comment.comments?.forEach(c => flatten(c, comment.text.slice(0, 60)));
+    };
+    comments.forEach(c => flatten(c));
+    return flattened.sort((a, b) => b.time - a.time);
+  };
 
   // Add this useEffect to handle scroll detection
   useEffect(() => {
@@ -554,6 +576,15 @@ export function StoryView({
   };
 
   const handleGrepSearch = (term: string) => {
+    if (!term || !commentState.loadedComments) {
+      setGrepState(prev => ({
+        ...prev,
+        searchTerm: term,
+        matchedComments: []
+      }));
+      return;
+    }
+
     setGrepState(prev => ({
       ...prev,
       searchTerm: term,
@@ -966,16 +997,8 @@ export function StoryView({
                   >
                     {comment.by}
                   </a>
-                  {story && comment.by === story.by && (
-                    <span className={`shrink-0 ${
-                      theme === 'green' 
-                        ? 'text-green-500/75' 
-                        : theme === 'og'
-                        ? 'text-[#ff6600]/75'
-                        : 'text-[#828282]/75'
-                    }`}>
-                      [OP]
-                    </span>
+                  {comment.by === story.by && (
+                    <span className="opacity-50 ml-1">[OP]</span>
                   )}
                   <span>•</span>
                   <a
@@ -1000,31 +1023,37 @@ export function StoryView({
                     storyTitle={story.title}
                     theme={theme}
                   />
+                  <span>•</span>
+                  <CopyButton 
+                    url={`https://hn.live/item/${story?.id}/comment/${comment.id}`}
+                    theme={theme}
+                  />
+                  <span>•</span>
+                  <a
+                    href={`https://news.ycombinator.com/reply?id=${comment.id}&goto=item%3Fid%3D${story?.id}%23${comment.id}`}
+                    className="hover:opacity-75 transition-opacity flex items-center"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Reply on Hacker News"
+                  >
+                    <svg 
+                      className="w-4 h-4" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                      />
+                    </svg>
+                  </a>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <a
-                  href={`https://news.ycombinator.com/reply?id=${comment.id}&goto=item%3Fid%3D${story?.id}%23${comment.id}`}
-                  className="hover:opacity-75 transition-opacity flex items-center"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Reply on Hacker News"
-                >
-                  <svg 
-                    className="w-4 h-4" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-                    />
-                  </svg>
-                </a>
                 <button
                   onClick={() => handleCollapseComment(comment.id)}
                   className={`shrink-0 ${
@@ -1042,7 +1071,7 @@ export function StoryView({
           {!commentState?.collapsedComments?.has(comment.id) && (
             <>
               <div 
-                className="prose max-w-none mb-4 break-words whitespace-pre-wrap overflow-x-auto px-2 max-w-full"
+                className="prose max-w-none mb-2 break-words whitespace-pre-wrap overflow-x-auto max-w-full"
                 dangerouslySetInnerHTML={{ 
                   __html: addTargetBlankToLinks(comment.text) 
                 }} 
@@ -1206,29 +1235,30 @@ export function StoryView({
           <link rel="canonical" href={`https://hn.live/item/${story.id}`} />
         </Helmet>
       )}
-      <div className={`
-        fixed inset-0 z-50 overflow-hidden
-        ${font === 'mono' ? 'font-mono' : 
-          font === 'jetbrains' ? 'font-jetbrains' :
-          font === 'fira' ? 'font-fira' :
-          font === 'source' ? 'font-source' :
-          font === 'sans' ? 'font-sans' :
-          font === 'serif' ? 'font-serif' :
-          'font-system'}
-        ${theme === 'green'
-          ? 'bg-black text-green-400'
-          : theme === 'og'
-          ? 'bg-[#f6f6ef] text-[#828282]'
-          : 'bg-[#1a1a1a] text-[#828282]'}
-        text-${fontSize}
-      `}>
+      <div 
+        className={`fixed inset-0 overflow-y-auto z-50
+          ${font === 'mono' ? 'font-mono' : 
+            font === 'jetbrains' ? 'font-jetbrains' :
+            font === 'fira' ? 'font-fira' :
+            font === 'source' ? 'font-source' :
+            font === 'sans' ? 'font-sans' :
+            font === 'serif' ? 'font-serif' :
+            'font-system'}
+          ${theme === 'green'
+            ? 'bg-black text-green-400'
+            : theme === 'og'
+            ? 'bg-[#f6f6ef] text-[#828282]'
+            : 'bg-[#1a1a1a] text-[#828282]'}
+          text-${fontSize}
+        `}
+      >
         <div 
           ref={containerRef}
           className="h-full overflow-y-auto p-4"
         >
           <div className="flex items-center justify-between mb-8">
             <button 
-              onClick={handleClose}
+              onClick={onClose}
               className={`${
                 theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
               } font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
@@ -1265,30 +1295,21 @@ export function StoryView({
               >
                 [SETTINGS]
               </button>
-              <button 
-                onClick={() => navigate('/')}
-                className="opacity-75 hover:opacity-100"
-              >
+              <button onClick={() => navigate('/')} className="opacity-75 hover:opacity-100">
                 [ESC]
               </button>
             </div>
           </div>
 
-          {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              Loading...
-            </div>
-          ) : story ? (
-            <div className="max-w-4xl mx-auto px-2 sm:px-4">
-              <div className="flex items-start justify-between gap-2">
-                <h1 className="text-xl font-bold mb-2 flex items-start gap-2">
+          {/* Story Content */}
+          <div className="max-w-4xl mx-auto">
+            {story ? (
+              <>
+                <h1 className={`text-xl font-bold mb-2 ${
+                  theme === 'dog' ? 'font-normal' : ''
+                }`}>
                   {story.url ? (
-                    <a
-                      href={story.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:opacity-75"
-                    >
+                    <a href={story.url} target="_blank" rel="noopener noreferrer" className="hover:opacity-75">
                       {story.title}
                       <span className="ml-2 font-normal text-base opacity-50">
                         ({new URL(story.url).hostname})
@@ -1298,104 +1319,213 @@ export function StoryView({
                     story.title
                   )}
                 </h1>
-              </div>
-              <div className="text-sm opacity-75 mb-4 flex items-center flex-wrap gap-1">
-                <a 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setViewingUser(story.by);
-                  }}
-                  href={`/user/${story.by}`}
-                  className={`hn-username hover:underline ${
-                    isTopUser(story.by) ? getTopUserClass(theme) : ''
-                  }`}
-                >
-                  {story.by}
-                </a>
-                <span>•</span>
-                <a
-                  href={`https://news.ycombinator.com/item?id=${story.id}`}
-                  className="hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={new Date(story.time * 1000).toLocaleString()}
-                >
-                  {formatTimeAgo(story.time)}
-                </a>
-                <span>•</span>
-                {story.descendants !== undefined && (
-                  <>
-                    <span>
-                      {story.descendants 
-                        ? `${story.descendants} comment${story.descendants === 1 ? '' : 's'}`
-                        : 'no comments yet'
-                      }
-                    </span>
-                    <span>•</span>
-                  </>
-                )}
-                <BookmarkButton
-                  item={{
-                    id: story.id,
-                    type: 'story',
-                    title: story.title,
-                    by: story.by,
-                    time: story.time,
-                    url: story.url
-                  }}
-                  theme={theme}
-                />
-                <span>•</span>
-                <CopyButton 
-                  url={`https://hn.live/item/${itemId}`}
-                  theme={theme}
-                />
-              </div>
-              {story.text && (
-                <div 
-                  className="prose max-w-none mb-8 break-words whitespace-pre-wrap overflow-x-auto px-2 max-w-full"
-                  dangerouslySetInnerHTML={{ __html: addTargetBlankToLinks(story.text) }}
-                />
-              )}
-              <div className="border-t border-current opacity-10 my-4" />
-              <div className="space-y-4">
-                {grepState.isActive && grepState.searchTerm ? (
-                  grepState.matchedComments.length > 0 ? (
-                    grepState.matchedComments.map((comment, index) => 
-                      renderComment(comment, `grep-${index}`)
-                    )
-                  ) : (
-                    <div className="text-center py-8 opacity-75">
-                      No matching comments found
-                    </div>
-                  )
-                ) : (
-                  commentState.loadedComments.map((comment, index) => 
-                    renderComment(comment, `${index}`)
-                  )
-                )}
                 
-                {commentState.hasMore ? (
-                  <div 
-                    ref={loadingRef} 
-                    className="text-center py-8"
+                <div className="text-sm opacity-75 mb-4 flex items-center flex-wrap gap-2">
+                  <a 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setViewingUser(story.by);
+                    }}
+                    href={`/user/${story.by}`}
+                    className={`hn-username hover:underline ${
+                      isTopUser(story.by) ? getTopUserClass(theme) : ''
+                    }`}
                   >
-                    {commentState.isLoadingMore ? (
-                      <div className={`${
-                        theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
-                      } opacity-75`}>
-                        Loading more comments...
-                      </div>
+                    {story.by}
+                  </a>
+                  <span>•</span>
+                  <a
+                    href={`https://news.ycombinator.com/item?id=${story.id}`}
+                    className="hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={new Date(story.time * 1000).toLocaleString()}
+                  >
+                    {formatTimeAgo(story.time)}
+                  </a>
+                  <span>•</span>
+                  <span>{story.descendants || 0} comments</span>
+                  <span>•</span>
+                  <BookmarkButton
+                    item={{
+                      id: story.id,
+                      type: 'story',
+                      title: story.title,
+                      by: story.by,
+                      time: story.time,
+                      url: story.url
+                    }}
+                    theme={theme}
+                  />
+                  <span>•</span>
+                  <CopyButton 
+                    url={`https://hn.live/item/${itemId}`}
+                    theme={theme}
+                  />
+                </div>
+
+                {story.text && (
+                  <div 
+                    className="prose max-w-none mb-8 break-words whitespace-pre-wrap overflow-x-auto px-2 max-w-full"
+                    dangerouslySetInnerHTML={{ __html: addTargetBlankToLinks(story.text) }}
+                  />
+                )}
+
+                {useAlgoliaApi && story.descendants > 0 && (
+                  <div className="flex justify-end gap-2 text-sm opacity-75 mb-2">
+                    <button
+                      onClick={() => setSortMode('nested')}
+                      className={`hover:underline ${sortMode === 'nested' ? 'opacity-50' : ''}`}
+                    >
+                      default view
+                    </button>
+                    <span>|</span>
+                    <button
+                      onClick={() => setSortMode('recent')}
+                      className={`hover:underline ${sortMode === 'recent' ? 'opacity-50' : ''}`}
+                    >
+                      recent first
+                    </button>
+                  </div>
+                )}
+
+                <div className={`border-t my-4 ${
+                  theme === 'green'
+                    ? 'border-green-500/10'
+                    : theme === 'og'
+                    ? 'border-[#ff6600]/10'
+                    : 'border-[#828282]/10'
+                }`} />
+
+                {/* Comments section */}
+                <div className="space-y-4">
+                  {grepState.isActive && grepState.searchTerm ? (
+                    grepState.matchedComments.length > 0 ? (
+                      grepState.matchedComments.map((comment, index) => 
+                        renderComment(comment, `grep-${index}`)
+                      )
                     ) : (
-                      <div className="h-20 opacity-50">
-                        <div className="text-sm">
-                          Viewing {commentState.loadedTotal} of {story.descendants} comments ({commentState.loadedCount} threads)
+                      <div className="text-center py-8 opacity-75">
+                        No matching comments found
+                      </div>
+                    )
+                  ) : useAlgoliaApi && sortMode === 'recent' ? (
+                    // Render flattened comments in recent first order
+                    getFlattenedComments(commentState.loadedComments).map((comment, index) => (
+                      <div key={`${comment.id}-${index}`} className={`border-b pb-4 mb-4 last:border-b-0 ${
+                        theme === 'green'
+                          ? 'border-green-500/10'
+                          : theme === 'og'
+                          ? 'border-[#ff6600]/10'
+                          : 'border-[#828282]/10'
+                      }`}>
+                        <div 
+                          className="prose max-w-none mb-2 break-words whitespace-pre-wrap overflow-x-auto max-w-full"
+                          dangerouslySetInnerHTML={{ __html: addTargetBlankToLinks(comment.text) }}
+                        />
+                        <div className="text-sm opacity-75 flex items-center gap-1 flex-wrap break-all">
+                          by <a 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setViewingUser(comment.by);
+                            }}
+                            href={`/user/${comment.by}`}
+                            className={`hn-username hover:underline ${
+                              isTopUser(comment.by) ? getTopUserClass(theme) : ''
+                            }`}
+                          >
+                            {comment.by}
+                          </a>
+                          {comment.by === story.by && (
+                            <span className="opacity-50 ml-1">[OP]</span>
+                          )}
+                          <span>•</span>
+                          <a
+                            href={`https://news.ycombinator.com/item?id=${comment.id}`}
+                            className="hover:underline"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={new Date(comment.time * 1000).toLocaleString()}
+                          >
+                            {formatTimeAgo(comment.time)}
+                          </a>
+                          <span>•</span>
+                          <BookmarkButton
+                            item={{
+                              id: comment.id,
+                              type: 'comment',
+                              text: comment.text,
+                              by: comment.by,
+                              time: comment.time
+                            }}
+                            storyId={story.id}
+                            storyTitle={story.title}
+                            theme={theme}
+                          />
+                          <span>•</span>
+                          <CopyButton 
+                            url={`https://hn.live/item/${story?.id}/comment/${comment.id}`}
+                            theme={theme}
+                          />
+                          <span>•</span>
+                          <a
+                            href={`https://news.ycombinator.com/reply?id=${comment.id}&goto=item%3Fid%3D${story?.id}%23${comment.id}`}
+                            className="hover:opacity-75 transition-opacity flex items-center"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Reply on Hacker News"
+                          >
+                            <svg 
+                              className="w-4 h-4" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                                strokeWidth={2} 
+                                d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                              />
+                            </svg>
+                          </a>
+                          <span>•</span>
+                          <span className="break-words">re: {comment.parentTitle?.slice(0, 60)}{comment.parentTitle?.length > 60 ? '...' : ''}</span>
                         </div>
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 space-y-3">
+                    ))
+                  ) : (
+                    // Default nested view
+                    commentState.loadedComments.map((comment, index) => 
+                      renderComment(comment, `${index}`)
+                    )
+                  )}
+                  
+                  {commentState.hasMore && (
+                    <div 
+                      ref={loadingRef} 
+                      className="text-center py-8"
+                    >
+                      {commentState.isLoadingMore ? (
+                        <div className={`${
+                          theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
+                        } opacity-75`}>
+                          Loading more comments...
+                        </div>
+                      ) : (
+                        <div className="h-20 opacity-50">
+                          <div className="text-sm">
+                            Viewing {commentState.loadedTotal} of {story.descendants} comments ({commentState.loadedCount} threads)
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer message */}
+                {!commentState.hasMore && (
+                  <div className="text-center py-8 pb-24 sm:pb-8 space-y-4">
                     <div className="text-sm space-y-2">
                       <div>
                         <a
@@ -1409,7 +1539,7 @@ export function StoryView({
                           → View this story on Hacker News
                         </a>
                       </div>
-                      <div>
+                      <div className="my-2">
                         <span className="opacity-50">or</span>
                       </div>
                       <div>
@@ -1425,13 +1555,13 @@ export function StoryView({
                     </div>
                   </div>
                 )}
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                Loading...
               </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              Story not found
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
       
