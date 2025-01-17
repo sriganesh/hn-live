@@ -13,6 +13,7 @@ interface SettingsModalProps {
     showCommentParents: boolean;
     font: FontOption;
     showBackToTop: boolean;
+    useAlgoliaApi: boolean;
   };
   onUpdateOptions: (options: any) => void;
   colorizeUsernames: boolean;
@@ -71,6 +72,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   // Add state for mobile notification
   const [showMobileReloadNotif, setShowMobileReloadNotif] = useState(false);
 
+  // Add state for collapsed sections
+  const [collapsedSections, setCollapsedSections] = useState({
+    terminal: true,
+    feedView: true,
+    storyView: true
+  });
+
+  // Toggle handler for sections
+  const toggleSection = (section: 'terminal' | 'feedView' | 'storyView') => {
+    setCollapsedSections(prev => ({
+      terminal: true,
+      feedView: true,
+      storyView: true,
+      [section]: !prev[section]
+    }));
+  };
+
   // Handle the setting change
   const handleCommentParentsChange = () => {
     const newOptions = {
@@ -127,7 +145,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="space-y-6">
             {/* Theme Selection */}
             <div className="space-y-2">
-              <div className="text-sm opacity-75">THEME</div>
+              <div className="text-sm font-bold uppercase tracking-wider mb-2">THEME</div>
               <div className="flex flex-wrap gap-4">
                 <button
                   onClick={() => onUpdateOptions({ ...options, theme: 'og' })}
@@ -152,7 +170,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
             {/* Font Size Selection */}
             <div className="space-y-4 mt-6">
-              <div className="text-sm opacity-75">FONTS</div>
+              <div className="text-sm font-bold uppercase tracking-wider mb-2">FONTS</div>
               
               <div className="space-y-4">
                 {/* Font Size Slider */}
@@ -263,8 +281,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
             {/* Terminal Behavior */}
             <div className="space-y-2">
-              <div className="text-sm opacity-75">TERMINAL BEHAVIOR</div>
-              <div className="space-y-2">
+              <button 
+                onClick={() => toggleSection('terminal')}
+                className="w-full flex items-center justify-between text-sm font-bold uppercase tracking-wider mb-2"
+              >
+                <span>TERMINAL BEHAVIOR</span>
+                <svg 
+                  className={`w-4 h-4 transform transition-transform ${collapsedSections.terminal ? '' : 'rotate-180'}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className={`space-y-2 transition-all duration-200 ${collapsedSections.terminal ? 'hidden' : ''}`}>
                 <button
                   onClick={() => onUpdateOptions({ ...options, autoscroll: !options.autoscroll })}
                   className={`hover:opacity-75 transition-opacity block`}
@@ -293,10 +324,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
             </div>
 
-            {/* View Options */}
+            {/* Feed View Options */}
             <div className="space-y-2">
-              <div className="text-sm opacity-75">VIEW OPTIONS</div>
-              <div className="space-y-2">
+              <button 
+                onClick={() => toggleSection('feedView')}
+                className="w-full flex items-center justify-between text-sm font-bold uppercase tracking-wider mb-2"
+              >
+                <span>FEED VIEW OPTIONS</span>
+                <svg 
+                  className={`w-4 h-4 transform transition-transform ${collapsedSections.feedView ? '' : 'rotate-180'}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className={`space-y-2 transition-all duration-200 ${collapsedSections.feedView ? 'hidden' : ''}`}>
                 <button
                   onClick={() => onColorizeUsernamesChange(!colorizeUsernames)}
                   className={`hover:opacity-75 transition-opacity block`}
@@ -312,6 +356,38 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 >
                   [{options.classicLayout ? 'x' : ' '}] Classic HN layout
                 </button>
+              </div>
+            </div>
+
+            {/* Story View Options */}
+            <div className="space-y-2">
+              <button 
+                onClick={() => toggleSection('storyView')}
+                className="w-full flex items-center justify-between text-sm font-bold uppercase tracking-wider mb-2"
+              >
+                <span>STORY VIEW OPTIONS</span>
+                <svg 
+                  className={`w-4 h-4 transform transition-transform ${collapsedSections.storyView ? '' : 'rotate-180'}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className={`space-y-2 transition-all duration-200 ${collapsedSections.storyView ? 'hidden' : ''}`}>
+                <button
+                  onClick={() => onUpdateOptions({ ...options, useAlgoliaApi: !options.useAlgoliaApi })}
+                  className={`hover:opacity-75 transition-opacity block text-left whitespace-normal leading-tight`}
+                >
+                  <div className="flex">
+                    <span className="mr-2">[{options.useAlgoliaApi ? 'x' : ' '}]</span>
+                    <span>Use Algolia API for stories (faster)</span>
+                  </div>
+                </button>
+                <div className="text-xs opacity-60 ml-6 mt-1">
+                  Note: If stories fail to load, try unchecking this option
+                </div>
                 <button
                   onClick={() => {
                     const newValue = !options.showBackToTop;
