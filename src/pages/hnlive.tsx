@@ -54,6 +54,7 @@ interface TerminalOptions {
   showCommentParents: boolean;
   font: FontOption;
   showBackToTop: boolean;
+  useAlgoliaApi: boolean;
 }
 
 interface SearchFilters {
@@ -160,6 +161,16 @@ const setStoredBackToTop = (value: boolean) => {
   localStorage.setItem('hn-show-back-to-top', value.toString());
 };
 
+const getStoredAlgoliaApi = () => {
+  try {
+    const stored = localStorage.getItem('hn-use-algolia-api');
+    return stored === null ? true : stored === 'true'; // Default to true if not set
+  } catch (e) {
+    console.warn('Could not access localStorage');
+  }
+  return true;  // Default to Algolia API
+};
+
 // Update the style to handle both dark and green themes
 const themeStyles = `
   [data-theme='dog'] ::selection {
@@ -203,6 +214,7 @@ export default function HNLiveTerminal() {
     showCommentParents: getStoredCommentParents(),
     font: getStoredFont(),
     showBackToTop: getStoredBackToTop(),
+    useAlgoliaApi: getStoredAlgoliaApi(),
   });
   const [isRunning, setIsRunning] = useState(true);
   
@@ -887,6 +899,7 @@ export default function HNLiveTerminal() {
       localStorage.setItem('hn-live-classic-layout', String(newOptions.classicLayout));
       localStorage.setItem('hn-live-comment-parents', String(newOptions.showCommentParents));
       localStorage.setItem('hn-live-font', newOptions.font);
+      localStorage.setItem('hn-use-algolia-api', String(newOptions.useAlgoliaApi));
     } catch (e) {
       console.warn('Could not save settings to localStorage');
     }
@@ -1528,6 +1541,7 @@ export default function HNLiveTerminal() {
             isSettingsOpen={showSettings}
             isRunning={isRunning}
             showBackToTop={options.showBackToTop}
+            useAlgoliaApi={options.useAlgoliaApi}
           />
         )}
 

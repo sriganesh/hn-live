@@ -16,6 +16,7 @@ interface StoryViewProps {
   isSettingsOpen: boolean;
   isRunning: boolean;
   showBackToTop: boolean;
+  useAlgoliaApi: boolean;
 }
 
 interface HNStory {
@@ -42,6 +43,31 @@ interface HNComment {
   isCollapsed?: boolean;
 }
 
+// Add these interfaces for Algolia API response
+interface AlgoliaStory {
+  id: number;
+  title: string;
+  text?: string;
+  url?: string;
+  author: string; // Note: Algolia uses 'author' instead of 'by'
+  created_at_i: number; // Note: Algolia uses 'created_at_i' instead of 'time'
+  points?: number;
+  children: AlgoliaComment[];
+  parent_id?: number;
+  story_id?: number;
+}
+
+interface AlgoliaComment {
+  id: number;
+  text?: string;
+  author: string;
+  created_at_i: number;
+  children: AlgoliaComment[];
+  parent_id: number;
+  story_id: number;
+  points?: number;
+}
+
 const MAX_COMMENTS = 5;  
 const MAX_DEPTH = 5;     // Maximum nesting depth for replies
 
@@ -49,19 +75,25 @@ const MAX_DEPTH = 5;     // Maximum nesting depth for replies
 const isDev = import.meta.env.DEV;
 
 // Story fetching function
-const fetchStory = async (storyId: number) => {
-  const response = await fetch(`https://hacker-news.firebaseio.com/v0/item/${storyId}.json`);
+const fetchStory = async (storyId: number, signal?: AbortSignal) => {
+  if (isDev) {
+    console.log('🔄 Fetching story from HN API:', `https://hacker-news.firebaseio.com/v0/item/${storyId}.json`);
+  }
+  const response = await fetch(`https://hacker-news.firebaseio.com/v0/item/${storyId}.json`, { signal });
   return response.json();
 };
 
-async function findRootStoryId(itemId: number): Promise<number> {
-  const response = await fetch(`https://hacker-news.firebaseio.com/v0/item/${itemId}.json`);
+async function findRootStoryId(itemId: number, signal?: AbortSignal): Promise<number> {
+  if (isDev) {
+    console.log('🔍 Finding root story ID for:', `https://hacker-news.firebaseio.com/v0/item/${itemId}.json`);
+  }
+  const response = await fetch(`https://hacker-news.firebaseio.com/v0/item/${itemId}.json`, { signal });
   const item = await response.json();
   
   if (item.type === 'story') {
     return item.id;
   } else if (item.parent) {
-    return findRootStoryId(item.parent);
+    return findRootStoryId(item.parent, signal);
   }
   return itemId; // fallback
 }
@@ -166,6 +198,15 @@ const fetchComments = async (
   requiredIds?: Set<number>,
   forceLoad: boolean = false
 ): Promise<HNComment[]> => {
+  if (isDev) {
+    console.log('📝 Fetching comments:', {
+      urls: commentIds.map(id => `https://hacker-news.firebaseio.com/v0/item/${id}.json`),
+      count: commentIds.length,
+      depth,
+      hasRequiredIds: !!requiredIds?.size,
+      forceLoad
+    });
+  }
   if (depth > MAX_DEPTH && !requiredIds?.size && !forceLoad) return [];
 
   const comments = await Promise.all(
@@ -371,7 +412,64 @@ const countReplies = (comment: HNComment): number => {
   return count;
 };
 
-export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, onShowSettings, isSettingsOpen, isRunning, showBackToTop }: StoryViewProps) {
+// Add a function to fetch from Algolia
+const fetchFromAlgolia = async (itemId: number, signal?: AbortSignal): Promise<AlgoliaStory> => {
+  if (isDev) {
+    console.log('🔄 Fetching story from Algolia API:', `https://hn.algolia.com/api/v1/items/${itemId}`);
+  }
+  const response = await fetch(`https://hn.algolia.com/api/v1/items/${itemId}`, { signal });
+  if (!response.ok) {
+    throw new Error('Failed to fetch from Algolia');
+  }
+  return response.json();
+};
+
+// Add a converter function to transform Algolia data to our format
+const convertAlgoliaStory = (algoliaStory: AlgoliaStory): HNStory => {
+  return {
+    id: algoliaStory.id,
+    title: algoliaStory.title,
+    text: algoliaStory.text,
+    url: algoliaStory.url,
+    by: algoliaStory.author,
+    time: algoliaStory.created_at_i,
+    kids: algoliaStory.children?.map(c => c.id),
+    descendants: countAlgoliaComments(algoliaStory.children),
+    comments: convertAlgoliaComments(algoliaStory.children, 0)
+  };
+};
+
+const convertAlgoliaComments = (comments: AlgoliaComment[], depth: number): HNComment[] => {
+  return comments.map(comment => ({
+    id: comment.id,
+    text: comment.text || '',
+    by: comment.author,
+    time: comment.created_at_i,
+    level: depth,
+    kids: comment.children?.map(c => c.id),
+    comments: convertAlgoliaComments(comment.children || [], depth + 1)
+  }));
+};
+
+const countAlgoliaComments = (comments: AlgoliaComment[]): number => {
+  return comments.reduce((count, comment) => {
+    return count + 1 + (comment.children ? countAlgoliaComments(comment.children) : 0);
+  }, 0);
+};
+
+export function StoryView({ 
+  itemId, 
+  scrollToId, 
+  onClose, 
+  theme, 
+  fontSize, 
+  font, 
+  onShowSettings, 
+  isSettingsOpen, 
+  isRunning, 
+  showBackToTop,
+  useAlgoliaApi
+}: StoryViewProps) {
   const navigate = useNavigate();
   const { isTopUser, getTopUserClass } = useTopUsers();
   
@@ -475,84 +573,198 @@ export function StoryView({ itemId, scrollToId, onClose, theme, fontSize, font, 
 
   // Update the useEffect that handles initial data fetching
   useEffect(() => {
+    const abortController = new AbortController();
+    let isMounted = true;
+
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const rootStoryId = await findRootStoryId(itemId);
-        const storyData = await fetchStory(rootStoryId);
+        const rootStoryId = await findRootStoryId(itemId, abortController.signal);
         
-        let initialComments: HNComment[] = [];
-        let requiredIds: Set<number> | undefined;
-
-        if (storyData.kids) {
-          // First, if we have a scrollToId, find its parent chain
-          if (scrollToId) {
-            const comment = await fetch(`https://hacker-news.firebaseio.com/v0/item/${scrollToId}.json`)
-              .then(res => res.json());
+        if (!isMounted) return;
+        
+        if (useAlgoliaApi) {
+          // Use Algolia API
+          try {
+            const algoliaData = await fetchFromAlgolia(rootStoryId, abortController.signal);
+            if (!isMounted) return;
             
-            // Find the top-level parent of this comment
-            let currentId = scrollToId;
-            let targetCommentChain: number[] = [];
-            while (currentId) {
-              targetCommentChain.unshift(currentId);
-              const parent = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentId}.json`)
+            const convertedStory = convertAlgoliaStory(algoliaData);
+            
+            setStory(convertedStory);
+            setCommentState({
+              loadedComments: convertedStory.comments || [],
+              loadedCount: convertedStory.comments?.length || 0,
+              loadedTotal: convertedStory.descendants || 0,
+              hasMore: false, // Algolia gives us everything at once
+              isLoadingMore: false,
+              collapsedComments: new Set()
+            });
+
+            if (scrollToId) {
+              setTimeout(() => {
+                if (!isMounted) return;
+                const element = document.getElementById(`comment-${scrollToId}`);
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  element.classList.add('highlight');
+                }
+              }, 100);
+            }
+          } catch (error) {
+            if (!isMounted) return;
+            console.error('Algolia API failed, falling back to HN API:', error);
+            // Fall back to original HN API implementation
+            const storyData = await fetchStory(rootStoryId, abortController.signal);
+            let initialComments: HNComment[] = [];
+            let requiredIds: Set<number> | undefined;
+
+            if (storyData.kids) {
+              // First, if we have a scrollToId, find its parent chain
+              if (scrollToId) {
+                const comment = await fetch(`https://hacker-news.firebaseio.com/v0/item/${scrollToId}.json`, { signal: abortController.signal })
+                  .then(res => res.json());
+                
+                // Find the top-level parent of this comment
+                let currentId = scrollToId;
+                let targetCommentChain: number[] = [];
+                while (currentId) {
+                  targetCommentChain.unshift(currentId);
+                  const parent = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentId}.json`, { signal: abortController.signal })
+                    .then(res => res.json());
+                  
+                  if (parent.parent === storyData.id || !parent.parent) break;
+                  currentId = parent.parent;
+                }
+                
+                requiredIds = new Set(targetCommentChain);
+              }
+
+              // Load first few comments
+              const firstFewComments = storyData.kids.slice(0, MAX_COMMENTS);
+              
+              // If our target comment's thread isn't in first batch, add it
+              if (scrollToId && requiredIds) {
+                const topLevelParentId = Array.from(requiredIds)[0];
+                if (!firstFewComments.includes(topLevelParentId)) {
+                  firstFewComments.push(topLevelParentId);
+                }
+              }
+
+              // Load all these comments
+              initialComments = await fetchComments(
+                firstFewComments,
+                0,
+                requiredIds,
+                true // Force load the entire chain
+              );
+            }
+
+            setStory(storyData);
+            setCommentState({
+              loadedComments: initialComments,
+              loadedCount: initialComments.length,
+              loadedTotal: countCommentsInTree(initialComments),
+              hasMore: (storyData.kids?.length || 0) > MAX_COMMENTS,
+              isLoadingMore: false,
+              collapsedComments: new Set()
+            });
+
+            if (scrollToId) {
+              setTimeout(() => {
+                if (!isMounted) return;
+                const element = document.getElementById(`comment-${scrollToId}`);
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  element.classList.add('highlight');
+                }
+              }, 100);
+            }
+          }
+        } else {
+          // Use original HN API implementation
+          const storyData = await fetchStory(rootStoryId, abortController.signal);
+          let initialComments: HNComment[] = [];
+          let requiredIds: Set<number> | undefined;
+
+          if (storyData.kids) {
+            // First, if we have a scrollToId, find its parent chain
+            if (scrollToId) {
+              const comment = await fetch(`https://hacker-news.firebaseio.com/v0/item/${scrollToId}.json`, { signal: abortController.signal })
                 .then(res => res.json());
               
-              if (parent.parent === storyData.id || !parent.parent) break;
-              currentId = parent.parent;
+              // Find the top-level parent of this comment
+              let currentId = scrollToId;
+              let targetCommentChain: number[] = [];
+              while (currentId) {
+                targetCommentChain.unshift(currentId);
+                const parent = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentId}.json`, { signal: abortController.signal })
+                  .then(res => res.json());
+                
+                if (parent.parent === storyData.id || !parent.parent) break;
+                currentId = parent.parent;
+              }
+              
+              requiredIds = new Set(targetCommentChain);
             }
+
+            // Load first few comments
+            const firstFewComments = storyData.kids.slice(0, MAX_COMMENTS);
             
-            requiredIds = new Set(targetCommentChain);
+            // If our target comment's thread isn't in first batch, add it
+            if (scrollToId && requiredIds) {
+              const topLevelParentId = Array.from(requiredIds)[0];
+              if (!firstFewComments.includes(topLevelParentId)) {
+                firstFewComments.push(topLevelParentId);
+              }
+            }
+
+            // Load all these comments
+            initialComments = await fetchComments(
+              firstFewComments,
+              0,
+              requiredIds,
+              true // Force load the entire chain
+            );
           }
 
-          // Load first few comments
-          const firstFewComments = storyData.kids.slice(0, MAX_COMMENTS);
-          
-          // If our target comment's thread isn't in first batch, add it
-          if (scrollToId && requiredIds) {
-            const topLevelParentId = Array.from(requiredIds)[0];
-            if (!firstFewComments.includes(topLevelParentId)) {
-              firstFewComments.push(topLevelParentId);
-            }
+          setStory(storyData);
+          setCommentState({
+            loadedComments: initialComments,
+            loadedCount: initialComments.length,
+            loadedTotal: countCommentsInTree(initialComments),
+            hasMore: (storyData.kids?.length || 0) > MAX_COMMENTS,
+            isLoadingMore: false,
+            collapsedComments: new Set()
+          });
+
+          if (scrollToId) {
+            setTimeout(() => {
+              if (!isMounted) return;
+              const element = document.getElementById(`comment-${scrollToId}`);
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                element.classList.add('highlight');
+              }
+            }, 100);
           }
-
-          // Load all these comments
-          initialComments = await fetchComments(
-            firstFewComments,
-            0,
-            requiredIds,
-            true // Force load the entire chain
-          );
         }
-
-        setCommentState({
-          loadedComments: initialComments,
-          loadedCount: initialComments.length,
-          loadedTotal: countCommentsInTree(initialComments),
-          hasMore: (storyData.kids?.length || 0) > MAX_COMMENTS,
-          isLoadingMore: false,
-          collapsedComments: new Set()
-        });
-
-        if (scrollToId) {
-          setTimeout(() => {
-            const element = document.getElementById(`comment-${scrollToId}`);
-            if (element) {
-              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              element.classList.add('highlight');
-            }
-          }, 100);
-        }
-
-        setStory(storyData);
       } catch (error) {
+        if (!isMounted) return;
         console.error('Error fetching story:', error);
       }
-      setIsLoading(false);
+      if (isMounted) {
+        setIsLoading(false);
+      }
     };
 
     fetchData();
-  }, [itemId, scrollToId]);
+
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
+  }, [itemId, scrollToId, useAlgoliaApi]);
 
   // Add these refs at the top of the StoryView component
   const observerRef = useRef<IntersectionObserver | null>(null);

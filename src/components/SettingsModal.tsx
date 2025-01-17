@@ -13,6 +13,7 @@ interface SettingsModalProps {
     showCommentParents: boolean;
     font: FontOption;
     showBackToTop: boolean;
+    useAlgoliaApi: boolean;
   };
   onUpdateOptions: (options: any) => void;
   colorizeUsernames: boolean;
@@ -302,6 +303,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   className={`hover:opacity-75 transition-opacity block`}
                 >
                   [{colorizeUsernames ? 'x' : ' '}] Colorize usernames
+                </button>
+                <button
+                  onClick={() => onUpdateOptions({ ...options, useAlgoliaApi: !options.useAlgoliaApi })}
+                  className={`hover:opacity-75 transition-opacity block`}
+                >
+                  [{options.useAlgoliaApi ? 'x' : ' '}] Use Algolia API for stories (faster)
                 </button>
                 <button
                   onClick={() => onUpdateOptions({
