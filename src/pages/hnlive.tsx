@@ -17,6 +17,7 @@ import { UserModal } from '../components/UserModal';
 import { AboutOverlay } from '../content/about';
 import { BookmarksPage } from '../components/BookmarksPage';
 import { navigationItems } from '../config/navigation';
+import { ReplayView } from '../components/ReplayView';
 
 interface HNItem {
   id: number;
@@ -1753,6 +1754,18 @@ export default function HNLiveTerminal() {
             onShowSearch={() => setShowSearch(true)}
             onCloseSearch={() => setShowSearch(false)}
             onShowSettings={() => setShowSettings(true)}
+            isRunning={isRunning}
+          />
+        )}
+
+        {/* Add the ReplayView component to the render */}
+        {location.pathname.startsWith('/replay/') && (
+          <ReplayView
+            theme={options.theme}
+            fontSize={options.fontSize}
+            font={options.font}
+            onShowSettings={() => setShowSettings(true)}
+            isSettingsOpen={showSettings}
             isRunning={isRunning}
           />
         )}
