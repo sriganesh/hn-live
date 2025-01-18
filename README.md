@@ -9,10 +9,14 @@ HN Live shows you what's happening on Hacker News right now. Instead of refreshi
 ## Features
 
 - Live feed of new stories and comments
-- Front page view with infinite scrolling (just like HN's front page!)
-- Show HN, Ask HN, Jobs, and Best sections
-- Bookmark stories and comments for later reading
+- Front page view with infinite scrolling
+- Show HN, Ask HN, Jobs, and Best views with infinite scrolling
+- Bookmark stories and comments for later reading.
 - User profiles with karma history
+- Flexible story viewing options:
+  - Sort comments by recent first or traditional nested view
+  - Choose between Algolia API (faster loading) or Firebase API
+  - Fallback option if one API is experiencing issues
 - Multiple font choices (system, mono, JetBrains, Fira Code, etc.)
 - Adjustable font sizes for better readability
 - Collapsible comment threads with reply counts
@@ -41,6 +45,19 @@ The site supports direct links to stories and comments:
 - Comment view: `/item/123/comment/456`
 
 You can share these URLs directly and they will load the appropriate content.
+
+## HN Live Bookmarklet
+
+Drag this link to your bookmarks bar to quickly open any (most) Hacker News page in HN Live:
+
+<a href="javascript:!function(){const t=window.location.href,n={'':%27front%27,news:%27front%27,show:%27show%27,ask:%27ask%27,jobs:%27jobs%27,best:%27best%27},e=/item\?id=(\d+)/.exec(t);if(e&&e[1])return void window.open(`https://hn.live/item/${e[1]}`,%27_blank%27);const i=new URL(t).pathname.replace(%27/%27,%27%27);return i in n?void window.open(`https://hn.live/${n[i]}`,%27_blank%27):void alert(%22This doesn%27t appear to be a supported Hacker News page.%22)}();">⚡ Open in HN Live</a>
+
+When viewing any page on news.ycombinator.com, click the bookmarklet to open that page in HN Live.
+
+- Chrome/Edge: Drag to bookmarks bar
+- Firefox: Drag to bookmarks toolbar
+- Safari: Drag to favorites bar
+- Or right-click the link and add to bookmarks/favorites
 
 ## Keyboard Shortcuts
 
@@ -102,6 +119,7 @@ Special thanks to:
 - [Cursor](https://cursor.com/) - Honestly, this editor is incredible! Made me feel like I had a coding buddy helping me out 24/7.
 - [Claude](https://anthropic.com/claude) & [ChatGPT](https://chat.openai.com) - Sometimes I had to jump directly to them to brainstorm ideas or debug tricky errors.
 - [Cloudflare Pages](https://pages.cloudflare.com/) - For making deployment super easy.
+- [Wispr Flow](https://wisprflow.ai/) - An incredible voice-to-text tool helping me "type" faster.
 
 These tools helped me build and debug this way faster than I could have imagined. They turned what could have been weeks of debugging and learning into a fun ~~weekend~~ project (it turned into several weekends because I wanted to refine and add more features). It's amazing how they can help you quickly turn ideas into working products!
 
