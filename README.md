@@ -51,10 +51,10 @@ You can share these URLs directly and they will load the appropriate content.
 To install the bookmarklet:
 
 1. Create a new bookmark / favorite in your browser
-2. Name it "⚡ Open in HN Live"
+2. Name it "HN Live"
 3. Copy and paste this code as the URL:
 ```javascript
-javascript:!function(){const t=window.location.href,n={'':"front",news:"front",show:"show",ask:"ask",jobs:"jobs",best:"best"},e=/item\?id=(\d+)/.exec(t);if(e&&e[1])return void window.open(`https://hn.live/item/${e[1]}`,"_blank");const i=new URL(t).pathname.replace("/","");return i in n?void window.open(`https://hn.live/${n[i]}`,"_blank"):void alert("This doesn't appear to be a supported Hacker News page.")}();
+javascript:void function(){try{const t=window.location.href,n={"":'front',news:'front',show:'show',ask:'ask',jobs:'jobs',best:'best'};if(!t||t==='about:blank'||t.startsWith('chrome://')||t.startsWith('about:')||t==='undefined'||t===window.location.origin+'/'||t===window.location.origin){window.location.href='https://hn.live';return}if(!t.includes('news.ycombinator.com')){window.location.href='https://hn.live';return}const e=/item\?id=(\d+)/.exec(t);if(e&&e[1]){window.open(`https://hn.live/item/${e[1]}`,%27_blank%27);return}const i=new URL(t).pathname.replace(%27/%27,%27%27);if(i in n){window.open(`https://hn.live/${n[i]}`,%27_blank%27);return}if(confirm("This doesn%27t appear to be a supported Hacker News page. Would you like to go to HN Live?")){window.location.href=%27https://hn.live%27}}catch(e){window.location.href=%27https://hn.live%27}}();
 ```
 
 When viewing any page on news.ycombinator.com, click the bookmarklet to open that page in HN Live.
