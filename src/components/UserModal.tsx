@@ -7,7 +7,7 @@ interface UserModalProps {
   isOpen: boolean;
   onClose: () => void;
   theme: 'green' | 'og' | 'dog';
-  fontSize: 'xs' | 'sm' | 'base';
+  fontSize: string;
 }
 
 interface HNUser {

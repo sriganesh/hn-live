@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTopUsers } from '../hooks/useTopUsers';
 import { UserModal } from './UserModal';
@@ -1216,6 +1216,35 @@ export function StoryView({
               url={`https://hn.live/item/${itemId}`}
               theme={theme}
             />
+            <span>•</span>
+            {/* Replay button - only show if there are comments */}
+            {(story.descendants ?? 0) > 0 && (
+              <button
+                onClick={() => navigate(`/replay/${story.id}`)}
+                className="hover:opacity-75 transition-opacity"
+                title="Replay story discussion"
+              >
+                <svg 
+                  className="w-4 h-4" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                  />
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2}
+                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                  />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1362,6 +1391,35 @@ export function StoryView({
                     url={`https://hn.live/item/${itemId}`}
                     theme={theme}
                   />
+                  <span>•</span>
+                  {/* Replay button - only show if there are comments */}
+                  {(story.descendants ?? 0) > 0 && (
+                    <button
+                      onClick={() => navigate(`/replay/${story.id}`)}
+                      className="hover:opacity-75 transition-opacity"
+                      title="Replay story discussion"
+                    >
+                      <svg 
+                        className="w-4 h-4" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                        />
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2}
+                          d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                        />
+                      </svg>
+                    </button>
+                  )}
                 </div>
 
                 {story.text && (
