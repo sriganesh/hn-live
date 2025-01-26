@@ -34,12 +34,6 @@ export const navigationItems: NavigationItem[] = [
     path: '/bookmarks'
   },
   {
-    id: 'profile',
-    label: (username: string | null) => username ? username.toUpperCase() : 'PROFILE',
-    path: '/profile',
-    icon: 'profile'
-  },
-  {
     label: 'HN',
     path: 'https://news.ycombinator.com',
     external: true

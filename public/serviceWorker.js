@@ -42,7 +42,7 @@ async function checkUserComments() {
 
     // Wait for both tracker state and new-replies state
     const { trackerData: existingData, newRepliesData } = await new Promise(resolve => {
-      self.addEventListener('message', function handler(event) {
+      const handler = (event) => {
         if (event.data.type === 'trackerState') {
           self.removeEventListener('message', handler);
           resolve({
@@ -50,7 +50,8 @@ async function checkUserComments() {
             newRepliesData: event.data.newReplies || {}
           });
         }
-      });
+      };
+      self.addEventListener('message', handler);
     });
 
     // Fetch new data from API
@@ -80,35 +81,34 @@ async function checkUserComments() {
     };
 
     // Initialize variables
-    let newReplies = {};
-    let unreadCount = 0;
+    let newReplies = {...newRepliesData}; // Start with existing replies
+    let foundNewReplies = false;
 
-    // Only calculate new replies if this isn't the first load for this username
-    const isFirstLoad = !initialLoadMap.get(currentUsername);
-    
-    if (!isFirstLoad) {
-      trackerData.comments.forEach(comment => {
-        const existingComment = existingData?.comments?.find(c => c.id === comment.id);
-        if (existingComment) {
-          // Only count replies that aren't in existing data or current new-replies
-          const existingNewReplies = Object.values(newRepliesData).flat()
-            .map(r => r.id);
-          
-          const newReplyIds = comment.replyIds.filter(replyId => 
-            !existingComment.replyIds.includes(replyId) &&
-            !existingNewReplies.includes(replyId)
-          );
+    // Calculate new replies for each comment
+    trackerData.comments.forEach(comment => {
+      const existingComment = existingData?.comments?.find(c => c.id === comment.id);
+      if (existingComment) {
+        // Only count replies that aren't in existing data or current new-replies
+        const existingNewReplies = Object.values(newRepliesData).flat()
+          .map(r => r.id);
+        
+        const newReplyIds = comment.replyIds.filter(replyId => 
+          !existingComment.replyIds.includes(replyId) &&
+          !existingNewReplies.includes(replyId)
+        );
 
-          if (newReplyIds.length > 0) {
-            newReplies[comment.id] = newReplyIds.map(id => ({
+        if (newReplyIds.length > 0) {
+          newReplies[comment.id] = [
+            ...(newReplies[comment.id] || []),
+            ...newReplyIds.map(id => ({
               id,
               seen: false
-            }));
-            unreadCount += newReplyIds.length;
-          }
+            }))
+          ];
+          foundNewReplies = true;
         }
-      });
-    }
+      }
+    });
 
     // Send updates to client
     clients.forEach(client => {
@@ -117,13 +117,12 @@ async function checkUserComments() {
         data: {
           trackerData,
           newReplies,
-          unreadCount,
-          isFirstLoad
+          unreadCount: Object.values(newReplies)
+            .reduce((count, replies) => count + replies.filter(r => !r.seen).length, 0),
+          isFirstLoad: false // Never treat as first load
         }
       });
     });
-
-    initialLoadMap.set(currentUsername, true);
 
   } catch (error) {
     console.error('Service Worker: Error in checkUserComments:', error);

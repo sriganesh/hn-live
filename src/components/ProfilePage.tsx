@@ -91,7 +91,16 @@ export function ProfilePage({
   const [trackerData, setTrackerData] = useState<TrackerData | null>(null);
   const [loading, setLoading] = useState(location.pathname === '/profile');
   const [unreadCount, setUnreadCount] = useState<number>(() => {
-    return parseInt(localStorage.getItem('hn-unread-count') || '0', 10);
+    try {
+      const newReplies = JSON.parse(localStorage.getItem('hn-new-replies') || '{}') as Record<string, NewReply[]>;
+      return Object.values(newReplies).reduce((count: number, replies: NewReply[]) => {
+        const unseenReplies = replies.filter(r => !r.seen).length;
+        return count + unseenReplies;
+      }, 0);
+    } catch (e) {
+      console.warn('Could not calculate initial unread count');
+      return 0;
+    }
   });
 
   // Separate useEffect for loading comments
@@ -277,34 +286,53 @@ export function ProfilePage({
       });
   }, [commentGroups]);
 
-  const handleMarkAsRead = (commentId: string) => {
-    // Get current new replies
-    const newReplies = JSON.parse(localStorage.getItem('hn-new-replies') || '{}');
+  // Function to handle marking all as read
+  const handleMarkAllAsRead = () => {
+    // Clear new replies and unread count
+    localStorage.setItem('hn-new-replies', '{}');
+    localStorage.setItem('hn-unread-count', '0');
+    setUnreadCount(0);
     
-    // Remove only the replies for this comment
-    delete newReplies[commentId];
-    
-    // Count remaining unread replies
-    const remainingUnread = Object.values(newReplies).flat().length;
-    
-    // Update localStorage
-    localStorage.setItem('hn-new-replies', JSON.stringify(newReplies));
-    localStorage.setItem('hn-unread-count', remainingUnread.toString());
-    
-    // Update state
-    setUnreadCount(remainingUnread);
+    // Dispatch custom event for other components
+    window.dispatchEvent(new CustomEvent('unreadCountChange', {
+      detail: { unreadCount: 0 }
+    }));
   };
 
-  const handleMarkAllAsRead = () => {
-    setUnreadCount(0);
-    localStorage.setItem('hn-unread-count', '0');
-    localStorage.setItem('hn-new-replies', '{}');
+  // Function to handle marking a comment's replies as read
+  const handleMarkAsRead = (commentId: string) => {
+    const newReplies = JSON.parse(localStorage.getItem('hn-new-replies') || '{}') as Record<string, NewReply[]>;
+    if (newReplies[commentId]) {
+      // Mark all replies for this comment as seen
+      newReplies[commentId] = newReplies[commentId].map(reply => ({
+        ...reply,
+        seen: true
+      }));
+      
+      // Calculate new total unread count
+      const totalUnreadCount = Object.values(newReplies)
+        .reduce((count: number, replies: NewReply[]) => {
+          const unseenReplies = replies.filter(r => !r.seen).length;
+          return count + unseenReplies;
+        }, 0);
+      
+      // Update localStorage and state
+      localStorage.setItem('hn-new-replies', JSON.stringify(newReplies));
+      localStorage.setItem('hn-unread-count', totalUnreadCount.toString());
+      setUnreadCount(totalUnreadCount);
+      
+      // Dispatch custom event for other components
+      window.dispatchEvent(new CustomEvent('unreadCountChange', {
+        detail: { unreadCount: totalUnreadCount }
+      }));
+    }
   };
 
   // Add this helper function to check if a comment has unread replies
   const hasUnreadReplies = (commentId: string): boolean => {
-    const newReplies = JSON.parse(localStorage.getItem('hn-new-replies') || '{}');
-    return !!newReplies[commentId];
+    const newReplies = JSON.parse(localStorage.getItem('hn-new-replies') || '{}') as Record<string, NewReply[]>;
+    // Check if there are any unseen replies for this comment
+    return !!newReplies[commentId]?.some(reply => !reply.seen);
   };
 
   return (

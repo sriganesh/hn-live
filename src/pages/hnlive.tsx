@@ -1090,7 +1090,13 @@ export default function HNLiveTerminal() {
       }
     };
 
+    // Listen for custom event from same window
+    const handleUnreadChange = (e: CustomEvent) => {
+      setUnreadReplies(e.detail.unreadCount);
+    };
+
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('unreadCountChange', handleUnreadChange as EventListener);
 
     // Also listen for custom event from service worker updates
     const handleUnreadUpdate = (e: MessageEvent) => {
@@ -1106,6 +1112,7 @@ export default function HNLiveTerminal() {
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('unreadCountChange', handleUnreadChange as EventListener);
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.removeEventListener('message', handleUnreadUpdate);
       }
@@ -1152,8 +1159,7 @@ export default function HNLiveTerminal() {
           options.font === 'source' ? 'font-source' :
           options.font === 'sans' ? 'font-sans' :
           options.font === 'serif' ? 'font-serif' :
-          options.font === 'system' ? 'font-system' :
-          'font-sans'}
+          'font-system'}
         ${options.fontSize}
       `}>
         <noscript>
