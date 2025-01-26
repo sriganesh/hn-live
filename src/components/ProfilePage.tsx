@@ -405,7 +405,7 @@ export function ProfilePage({
           <div className="max-w-4xl mx-auto">
             {!hnUsername ? (
               <div className="text-center py-8">
-                <div className="mb-4">Connect your HN username in settings to see your recent comments and replies</div>
+                <div className="mb-4">Connect your HN username to get notified when someone replies to your comments</div>
                 <button
                   onClick={onShowSettings}
                   className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} hover:opacity-75`}
