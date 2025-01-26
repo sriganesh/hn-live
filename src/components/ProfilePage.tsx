@@ -111,6 +111,13 @@ export function ProfilePage({
       if (process.env.NODE_ENV === 'development') {
         console.log('Loading comments from tracker data...');
       }
+      
+      // Don't set loading state if no username
+      if (!hnUsername) {
+        setLoading(false);
+        return;
+      }
+      
       setLoading(true);
       
       try {
@@ -396,12 +403,18 @@ export function ProfilePage({
 
           {/* Content */}
           <div className="max-w-4xl mx-auto">
-            {loading ? (
-              <div className="text-center py-8">Loading comments...</div>
-            ) : !hnUsername ? (
+            {!hnUsername ? (
               <div className="text-center py-8">
-                Connect your HN username in settings to see your recent comments and replies
+                <div className="mb-4">Connect your HN username in settings to see your recent comments and replies</div>
+                <button
+                  onClick={onShowSettings}
+                  className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} hover:opacity-75`}
+                >
+                  [CONNECT USERNAME]
+                </button>
               </div>
+            ) : loading ? (
+              <div className="text-center py-8">Loading comments...</div>
             ) : (
               <>
                 {/* Updated profile header */}
