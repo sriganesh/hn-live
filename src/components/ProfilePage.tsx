@@ -503,7 +503,6 @@ export function ProfilePage({
                                       >
                                         {formatDistanceToNow(new Date(reply.created_at))} ago
                                       </a>
-                                      {' in response to:'}
                                     </div>
                                     <div 
                                       className="prose prose-sm max-w-none"
@@ -513,6 +512,11 @@ export function ProfilePage({
                                 ))}
                               </div>
                             )}
+
+                            {/* "In response to" text */}
+                            <div className="text-xs opacity-70 mb-2">
+                              in response to:
+                            </div>
 
                             {/* Original Comment - Now shown last */}
                             <div className="bg-current/5 p-4 rounded">

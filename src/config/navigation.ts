@@ -32,11 +32,6 @@ export const navigationItems: NavigationItem[] = [
   {
     label: 'BOOKMARKS',
     path: '/bookmarks'
-  },
-  {
-    label: 'HN',
-    path: 'https://news.ycombinator.com',
-    external: true
   }
 ];
 
@@ -66,10 +61,5 @@ export const MOBILE_MENU_ITEMS: NavigationItem[] = [
     id: 'profile',
     label: (username: string | null) => username || 'Profile',
     path: '/profile'
-  },
-  {
-    label: 'Hacker News',
-    path: 'https://news.ycombinator.com',
-    external: true
   }
 ]; 
