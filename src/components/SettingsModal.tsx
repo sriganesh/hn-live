@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { startTracking } from '../registerServiceWorker';
+import { useNavigate } from 'react-router-dom';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -56,6 +57,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   hnUsername,
   onUpdateHnUsername
 }) => {
+  const navigate = useNavigate();
+
   // Add ESC key handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -119,20 +122,29 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   };
 
-  // Add this helper function to validate username with HN API
-  const validateHnUsername = async (username: string) => {
+  // Update the validateAndSaveUsername function
+  const validateAndSaveUsername = async () => {
+    setIsValidating(true);
+    setValidationError(null);
+
     try {
-      const response = await fetch(`https://hacker-news.firebaseio.com/v0/user/${username}.json`);
-      const data = await response.json();
-      if (response.ok) {
-        localStorage.setItem('hn-username', username);
-        startTracking(username);
-        return true;
+      const response = await fetch(`https://hacker-news.firebaseio.com/v0/user/${usernameInput}.json`);
+      const userData = await response.json();
+
+      if (!userData) {
+        setValidationError('User not found');
+      } else {
+        localStorage.setItem('hn-username', usernameInput);
+        startTracking(usernameInput);
+        onUpdateHnUsername(usernameInput);
+        setUsernameInput('');
+        onClose();  // Close settings modal first
+        navigate('/profile');  // Navigate to profile every time username is set
       }
-      return false;
     } catch (error) {
-      console.error('Error validating username:', error);
-      return false;
+      setValidationError('Error validating username');
+    } finally {
+      setIsValidating(false);
     }
   };
 
@@ -490,23 +502,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         `}
                       />
                       <button
-                        onClick={async () => {
-                          if (!usernameInput.trim()) return;
-                          
-                          setIsValidating(true);
-                          setValidationError(null);
-                          
-                          const isValid = await validateHnUsername(usernameInput.trim());
-                          
-                          if (isValid) {
-                            onUpdateHnUsername(usernameInput.trim());
-                            setValidationError(null);
-                          } else {
-                            setValidationError('Username not found. Note: Usernames are case-sensitive');
-                          }
-                          
-                          setIsValidating(false);
-                        }}
+                        onClick={validateAndSaveUsername}
                         disabled={isValidating || !usernameInput.trim()}
                         className={`
                           px-3 py-1 rounded transition-opacity
