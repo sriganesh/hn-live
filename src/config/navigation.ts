@@ -1,7 +1,9 @@
 interface NavigationItem {
-  label: string;
+  label: string | ((username: string | null) => string);
   path: string;
   external?: boolean;
+  id?: string;
+  icon?: string;
 }
 
 // Main navigation items that appear in MORE dropdown
@@ -32,6 +34,12 @@ export const navigationItems: NavigationItem[] = [
     path: '/bookmarks'
   },
   {
+    id: 'profile',
+    label: (username: string | null) => username ? username.toUpperCase() : 'PROFILE',
+    path: '/profile',
+    icon: 'profile'
+  },
+  {
     label: 'HN',
     path: 'https://news.ycombinator.com',
     external: true
@@ -59,6 +67,11 @@ export const MOBILE_MENU_ITEMS: NavigationItem[] = [
   {
     label: 'Bookmarks',
     path: '/bookmarks'
+  },
+  {
+    id: 'profile',
+    label: (username: string | null) => username || 'Profile',
+    path: '/profile'
   },
   {
     label: 'Hacker News',

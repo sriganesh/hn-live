@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { navigationItems } from '../config/navigation';
+import { MOBILE_MENU_ITEMS } from '../config/navigation';
 
 interface MobileBottomBarProps {
   theme: 'green' | 'og' | 'dog';
   onShowSearch: () => void;
   onCloseSearch: () => void;
   onShowSettings: () => void;
-  isRunning?: boolean;
+  isRunning: boolean;
+  username: string | null;
 }
 
-export function MobileBottomBar({ theme, onShowSearch, onCloseSearch, onShowSettings, isRunning }: MobileBottomBarProps) {
+export function MobileBottomBar({ theme, onShowSearch, onCloseSearch, onShowSettings, isRunning, username }: MobileBottomBarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -172,19 +173,21 @@ export function MobileBottomBar({ theme, onShowSearch, onCloseSearch, onShowSett
                   ? 'bg-[#f6f6ef] border-[#ff6600]/30 text-[#828282]'
                   : 'bg-[#1a1a1a] border-[#828282]/30 text-[#828282]'
               }`}>
-                {navigationItems.map((item) => (
-                  item.path === 'separator' ? (
-                    <div key="separator" className="border-t border-current/10 my-2" />
-                  ) : item.external ? (
+                {MOBILE_MENU_ITEMS.map((item) => (
+                  item.external ? (
                     <a
                       key={item.path}
                       href={item.path}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block px-4 py-2 hover:opacity-75"
+                      className={`block px-4 py-2 hover:opacity-75 ${
+                        item.id === 'profile' && theme !== 'green' 
+                          ? 'text-[#ff6600]' 
+                          : ''
+                      }`}
                       onClick={() => setShowMoreMenu(false)}
                     >
-                      {item.label}
+                      {typeof item.label === 'function' ? item.label(username) : item.label}
                     </a>
                   ) : (
                     <button
@@ -194,9 +197,13 @@ export function MobileBottomBar({ theme, onShowSearch, onCloseSearch, onShowSett
                         navigate(item.path);
                         setShowMoreMenu(false);
                       }}
-                      className="w-full text-left px-4 py-2 hover:opacity-75"
+                      className={`w-full text-left px-4 py-2 hover:opacity-75 ${
+                        item.id === 'profile' && theme !== 'green' 
+                          ? 'text-[#ff6600]' 
+                          : ''
+                      }`}
                     >
-                      {item.label}
+                      {typeof item.label === 'function' ? item.label(username) : item.label}
                     </button>
                   )
                 ))}

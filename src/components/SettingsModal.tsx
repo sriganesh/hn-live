@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { startTracking } from '../registerServiceWorker';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -20,6 +21,8 @@ interface SettingsModalProps {
   onColorizeUsernamesChange: (value: boolean) => void;
   isMobile?: boolean;
   setStoredBackToTop: (value: boolean) => void;
+  hnUsername: string | null;
+  onUpdateHnUsername: (username: string | null) => void;
 }
 
 const fontSizeOptions = {
@@ -49,7 +52,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   colorizeUsernames,
   onColorizeUsernamesChange,
   isMobile = window.innerWidth < 640,
-  setStoredBackToTop
+  setStoredBackToTop,
+  hnUsername,
+  onUpdateHnUsername
 }) => {
   // Add ESC key handler
   useEffect(() => {
@@ -79,6 +84,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     storyView: true
   });
 
+  // Add state for HN username input
+  const [usernameInput, setUsernameInput] = useState('');
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
   // Toggle handler for sections
   const toggleSection = (section: 'terminal' | 'feedView' | 'storyView') => {
     setCollapsedSections(prev => ({
@@ -106,6 +116,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       // Show reload message for desktop
       setShowReloadMessage(true);
       setTimeout(() => setShowReloadMessage(false), 1000);
+    }
+  };
+
+  // Add this helper function to validate username with HN API
+  const validateHnUsername = async (username: string) => {
+    try {
+      const response = await fetch(`https://hacker-news.firebaseio.com/v0/user/${username}.json`);
+      const data = await response.json();
+      if (response.ok) {
+        localStorage.setItem('hn-username', username);
+        startTracking(username);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error validating username:', error);
+      return false;
     }
   };
 
@@ -401,6 +428,105 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 >
                   [{options.showBackToTop ? 'x' : ' '}] Show scroll to top
                 </button>
+              </div>
+            </div>
+
+            {/* Account */}
+            <div className="space-y-2">
+              <button 
+                onClick={() => toggleSection('account')}
+                className="w-full flex items-center justify-between text-sm font-bold uppercase tracking-wider mb-2"
+              >
+                <span>ACCOUNT</span>
+                <svg 
+                  className={`w-4 h-4 transform transition-transform ${collapsedSections.account ? '' : 'rotate-180'}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className={`space-y-4 transition-all duration-200 ${collapsedSections.account ? 'hidden' : ''}`}>
+                {hnUsername ? (
+                  // Show connected account
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="opacity-75">Connected as: {hnUsername}</div>
+                      <button
+                        onClick={() => {
+                          onUpdateHnUsername(null);
+                          setUsernameInput('');
+                          setValidationError(null);
+                        }}
+                        className="text-sm hover:opacity-75"
+                      >
+                        [disconnect]
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  // Show connect form
+                  <div className="space-y-2">
+                    <div className="text-sm opacity-75">Connect your HN account (case-sensitive):</div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={usernameInput}
+                        onChange={(e) => {
+                          setUsernameInput(e.target.value);
+                          setValidationError(null);
+                        }}
+                        placeholder="HN username (case-sensitive)"
+                        className={`
+                          bg-transparent border px-2 py-1 rounded w-full
+                          ${theme === 'green' 
+                            ? 'border-green-500/30 focus:border-green-500/50 placeholder-green-500/50' 
+                            : theme === 'og'
+                            ? 'border-[#ff6600]/30 focus:border-[#ff6600]/50 placeholder-[#828282]/75'
+                            : 'border-[#828282]/30 focus:border-[#828282]/50 placeholder-[#828282]'
+                          }
+                          focus:outline-none
+                        `}
+                      />
+                      <button
+                        onClick={async () => {
+                          if (!usernameInput.trim()) return;
+                          
+                          setIsValidating(true);
+                          setValidationError(null);
+                          
+                          const isValid = await validateHnUsername(usernameInput.trim());
+                          
+                          if (isValid) {
+                            onUpdateHnUsername(usernameInput.trim());
+                            setValidationError(null);
+                          } else {
+                            setValidationError('Username not found. Note: Usernames are case-sensitive');
+                          }
+                          
+                          setIsValidating(false);
+                        }}
+                        disabled={isValidating || !usernameInput.trim()}
+                        className={`
+                          px-3 py-1 rounded transition-opacity
+                          ${isValidating ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-75'}
+                          ${theme === 'green'
+                            ? 'bg-green-500/20 text-green-400'
+                            : theme === 'og'
+                            ? 'bg-[#ff6600]/20 text-[#ff6600]'
+                            : 'bg-[#828282]/20'
+                          }
+                        `}
+                      >
+                        {isValidating ? 'Checking...' : 'Connect'}
+                      </button>
+                    </div>
+                    {validationError && (
+                      <div className="text-sm text-red-500">{validationError}</div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

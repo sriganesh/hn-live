@@ -18,6 +18,7 @@ import { AboutOverlay } from '../content/about';
 import { BookmarksPage } from '../components/BookmarksPage';
 import { navigationItems } from '../config/navigation';
 import { ReplayView } from '../components/ReplayView';
+import { ProfilePage } from '../components/ProfilePage';
 
 interface HNItem {
   id: number;
@@ -1038,6 +1039,79 @@ export default function HNLiveTerminal() {
     }
   }, [options.theme]);
 
+  // Add near other state declarations
+  const [hnUsername, setHnUsername] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('hn-username');
+    } catch (e) {
+      console.warn('Could not access localStorage');
+      return null;
+    }
+  });
+
+  // Add handler for username updates
+  const handleUpdateHnUsername = (username: string | null) => {
+    try {
+      if (username) {
+        localStorage.setItem('hn-username', username);
+      } else {
+        localStorage.removeItem('hn-username');
+      }
+      setHnUsername(username);
+    } catch (e) {
+      console.warn('Could not save username to localStorage');
+    }
+  };
+
+  // Add handler for user clicks
+  const handleUserClick = (username: string) => {
+    setViewingUser(username);  // This will trigger the UserModal to open
+  };
+
+  // Add state for unread replies
+  const [unreadReplies, setUnreadReplies] = useState<number>(() => {
+    try {
+      const count = localStorage.getItem('hn-unread-count');
+      return count ? parseInt(count, 10) : 0;
+    } catch (e) {
+      console.warn('Could not access localStorage');
+      return 0;
+    }
+  });
+
+  // Check for unread replies and listen for changes
+  useEffect(() => {
+    // Initial load is now handled by useState initializer above
+    
+    // Listen for changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'hn-unread-count' && e.newValue !== null) {
+        setUnreadReplies(parseInt(e.newValue, 10));
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also listen for custom event from service worker updates
+    const handleUnreadUpdate = (e: MessageEvent) => {
+      if (e.data.type === 'updateCommentTracker' && !e.data.data.isFirstLoad) {
+        const { unreadCount } = e.data.data;
+        setUnreadReplies(unreadCount);
+      }
+    };
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleUnreadUpdate);
+    }
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleUnreadUpdate);
+      }
+    };
+  }, []);
+
   return (
     <>
       <Helmet>
@@ -1337,15 +1411,41 @@ export default function HNLiveTerminal() {
                 )}
               </div>
 
-              {/* Replace theme selector and settings with new Settings button and dropdown */}
+              {/* Profile button with badge */}
               <div className="relative">
-              <button
+                <button 
+                  onClick={() => navigate('/profile')}
+                  className={`${
+                    theme === 'green' 
+                      ? themeColors 
+                      : 'text-[#ff6600]'
+                  }`}
+                >
+                  [{hnUsername || 'PROFILE'}]
+                </button>
+                {unreadReplies > 0 && (
+                  <span className={`
+                    absolute -top-1 -right-1 
+                    min-w-[18px] h-[18px] 
+                    rounded-full 
+                    flex items-center justify-center
+                    text-xs
+                    ${theme === 'green' 
+                      ? 'bg-green-500 text-black' 
+                      : 'bg-[#ff6600] text-white'
+                    }
+                  `}>
+                    {unreadReplies}
+                  </span>
+                )}
+              </div>
+
+              <button 
                 onClick={() => setShowSettings(true)}
-                className={`${themeColors} opacity-75 hover:opacity-100 transition-colors`}
+                className={themeColors}
               >
                 [SETTINGS]
               </button>
-              </div>
 
               {/* Start/Stop control */}
               <button 
@@ -1716,6 +1816,8 @@ export default function HNLiveTerminal() {
           colorizeUsernames={colorizeUsernames}
           onColorizeUsernamesChange={setColorizeUsernames}
           setStoredBackToTop={setStoredBackToTop}
+          hnUsername={hnUsername}
+          onUpdateHnUsername={handleUpdateHnUsername}
         />
 
         {/* Replace the mobile bottom bar with the new component */}
@@ -1725,6 +1827,7 @@ export default function HNLiveTerminal() {
           onCloseSearch={() => setShowSearch(false)}
           onShowSettings={() => setShowSettings(true)}
           isRunning={isRunning}
+          username={hnUsername}
         />
 
         {location.pathname.startsWith('/user/') && (
@@ -1767,6 +1870,18 @@ export default function HNLiveTerminal() {
             onShowSettings={() => setShowSettings(true)}
             isSettingsOpen={showSettings}
             isRunning={isRunning}
+          />
+        )}
+
+        {location.pathname === '/profile' && (
+          <ProfilePage 
+            theme={options.theme}
+            fontSize={options.fontSize}
+            font={options.font}
+            onShowSettings={() => setShowSettings(true)}
+            isSettingsOpen={showSettings}
+            isRunning={isRunning}
+            onUserClick={handleUserClick}
           />
         )}
       </div>
