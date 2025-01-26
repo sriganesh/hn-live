@@ -1828,6 +1828,7 @@ export default function HNLiveTerminal() {
           onShowSettings={() => setShowSettings(true)}
           isRunning={isRunning}
           username={hnUsername}
+          unreadCount={unreadReplies}
         />
 
         {location.pathname.startsWith('/user/') && (
