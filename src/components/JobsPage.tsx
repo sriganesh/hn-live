@@ -150,7 +150,7 @@ export function JobsPage({
         if (isSettingsOpen || isSearchOpen) {
           return;
         }
-        navigate('/');
+        navigate(-1);
       }
     };
 

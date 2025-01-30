@@ -224,7 +224,7 @@ export function ReplayView({
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        navigate(`/item/${itemId}`);
+        navigate(-1);
       }
     };
 

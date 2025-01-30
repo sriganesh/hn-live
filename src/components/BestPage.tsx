@@ -172,7 +172,7 @@ export function BestPage({
             matchedStories: []
           }));
         } else {
-          navigate('/');
+          navigate(-1);
         }
       }
     };

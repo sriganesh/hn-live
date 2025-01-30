@@ -175,7 +175,7 @@ export function AskPage({
             matchedStories: []
           }));
         } else {
-          navigate('/');
+          navigate(-1);
         }
       }
     };
@@ -556,7 +556,7 @@ export function AskPage({
                         </div>
                         <div>
                           <button
-                            onClick={() => navigate('/')}
+                            onClick={() => navigate('-1')}
                             className={`${
                               theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
                             } hover:opacity-75`}

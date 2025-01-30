@@ -38,6 +38,18 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
   const [error, setError] = useState<string | null>(null);
   const [recentActivity, setRecentActivity] = useState<HNItem | null>(null);
 
+  // Update the ESC key handler
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        navigate(-1);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -118,7 +130,7 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
               
               <div className="hidden sm:flex items-center gap-4">
                 <button 
-                  onClick={() => navigate(-1)}
+                  onClick={() => navigate('/')}
                   className="opacity-75 hover:opacity-100"
                 >
                   [ESC]
