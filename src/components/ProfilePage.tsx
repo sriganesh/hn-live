@@ -342,6 +342,18 @@ export function ProfilePage({
     return !!newReplies[commentId]?.some(reply => !reply.seen);
   };
 
+  // Add ESC key handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        navigate(-1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
+
   return (
     <>
       <Helmet>
@@ -393,7 +405,7 @@ export function ProfilePage({
                 [SETTINGS]
               </button>
               <button 
-                onClick={() => navigate('/')} 
+                onClick={() => navigate(-1)} 
                 className="opacity-75 hover:opacity-100"
               >
                 [ESC]

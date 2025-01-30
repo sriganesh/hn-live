@@ -175,7 +175,7 @@ export function ShowPage({
             matchedStories: []
           }));
         } else {
-          navigate('/');
+          navigate(-1);
         }
       }
     };
@@ -598,7 +598,7 @@ export function ShowPage({
                         </div>
                         <div>
                           <button
-                            onClick={() => navigate('/')}
+                            onClick={() => navigate('-1')}
                             className={`${
                               theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
                             } hover:opacity-75`}

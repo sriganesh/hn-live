@@ -191,7 +191,17 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <h2 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} text-xl font-bold`}>
-                    {user.id}
+                    <a 
+                      href={`/user/${user.id}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate(`/user/${user.id}`);
+                        onClose();
+                      }}
+                      className="hover:opacity-75"
+                    >
+                      {user.id}
+                    </a>
                   </h2>
                   {isTopUser(user.id) && (
                     <span className={`text-xs px-2 py-0.5 rounded-full border ${

@@ -174,26 +174,7 @@ export function FrontPage({
         setShowGrep(true);
       }
       // Handle Escape for grep input
-      if (e.key === 'Escape' && showGrep) {
-        setGrepFilter('');
-        setShowGrep(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showGrep]);
-
-  const loadMore = useCallback(() => {
-    const nextPage = state.page + 1;
-    setState(prev => ({ ...prev, page: nextPage }));
-    fetchStories(nextPage);
-  }, [state.page]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        // Only handle ESC if neither modal is open
         if (!isSettingsOpen && !isSearchOpen) {
           // First check if grep is open
           if (showGrep) {
@@ -202,14 +183,20 @@ export function FrontPage({
             return;
           }
           // If no modals are open, then navigate back
-          navigate('/');
+          navigate(-1);
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, showGrep, isSettingsOpen, isSearchOpen]); // Add isSearchOpen to dependencies
+  }, [navigate, showGrep, isSettingsOpen, isSearchOpen]);
+
+  const loadMore = useCallback(() => {
+    const nextPage = state.page + 1;
+    setState(prev => ({ ...prev, page: nextPage }));
+    fetchStories(nextPage);
+  }, [state.page]);
 
   const handleClose = () => {
     navigate('/');
