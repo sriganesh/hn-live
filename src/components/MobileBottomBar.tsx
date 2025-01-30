@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { navigationItems } from '../config/navigation';
+import { MOBILE_MENU_ITEMS } from '../config/navigation';
 
 interface MobileBottomBarProps {
   theme: 'green' | 'og' | 'dog';
   onShowSearch: () => void;
   onCloseSearch: () => void;
   onShowSettings: () => void;
-  isRunning?: boolean;
+  isRunning: boolean;
+  username: string | null;
+  unreadCount?: number;
 }
 
-export function MobileBottomBar({ theme, onShowSearch, onCloseSearch, onShowSettings, isRunning }: MobileBottomBarProps) {
+export function MobileBottomBar({ theme, onShowSearch, onCloseSearch, onShowSettings, isRunning, username, unreadCount = 0 }: MobileBottomBarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -155,10 +157,21 @@ export function MobileBottomBar({ theme, onShowSearch, onCloseSearch, onShowSett
               onClick={() => setShowMoreMenu(!showMoreMenu)}
               className="flex flex-col items-center"
             >
-              <div className={`${iconClass} opacity-50 hover:opacity-75`}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <div className="relative">
+                <div className={`${iconClass} opacity-50 hover:opacity-75`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                {unreadCount > 0 && (
+                  <div className={`absolute -top-1 -right-1 min-w-[1.25rem] h-5 rounded-full flex items-center justify-center text-xs ${
+                    theme === 'green'
+                      ? 'bg-green-500 text-black'
+                      : 'bg-[#ff6600] text-white'
+                  }`}>
+                    {unreadCount}
+                  </div>
+                )}
               </div>
               <span className={labelClass}>More</span>
             </button>
@@ -172,19 +185,21 @@ export function MobileBottomBar({ theme, onShowSearch, onCloseSearch, onShowSett
                   ? 'bg-[#f6f6ef] border-[#ff6600]/30 text-[#828282]'
                   : 'bg-[#1a1a1a] border-[#828282]/30 text-[#828282]'
               }`}>
-                {navigationItems.map((item) => (
-                  item.path === 'separator' ? (
-                    <div key="separator" className="border-t border-current/10 my-2" />
-                  ) : item.external ? (
+                {MOBILE_MENU_ITEMS.map((item) => (
+                  item.external ? (
                     <a
                       key={item.path}
                       href={item.path}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block px-4 py-2 hover:opacity-75"
+                      className={`block px-4 py-2 hover:opacity-75 ${
+                        item.id === 'profile' && theme !== 'green' 
+                          ? 'text-[#ff6600]' 
+                          : ''
+                      }`}
                       onClick={() => setShowMoreMenu(false)}
                     >
-                      {item.label}
+                      {typeof item.label === 'function' ? item.label(username) : item.label}
                     </a>
                   ) : (
                     <button
@@ -194,9 +209,13 @@ export function MobileBottomBar({ theme, onShowSearch, onCloseSearch, onShowSett
                         navigate(item.path);
                         setShowMoreMenu(false);
                       }}
-                      className="w-full text-left px-4 py-2 hover:opacity-75"
+                      className={`w-full text-left px-4 py-2 hover:opacity-75 ${
+                        item.id === 'profile' && theme !== 'green' 
+                          ? 'text-[#ff6600]' 
+                          : ''
+                      }`}
                     >
-                      {item.label}
+                      {typeof item.label === 'function' ? item.label(username) : item.label}
                     </button>
                   )
                 ))}

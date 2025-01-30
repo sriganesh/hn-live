@@ -1,13 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import { MOBILE_MENU_ITEMS } from '../config/navigation';
+import { Link } from 'react-router-dom';
 
 interface MobileMoreMenuProps {
   theme: 'green' | 'og' | 'dog';
   showMenu: boolean;
   onClose: () => void;
+  username: string | null;
 }
 
-export function MobileMoreMenu({ theme, showMenu, onClose }: MobileMoreMenuProps) {
+export function MobileMoreMenu({ theme, showMenu, onClose, username }: MobileMoreMenuProps) {
   const navigate = useNavigate();
 
   if (!showMenu) return null;
@@ -34,9 +36,9 @@ export function MobileMoreMenu({ theme, showMenu, onClose }: MobileMoreMenuProps
       }
     `}>
       {MOBILE_MENU_ITEMS.map((item) => (
-        <button
+        <Link
           key={item.path}
-          onClick={handleClick(item)}
+          to={item.path}
           className={`w-full px-4 py-2 text-left font-normal
             ${theme === 'green'
               ? 'hover:bg-green-900 hover:text-green-400'
@@ -45,12 +47,13 @@ export function MobileMoreMenu({ theme, showMenu, onClose }: MobileMoreMenuProps
               : 'hover:bg-gray-900 hover:text-[#828282]'
             }
           `}
+          onClick={handleClick(item)}
         >
-          {item.label}
+          {typeof item.label === 'function' ? item.label(username) : item.label}
           {item.external && (
             <span className="ml-1 opacity-50">↗</span>
           )}
-        </button>
+        </Link>
       ))}
     </div>
   );
