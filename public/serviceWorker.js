@@ -162,6 +162,8 @@ self.addEventListener('message', async (event) => {
     startReplyCheck(username);
   } else if (type === 'STOP_REPLY_CHECK') {
     stopReplyCheck();
+  } else if (event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
   }
 });
 

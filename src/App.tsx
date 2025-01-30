@@ -10,7 +10,7 @@ interface NewReply {
   seen: boolean;
 }
 
-function App() {
+export function App() {
   useEffect(() => {
     registerServiceWorker();
 
