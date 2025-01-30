@@ -1,9 +1,13 @@
 export function register() {
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      console.log('Registering service worker...');
-      navigator.serviceWorker.register('/serviceWorker.js').then(registration => {
-        console.log('ServiceWorker registration successful:', registration);
+    // Add timestamp as query parameter to force update check on new deploys
+    const timestamp = new Date().getTime();
+    const swUrl = `/serviceWorker.js?v=${timestamp}`;
+    
+    navigator.serviceWorker
+      .register(swUrl)
+      .then((registration) => {
+        console.log('ServiceWorker registration successful');
         
         // Start tracking immediately if service worker is already active
         const username = localStorage.getItem('hn-username');
@@ -28,12 +32,20 @@ export function register() {
           }
         });
 
-      }).catch(err => {
-        console.error('ServiceWorker registration failed:', err);
+      })
+      .catch((error) => {
+        console.error('ServiceWorker registration failed:', error);
       });
-    });
   } else {
     console.log('Service workers are not supported');
+  }
+}
+
+export function unregister() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.unregister();
+    });
   }
 }
 

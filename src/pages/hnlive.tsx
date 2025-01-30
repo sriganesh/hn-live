@@ -19,6 +19,7 @@ import { BookmarksPage } from '../components/BookmarksPage';
 import { navigationItems } from '../config/navigation';
 import { ReplayView } from '../components/ReplayView';
 import { ProfilePage } from '../components/ProfilePage';
+import { UpdateNotifier } from '../components/UpdateNotifier';
 
 interface HNItem {
   id: number;
@@ -1177,6 +1178,20 @@ export default function HNLiveTerminal() {
             onClose={() => setShowAbout(false)}
           />
         )}
+        <UpdateNotifier 
+          className={
+            theme === 'green'
+              ? 'bg-green-900/80 text-green-400 border border-green-500/20'
+              : theme === 'og'
+              ? 'bg-[#f6f6ef]/80 text-[#828282] border-[#ff6600]/20'
+              : 'bg-[#1a1a1a]/80 text-[#828282] border-[#828282]/20'
+          }
+          buttonClassName={
+            theme === 'green'
+              ? 'bg-green-500 text-black hover:bg-green-400'
+              : 'bg-[#ff6600] text-white hover:bg-[#ff6600]/80'
+          }
+        />
         <div className={`
           fixed top-0 left-0 right-0 z-50 
           ${themeHeaderBg} ${themeColors}
