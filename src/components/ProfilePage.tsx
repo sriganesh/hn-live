@@ -417,7 +417,10 @@ export function ProfilePage({
           <div className="max-w-4xl mx-auto">
             {!hnUsername ? (
               <div className="text-center py-8">
-                <div className="mb-4">Connect your HN username to get notified when someone replies to your comments</div>
+                <div className="mb-4">
+                  Connect your HN username to get notified when someone replies to your comments
+                  <span className="block mt-1 text-sm opacity-75">(Beta feature - notifications may be delayed or intermittent)</span>
+                </div>
                 <button
                   onClick={onShowSettings}
                   className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} hover:opacity-75`}
@@ -441,10 +444,14 @@ export function ProfilePage({
                       ? 'text-green-500' 
                       : 'text-[#ff6600]'
                   }>{hnUsername}</span>
+                  <span className="text-xs opacity-75 ml-2">(Beta)</span>
                 </div>
 
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold">Recent Comments and Replies</h2>
+                  <div>
+                    <h2 className="text-lg font-semibold inline-block">Recent Comments and Replies</h2>
+                    <span className="text-xs opacity-75 ml-2">(Beta)</span>
+                  </div>
                   {unreadCount > 0 && (
                     <button 
                       onClick={handleMarkAllAsRead}
