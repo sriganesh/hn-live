@@ -74,8 +74,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   }, [isOpen, onClose]);
 
-  // Add state for showing the reload message
-  const [showReloadMessage, setShowReloadMessage] = useState(false);
+  // Add separate state variables for each setting's reload message
+  const [showStoryContextReload, setShowStoryContextReload] = useState(false);
+  const [showDirectLinksReload, setShowDirectLinksReload] = useState(false);
 
   // Add state for mobile notification
   const [showMobileReloadNotif, setShowMobileReloadNotif] = useState(false);
@@ -112,12 +113,28 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     // Show appropriate notification based on device
     if (isMobile) {
       setShowMobileReloadNotif(true);
-      // Hide after 3 seconds
       setTimeout(() => setShowMobileReloadNotif(false), 3000);
     } else {
-      // Show reload message for desktop
-      setShowReloadMessage(true);
-      setTimeout(() => setShowReloadMessage(false), 1000);
+      setShowStoryContextReload(true);
+      setTimeout(() => setShowStoryContextReload(false), 1000);
+    }
+  };
+
+  // Create a handler for direct links change
+  const handleDirectLinksChange = () => {
+    const newOptions = {
+      ...options,
+      directLinks: !options.directLinks
+    };
+    onUpdateOptions(newOptions);
+
+    // Show appropriate notification based on device
+    if (isMobile) {
+      setShowMobileReloadNotif(true);
+      setTimeout(() => setShowMobileReloadNotif(false), 3000);
+    } else {
+      setShowDirectLinksReload(true);
+      setTimeout(() => setShowDirectLinksReload(false), 1000);
     }
   };
 
@@ -341,10 +358,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   [{options.autoscroll ? 'x' : ' '}] Auto-scroll feed
                 </button>
                 <button
-                  onClick={() => onUpdateOptions({ ...options, directLinks: !options.directLinks })}
-                  className={`hover:opacity-75 transition-opacity block`}
+                  onClick={handleDirectLinksChange}
+                  className={`hover:opacity-75 transition-opacity block w-full text-left`}
                 >
-                  [{options.directLinks ? 'x' : ' '}] Direct HN links
+                  <div className="flex items-center gap-2">
+                    <span>[{options.directLinks ? 'x' : ' '}] Direct HN links</span>
+                    {!isMobile && showDirectLinksReload && (
+                      <span className="text-sm opacity-75">
+                        [page reload may be required]
+                      </span>
+                    )}
+                  </div>
                 </button>
                 <button
                   onClick={handleCommentParentsChange}
@@ -352,7 +376,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 >
                   <div className="flex items-center gap-2">
                     <span>[{options.showCommentParents ? 'x' : ' '}] Show story context</span>
-                    {!isMobile && showReloadMessage && (
+                    {!isMobile && showStoryContextReload && (
                       <span className="text-sm opacity-75">
                         [page reload required]
                       </span>

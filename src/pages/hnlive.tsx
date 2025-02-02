@@ -320,11 +320,14 @@ export default function HNLiveTerminal() {
       
       // Then add the parent story info if available, respecting directLinks setting
       if (parentStory) {
-        text += ` <span class="opacity-50">| re: </span><a href="https://news.ycombinator.com/item?id=${parentStory.id}" 
+        text += ` <span class="opacity-50">| re: </span><a href="${
+          options.directLinks 
+            ? `https://news.ycombinator.com/item?id=${parentStory.id}`
+            : `#`
+        }" 
           class="opacity-75 hover:opacity-100"
-          target="_blank"
-          rel="noopener noreferrer"
-          onclick="event.stopPropagation()"
+          ${!options.directLinks ? `onclick="event.preventDefault(); event.stopPropagation(); window.dispatchEvent(new CustomEvent('navigateToParentStory', { detail: ${parentStory.id} }))"` : ''}
+          ${options.directLinks ? 'target="_blank" rel="noopener noreferrer"' : ''}
         >${parentStory.title}</a>`;
       }
       
@@ -1132,6 +1135,34 @@ export default function HNLiveTerminal() {
       }
     };
   }, []);
+
+  // Add back the event listener for navigation
+  useEffect(() => {
+    const handleNavigateToParentStory = (e: CustomEvent) => {
+      navigate(`/item/${e.detail}`);
+    };
+
+    window.addEventListener('navigateToParentStory', handleNavigateToParentStory as EventListener);
+    return () => {
+      window.removeEventListener('navigateToParentStory', handleNavigateToParentStory as EventListener);
+    };
+  }, [navigate]);
+
+  // Add options as a dependency to the formatItem function
+  useEffect(() => {
+    // Re-format all items when directLinks setting changes
+    const reformatItems = async () => {
+      const updatedItems = await Promise.all(
+        items.map(async (item) => {
+          const formatted = await formatItem(item);
+          return formatted ? { ...item, formatted } : item;
+        })
+      );
+      setItems(updatedItems);
+    };
+
+    reformatItems();
+  }, [options.directLinks]); // Only re-run when directLinks changes
 
   return (
     <>
