@@ -178,12 +178,17 @@ const getStoredAlgoliaApi = () => {
 // Update the style to handle both dark and green themes
 const themeStyles = `
   [data-theme='dog'] ::selection {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 0, 0.1);
+    color: inherit;
+  }
+  
+  [data-theme='og'] ::selection {
+    background: rgba(255, 255, 0, 0.2);
     color: inherit;
   }
   
   [data-theme='green'] ::selection {
-    background: rgba(34, 197, 94, 0.2); /* green-500 with low opacity */
+    background: rgba(255, 255, 0, 0.1);
     color: inherit;
   }
 `;
@@ -712,14 +717,21 @@ export default function HNLiveTerminal() {
     );
   };
 
-  // Add an effect to save theme changes
+  // Update the useEffect that handles theme changes
   useEffect(() => {
     try {
       localStorage.setItem('hn-live-theme', options.theme);
+      // Add this line to set the data-theme attribute on the HTML element
+      document.documentElement.setAttribute('data-theme', options.theme);
     } catch (e) {
       console.warn('Could not save theme preference');
     }
   }, [options.theme]);
+
+  // Also add this effect to set the initial theme
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', options.theme);
+  }, []); // Run once on mount
 
   // Add an effect to save directLinks preference
   useEffect(() => {
