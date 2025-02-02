@@ -20,6 +20,7 @@ import { navigationItems } from '../config/navigation';
 import { ReplayView } from '../components/ReplayView';
 import { ProfilePage } from '../components/ProfilePage';
 import { UpdateNotifier } from '../components/UpdateNotifier';
+import { LinksView } from '../components/LinksView';
 
 interface HNItem {
   id: number;
@@ -1904,6 +1905,16 @@ export default function HNLiveTerminal() {
             isSettingsOpen={showSettings}
             isRunning={isRunning}
             onUserClick={handleUserClick}
+          />
+        )}
+
+        {/* Add LinksView to the render section, after ReplayView */}
+        {location.pathname.startsWith('/links/') && (
+          <LinksView
+            theme={options.theme}
+            fontSize={options.fontSize}
+            font={options.font}
+            isRunning={isRunning}
           />
         )}
       </div>

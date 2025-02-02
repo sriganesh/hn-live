@@ -121,6 +121,7 @@ export function App() {
             <Route path="bookmarks" element={null} />
             <Route path="replay/:itemId" element={null} />
             <Route path="profile" element={null} />
+            <Route path="links/:itemId" element={null} />
           </Route>
         </Routes>
       </Router>
