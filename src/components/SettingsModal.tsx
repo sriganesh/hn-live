@@ -84,7 +84,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   const [collapsedSections, setCollapsedSections] = useState({
     terminal: true,
     feedView: true,
-    storyView: true
+    storyView: true,
+    account: true
   });
 
   // Add state for HN username input
@@ -93,11 +94,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   const [validationError, setValidationError] = useState<string | null>(null);
 
   // Toggle handler for sections
-  const toggleSection = (section: 'terminal' | 'feedView' | 'storyView') => {
+  const toggleSection = (section: 'terminal' | 'feedView' | 'storyView' | 'account') => {
     setCollapsedSections(prev => ({
-      terminal: true,
-      feedView: true,
-      storyView: true,
+      ...prev,
       [section]: !prev[section]
     }));
   };
@@ -467,6 +466,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div className="opacity-75">Connected as: {hnUsername}</div>
                       <button
                         onClick={() => {
+                          // Clear only the keys we're actually using
+                          localStorage.removeItem('hn-username');
+                          localStorage.removeItem('hn-new-replies');
+                          localStorage.removeItem('hn-unread-count');
+                          localStorage.removeItem('hn-comment-tracker');
+                          
                           onUpdateHnUsername(null);
                           setUsernameInput('');
                           setValidationError(null);
