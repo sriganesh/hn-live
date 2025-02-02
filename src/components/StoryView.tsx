@@ -1165,7 +1165,7 @@ export function StoryView({
           </div>
 
           {/* Metadata row */}
-          <div className="text-sm opacity-75 mb-4 flex items-center flex-wrap gap-1">
+          <div className="text-sm opacity-75 mb-4 flex items-center flex-wrap gap-2">
             <a 
               onClick={(e) => {
                 e.preventDefault();
@@ -1222,34 +1222,55 @@ export function StoryView({
               url={`https://hn.live/item/${itemId}`}
               theme={theme}
             />
-            <span>•</span>
-            {/* Replay button - only show if there are comments */}
             {(story.descendants ?? 0) > 0 && (
-              <button
-                onClick={() => navigate(`/replay/${story.id}`)}
-                className="hover:opacity-75 transition-opacity"
-                title="Replay story discussion"
-              >
-                <svg 
-                  className="w-4 h-4" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
+              <>
+                <span>•</span>
+                <button
+                  onClick={() => navigate(`/links/${story.id}`)}
+                  className="hover:opacity-75 transition-opacity flex items-center"
+                  title="View all links shared in comments"
                 >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                  />
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2}
-                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-                  />
-                </svg>
-              </button>
+                  <svg 
+                    className="w-4 h-4" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                    />
+                  </svg>
+                </button>
+                <span>•</span>
+                <button
+                  onClick={() => navigate(`/replay/${story.id}`)}
+                  className="hover:opacity-75 transition-opacity"
+                  title="Replay story discussion"
+                >
+                  <svg 
+                    className="w-4 h-4" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                    />
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2}
+                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                    />
+                  </svg>
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -1412,34 +1433,55 @@ export function StoryView({
                     url={`https://hn.live/item/${itemId}`}
                     theme={theme}
                   />
-                  <span>•</span>
-                  {/* Replay button - only show if there are comments */}
                   {(story.descendants ?? 0) > 0 && (
-                    <button
-                      onClick={() => navigate(`/replay/${story.id}`)}
-                      className="hover:opacity-75 transition-opacity"
-                      title="Replay story discussion"
-                    >
-                      <svg 
-                        className="w-4 h-4" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
+                    <>
+                      <span>•</span>
+                      <button
+                        onClick={() => navigate(`/links/${story.id}`)}
+                        className="hover:opacity-75 transition-opacity flex items-center"
+                        title="View all links shared in comments"
                       >
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth={2} 
-                          d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                        />
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth={2}
-                          d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-                        />
-                      </svg>
-                    </button>
+                        <svg 
+                          className="w-4 h-4" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2} 
+                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                          />
+                        </svg>
+                      </button>
+                      <span>•</span>
+                      <button
+                        onClick={() => navigate(`/replay/${story.id}`)}
+                        className="hover:opacity-75 transition-opacity"
+                        title="Replay story discussion"
+                      >
+                        <svg 
+                          className="w-4 h-4" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2} 
+                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                          />
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2}
+                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                          />
+                        </svg>
+                      </button>
+                    </>
                   )}
                 </div>
 
