@@ -32,6 +32,10 @@ export const navigationItems: NavigationItem[] = [
   {
     label: 'BOOKMARKS',
     path: '/bookmarks'
+  },
+  {
+    label: 'USER TAGS',
+    path: '/tags'
   }
 ];
 
@@ -56,6 +60,10 @@ export const MOBILE_MENU_ITEMS: NavigationItem[] = [
   {
     label: 'Bookmarks',
     path: '/bookmarks'
+  },
+  {
+    label: 'User Tags',
+    path: '/tags'
   },
   {
     id: 'profile',

@@ -122,6 +122,7 @@ export function App() {
             <Route path="replay/:itemId" element={null} />
             <Route path="profile" element={null} />
             <Route path="links/:itemId" element={null} />
+            <Route path="tags" element={null} />
           </Route>
         </Routes>
       </Router>

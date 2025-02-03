@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MobileBottomBar } from './MobileBottomBar';
+import { UserTag } from '../types/UserTag';
 
 interface UserPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -37,6 +38,17 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recentActivity, setRecentActivity] = useState<HNItem | null>(null);
+  const [userTags, setUserTags] = useState<string[]>(() => {
+    try {
+      const tags = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
+      const userTag = tags.find((t: UserTag) => t.userId === userId);
+      return userTag?.tags || [];
+    } catch (e) {
+      console.error('Error parsing user tags:', e);
+      return [];
+    }
+  });
+  const [newTag, setNewTag] = useState('');
 
   // Update the ESC key handler
   useEffect(() => {
@@ -106,6 +118,51 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
     : theme === 'og'
     ? 'text-[#828282] bg-[#f6f6ef]'
     : 'text-[#828282] bg-[#1a1a1a]';
+
+  const addTag = () => {
+    if (!newTag.trim()) return;
+    
+    try {
+      const tags: UserTag[] = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
+      const existingTagIndex = tags.findIndex(t => t.userId === userId);
+      
+      if (existingTagIndex >= 0) {
+        if (!tags[existingTagIndex].tags.includes(newTag)) {
+          tags[existingTagIndex].tags.push(newTag);
+          tags[existingTagIndex].timestamp = Date.now();
+        }
+      } else {
+        tags.push({
+          userId: userId!,
+          tags: [newTag],
+          timestamp: Date.now()
+        });
+      }
+      
+      localStorage.setItem('hn-user-tags', JSON.stringify(tags));
+      setUserTags(prev => [...prev, newTag]);
+      setNewTag('');
+    } catch (e) {
+      console.error('Error adding tag:', e);
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    const tags: UserTag[] = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
+    const userTagIndex = tags.findIndex(t => t.userId === userId);
+    
+    if (userTagIndex >= 0) {
+      tags[userTagIndex].tags = tags[userTagIndex].tags.filter(t => t !== tagToRemove);
+      tags[userTagIndex].timestamp = Date.now();
+      
+      if (tags[userTagIndex].tags.length === 0) {
+        tags.splice(userTagIndex, 1);
+      }
+      
+      localStorage.setItem('hn-user-tags', JSON.stringify(tags));
+      setUserTags(prev => prev.filter(t => t !== tagToRemove));
+    }
+  };
 
   return (
     <>
@@ -190,6 +247,65 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                       className="prose prose-invert max-w-none"
                       dangerouslySetInnerHTML={{ __html: user.about }}
                     />
+                  </div>
+                )}
+              </div>
+
+              {/* User Tags */}
+              <div className="space-y-2 mt-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        addTag();
+                      }
+                    }}
+                    placeholder="Add tag..."
+                    className={`
+                      px-2 py-1 rounded text-sm
+                      ${theme === 'green' 
+                        ? 'bg-black border border-green-500/30 text-green-400' 
+                        : theme === 'og'
+                        ? 'bg-[#f6f6ef] border border-[#ff6600]/30 text-[#828282]'
+                        : 'bg-[#1a1a1a] border border-[#828282]/30 text-[#828282]'
+                      }
+                    `}
+                  />
+                  <button
+                    onClick={addTag}
+                    className="opacity-75 hover:opacity-100"
+                  >
+                    [add]
+                  </button>
+                </div>
+                
+                {userTags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {userTags.map(tag => (
+                      <span
+                        key={tag}
+                        className={`
+                          inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm
+                          ${theme === 'green' 
+                            ? 'bg-green-500/10 border border-green-500/30' 
+                            : theme === 'og'
+                            ? 'bg-[#ff6600]/10 border border-[#ff6600]/30'
+                            : 'bg-[#828282]/10 border border-[#828282]/30'
+                          }
+                        `}
+                      >
+                        {tag}
+                        <button
+                          onClick={() => removeTag(tag)}
+                          className="opacity-75 hover:opacity-100 ml-1"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
