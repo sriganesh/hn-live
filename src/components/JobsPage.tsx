@@ -354,7 +354,12 @@ export function JobsPage({
                               navigate(`/item/${job.id}`);
                             }
                           }}
-                          className="group-hover:opacity-75"
+                          className={`
+                            group-hover:opacity-75
+                            ${job.url && theme === 'green' && 'visited:text-green-600/30'}
+                            ${job.url && theme === 'og' && 'visited:text-[#999999]'}
+                            ${job.url && theme === 'dog' && 'visited:text-[#666666]'}
+                          `}
                           target={job.url ? "_blank" : undefined}
                           rel={job.url ? "noopener noreferrer" : undefined}
                         >

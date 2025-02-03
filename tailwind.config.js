@@ -31,5 +31,10 @@ export default {
       },
     },
   },
+  safelist: [
+    {
+      pattern: /visited:/,
+    },
+  ],
   plugins: [],
 } 

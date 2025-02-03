@@ -408,7 +408,12 @@ export function BestPage({
                                 navigate(`/item/${story.id}`);
                               }
                             }}
-                            className="group-hover:opacity-75"
+                            className={`
+                              group-hover:opacity-75
+                              ${story.url && theme === 'green' && 'visited:text-green-600/30'}
+                              ${story.url && theme === 'og' && 'visited:text-[#999999]'}
+                              ${story.url && theme === 'dog' && 'visited:text-[#666666]'}
+                            `}
                             target={story.url ? "_blank" : undefined}
                             rel={story.url ? "noopener noreferrer" : undefined}
                           >
@@ -488,7 +493,12 @@ export function BestPage({
                                 navigate(`/item/${story.id}`);
                               }
                             }}
-                            className="group-hover:opacity-75 font-medium"
+                            className={`
+                              group-hover:opacity-75 font-medium
+                              ${story.url && theme === 'green' && 'visited:text-green-600/30'}
+                              ${story.url && theme === 'og' && 'visited:text-[#999999]'}
+                              ${story.url && theme === 'dog' && 'visited:text-[#666666]'}
+                            `}
                             target={story.url ? "_blank" : undefined}
                             rel={story.url ? "noopener noreferrer" : undefined}
                           >
