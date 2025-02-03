@@ -13,6 +13,7 @@ HN Live shows you what's happening on Hacker News right now. Instead of refreshi
 - Show HN, Ask HN, Jobs, and Best views with infinite scrolling
 - Bookmark stories and comments for later reading.
 - User profiles with karma history
+- View all links shared in story comments
 - Flexible story viewing options:
   - Sort comments by recent first or traditional nested view
   - Choose between Algolia API (faster loading) or Firebase API
@@ -73,9 +74,7 @@ I'm primarily a backend developer who loves building things. This project starte
 
 The design is intentionally minimalist, inspired by both HN's simplicity and old school terminal UIs. Since I'm not a designer by trade, I built it based on how I like to browse HN but I'm always open to suggestions for improvements!
 
-What made this project possible was the amazing AI tooling available today. As someone more comfortable with backend work, tools like Claude and ChatGPT were invaluable in helping me debug frontend issues and implement UI features. They really helped bridge the gap between my backend expertise and frontend needs.
-
-These AI tools have been game changing for someone like me  they complement my existing skills and help me ship full stack projects that I wouldn't have attempted before. While they don't replace proper engineering knowledge, they're incredible at helping you learn and implement things outside your core expertise. They're surprisingly good at helping you figure out tricky UI problems or debugging weird edge cases. Not gonna lie, without them, I probably would've given up on the frontend parts pretty early on.
+What made this project possible was the amazing AI tooling available today.These AI tools have been game changing for someone like me  they complement my existing skills and help me ship full stack projects that I wouldn't have attempted before. While they don't replace proper engineering knowledge, they're incredible at helping you learn and implement things outside your core expertise. They're surprisingly good at helping you figure out tricky UI problems or debugging weird edge cases. Not gonna lie, without them, I probably would've given up on the frontend parts pretty early on.
 
 Is the code perfect? Probably not. But it works, and I learned a ton building it. 
 
