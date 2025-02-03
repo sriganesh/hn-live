@@ -22,10 +22,9 @@ export const AboutOverlay = ({ theme, themeColors, themeBg, headerColor, onClose
             A real-time interface for Hacker News that shows new posts and comments as they happen.
           </p>
           <ul className="list-disc pl-5 space-y-2">
-            <li>Real-time feed, auto-scroll, live filtering (GREP), search, bookmarks</li>
-            <li>Classic sections: Front Page, Show, Ask, Jobs, Best</li>
-            <li>Features: User profiles, threaded comments, keyboard shortcuts, mobile-optimized</li>
-            <li>Customization: Themes (Orange/Dark/Terminal), fonts, text sizes</li>
+            <li>Real-time feed with auto-scroll, infinite scrolling, live filtering (GREP), global search, and comment replay</li>
+            <li>Complete HN experience: Front Page, Show, Ask, Jobs, Best, user profiles, threaded/recent comment view, collected links</li>
+            <li>Full customization: Themes (Orange/Dark/Terminal), fonts, sizes, view preferences, keyboard shortcuts, mobile-optimized</li>
           </ul>
           {extraContent && extraLink && (
             <p>
