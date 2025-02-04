@@ -123,6 +123,8 @@ export function App() {
             <Route path="profile" element={null} />
             <Route path="links/:itemId" element={null} />
             <Route path="tags" element={null} />
+            <Route path="following" element={null} />
+            <Route path="feed" element={null} />
           </Route>
         </Routes>
       </Router>

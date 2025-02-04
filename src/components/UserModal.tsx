@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { topUsers } from '../data/top-users.json';
 import { UserTag } from '../types/UserTag';
+import { FollowButton } from './FollowButton';
 
 interface UserModalProps {
   userId: string;
@@ -263,6 +264,7 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
                       {user.id}
                     </a>
                   </h2>
+                  <FollowButton userId={userId} theme={theme} />
                   {isTopUser(user.id) && (
                     <span className={`text-xs px-2 py-0.5 rounded-full border ${
                       theme === 'green' 
@@ -295,11 +297,11 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
             {/* User Info */}
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
+                <div className="space-y-2">
                   <div className="text-sm opacity-75">Joined</div>
                   <div>{formatDate(user.created)}</div>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-2">
                   <div className="text-sm opacity-75">Karma</div>
                   <div>{user.karma.toLocaleString()}</div>
                 </div>

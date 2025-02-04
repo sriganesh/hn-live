@@ -36,6 +36,14 @@ export const navigationItems: NavigationItem[] = [
   {
     label: 'USER TAGS',
     path: '/tags'
+  },
+  {
+    label: 'FOLLOWING',
+    path: '/following'
+  },
+  {
+    label: 'MY FEED',
+    path: '/feed'
   }
 ];
 
@@ -64,6 +72,14 @@ export const MOBILE_MENU_ITEMS: NavigationItem[] = [
   {
     label: 'User Tags',
     path: '/tags'
+  },
+  {
+    label: 'Following',
+    path: '/following'
+  },
+  {
+    label: 'My Feed',
+    path: '/feed'
   },
   {
     id: 'profile',

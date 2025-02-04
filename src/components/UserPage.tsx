@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MobileBottomBar } from './MobileBottomBar';
 import { UserTag } from '../types/UserTag';
+import { FollowButton } from './FollowButton';
+import { topUsers } from '../data/top-users.json';
 
 interface UserPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -30,6 +32,8 @@ interface HNItem {
   dead?: boolean;
   deleted?: boolean;
 }
+
+const isTopUser = (userId: string) => topUsers.includes(userId);
 
 export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings }: UserPageProps) {
   const { userId } = useParams();
@@ -169,7 +173,7 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
       <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
         <div className="h-full overflow-y-auto p-4">
           {/* Header */}
-          <div className="mb-8">
+          <div className="max-w-3xl mx-auto mb-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <button
@@ -181,18 +185,13 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                   <span>LIVE</span>
                 </button>
                 <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
-                  /user/{userId}
+                  / USER
                 </span>
+                <span className="opacity-75">/ {userId}</span>
               </div>
-              
-              <div className="hidden sm:flex items-center gap-4">
-                <button 
-                  onClick={() => navigate('/')}
-                  className="opacity-75 hover:opacity-100"
-                >
-                  [ESC]
-                </button>
-              </div>
+              <button onClick={() => navigate(-1)} className="opacity-75 hover:opacity-100">
+                [ESC]
+              </button>
             </div>
           </div>
 
@@ -212,36 +211,58 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
               </button>
             </div>
           ) : user && (
-            <div className="max-w-3xl mx-auto space-y-8">
-              {/* User Info */}
-              <div className="space-y-4">
-                <div className="flex items-baseline gap-4">
-                  <h1 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} text-xl font-bold`}>
-                    {user.id}
-                  </h1>
+            <div className="max-w-3xl mx-auto">
+              {/* User Header Section */}
+              <div className={`
+                p-6 rounded-lg mb-8
+                ${theme === 'green'
+                  ? 'bg-green-500/5'
+                  : theme === 'og'
+                  ? 'bg-[#ff6600]/5'
+                  : 'bg-[#828282]/5'}
+              `}>
+                {/* Username and Actions */}
+                <div className="space-y-1 mb-6">
+                  <div className="flex items-center gap-4">
+                    <h1 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} text-2xl font-bold`}>
+                      {user.id}
+                    </h1>
+                    <FollowButton userId={userId || ''} theme={theme} />
+                    {isTopUser(user.id) && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                        theme === 'green' 
+                          ? 'border-green-500/30 text-green-400' 
+                          : 'border-[#ff6600]/30 text-[#ff6600]'
+                      }`}>
+                        Top 100
+                      </span>
+                    )}
+                  </div>
                   <a 
                     href={`https://news.ycombinator.com/user?id=${user.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm opacity-50 hover:opacity-75"
+                    className="text-sm opacity-50 hover:opacity-75 block"
                   >
                     [view on HN]
                   </a>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* User Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <div className="text-sm opacity-75">Joined</div>
-                    <div>{formatDate(user.created)}</div>
+                    <div className="text-lg">{formatDate(user.created)}</div>
                   </div>
                   <div className="space-y-2">
                     <div className="text-sm opacity-75">Karma</div>
-                    <div>{user.karma.toLocaleString()}</div>
+                    <div className="text-lg">{user.karma.toLocaleString()}</div>
                   </div>
                 </div>
 
+                {/* About Section */}
                 {user.about && (
-                  <div className="space-y-2 pt-4">
+                  <div className="mt-6 space-y-2">
                     <div className="text-sm opacity-75">About</div>
                     <div 
                       className="prose prose-invert max-w-none"
@@ -251,9 +272,9 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                 )}
               </div>
 
-              {/* User Tags */}
-              <div className="space-y-2 mt-4">
-                <div className="flex items-center gap-2">
+              {/* Tags Section */}
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
                   <input
                     type="text"
                     value={newTag}
@@ -265,7 +286,7 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                     }}
                     placeholder="Add tag..."
                     className={`
-                      px-2 py-1 rounded text-sm
+                      px-3 py-2 rounded text-sm w-full max-w-xs
                       ${theme === 'green' 
                         ? 'bg-black border border-green-500/30 text-green-400' 
                         : theme === 'og'
@@ -288,7 +309,7 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                       <span
                         key={tag}
                         className={`
-                          inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm
+                          inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm
                           ${theme === 'green' 
                             ? 'bg-green-500/10 border border-green-500/30' 
                             : theme === 'og'
@@ -310,6 +331,7 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                 )}
               </div>
 
+              {/* Recent Activity Section */}
               {recentActivity && (
                 <div className="space-y-4">
                   <h2 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} text-lg font-bold`}>
@@ -317,58 +339,41 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                   </h2>
                   <div className="space-y-2">
                     <div className="text-sm opacity-75">
-                      {formatTimeAgo(recentActivity.time)}
+                      <a
+                        href={recentActivity.type === 'comment'
+                          ? `/item/${recentActivity.parent}/comment/${recentActivity.id}`
+                          : `/item/${recentActivity.id}`
+                        }
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate(recentActivity.type === 'comment'
+                            ? `/item/${recentActivity.parent}/comment/${recentActivity.id}`
+                            : `/item/${recentActivity.id}`
+                          );
+                        }}
+                        className="hover:opacity-75"
+                      >
+                        {formatTimeAgo(recentActivity.time)}
+                      </a>
                     </div>
                     {recentActivity.type === 'story' ? (
                       <div>
                         <a
                           href={recentActivity.url || `https://news.ycombinator.com/item?id=${recentActivity.id}`}
-                          onClick={(e) => {
-                            if (!recentActivity.url) {
-                              e.preventDefault();
-                              navigate(`/item/${recentActivity.id}`);
-                            }
-                          }}
-                          className="font-medium hover:opacity-75"
-                          target={recentActivity.url ? "_blank" : undefined}
-                          rel={recentActivity.url ? "noopener noreferrer" : undefined}
+                          className="hover:opacity-75"
+                          target="_blank"
+                          rel="noopener noreferrer"
                         >
                           {recentActivity.title}
                         </a>
-                        {recentActivity.url && (
-                          <span className="ml-2 opacity-50 text-sm">
-                            ({new URL(recentActivity.url).hostname})
-                          </span>
-                        )}
                       </div>
                     ) : (
-                      <div className="space-y-2">
-                        <a
-                          href={`/item/${recentActivity.id}`}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            navigate(`/item/${recentActivity.id}`);
-                          }}
-                          className="opacity-75 hover:opacity-100"
-                        >
-                          {recentActivity.text}
-                        </a>
-                      </div>
+                      <div 
+                        className="prose prose-invert max-w-none"
+                        dangerouslySetInnerHTML={{ __html: recentActivity.text || '' }}
+                      />
                     )}
                   </div>
-                </div>
-              )}
-
-              {/* Activity Summary */}
-              {user.submitted && (
-                <div className="space-y-4">
-                  <h2 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} text-lg font-bold`}>
-                    Activity
-                  </h2>
-                  <div className="text-sm opacity-75">
-                    {user.submitted.length.toLocaleString()} submissions
-                  </div>
-                  {/* We could add a paginated list of their submissions here */}
                 </div>
               )}
             </div>

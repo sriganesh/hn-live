@@ -22,6 +22,8 @@ import { ProfilePage } from '../components/ProfilePage';
 import { UpdateNotifier } from '../components/UpdateNotifier';
 import { LinksView } from '../components/LinksView';
 import { UserTagsPage } from '../components/UserTagsPage';
+import { FeedPage } from '../components/FeedPage';
+import { FollowingPage } from '../components/FollowingPage';
 
 interface HNItem {
   id: number;
@@ -1965,6 +1967,32 @@ export default function HNLiveTerminal() {
           {/* Add UserTagsPage component to the render */}
           {location.pathname === '/tags' && (
           <UserTagsPage 
+            theme={options.theme}
+            fontSize={options.fontSize}
+            font={options.font}
+            onShowSearch={() => setShowSearch(true)}
+            onCloseSearch={() => setShowSearch(false)}
+            onShowSettings={() => setShowSettings(true)}
+            isRunning={isRunning}
+          />
+        )}
+
+        {/* Add FollowingPage component to the render */}
+        {location.pathname === '/following' && (
+          <FollowingPage 
+            theme={options.theme}
+            fontSize={options.fontSize}
+            font={options.font}
+            onShowSearch={() => setShowSearch(true)}
+            onCloseSearch={() => setShowSearch(false)}
+            onShowSettings={() => setShowSettings(true)}
+            isRunning={isRunning}
+          />
+        )}
+
+        {/* Add FeedPage component to the render */}
+        {location.pathname === '/feed' && (
+          <FeedPage 
             theme={options.theme}
             fontSize={options.fontSize}
             font={options.font}
