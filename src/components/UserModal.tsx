@@ -20,26 +20,11 @@ interface HNUser {
   submitted?: number[];
 }
 
-interface HNItem {
-  id: number;
-  type: 'story' | 'comment';
-  title?: string;
-  text?: string;
-  by: string;
-  time: number;
-  url?: string;
-  parent?: number;
-  dead?: boolean;
-  deleted?: boolean;
-}
-
 export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModalProps) {
   const navigate = useNavigate();
   const [user, setUser] = useState<HNUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [recentActivity, setRecentActivity] = useState<HNItem | null>(null);
-  const [parentStory, setParentStory] = useState<HNItem | null>(null);
   const [userTags, setUserTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
@@ -64,24 +49,6 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
         }
         const userData = await response.json();
         setUser(userData);
-
-        if (userData.submitted && userData.submitted.length > 0) {
-          for (const itemId of userData.submitted.slice(0, 10)) {
-            const itemResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${itemId}.json`);
-            const itemData = await itemResponse.json();
-            
-            if (itemData && !itemData.dead && !itemData.deleted) {
-              setRecentActivity(itemData);
-
-              if (itemData.type === 'comment' && itemData.parent) {
-                const parentResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${itemData.parent}.json`);
-                const parentData = await parentResponse.json();
-                setParentStory(parentData);
-              }
-              break;
-            }
-          }
-        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load user');
       } finally {
@@ -120,18 +87,6 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
       month: 'long',
       day: 'numeric'
     });
-  };
-
-  const formatTimeAgo = (timestamp: number): string => {
-    const seconds = Math.floor((Date.now() - timestamp * 1000) / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) return `${days}d ago`;
-    if (hours > 0) return `${hours}h ago`;
-    if (minutes > 0) return `${minutes}m ago`;
-    return 'just now';
   };
 
   // Add function to check if user is in top 100
@@ -247,42 +202,47 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
           </div>
         ) : user && (
           <div className="space-y-6">
-            {/* Header with username, top user badge, and buttons */}
-            <div className="flex justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <h2 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} text-xl font-bold`}>
+            {/* User Header */}
+            <div className="flex items-start justify-between mb-4">
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <h2 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} text-xl font-bold`}>
+                      {user.id}
+                    </h2>
+                    <FollowButton userId={userId} theme={theme} />
+                    {isTopUser(user.id) && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                        theme === 'green' 
+                          ? 'border-green-500/30 text-green-400' 
+                          : 'border-[#ff6600]/30 text-[#ff6600]'
+                      }`}>
+                        Top 100
+                      </span>
+                    )}
+                  </div>
+                  <div className="space-y-2">
                     <a 
+                      href={`https://news.ycombinator.com/user?id=${user.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm opacity-50 hover:opacity-75 block"
+                    >
+                      [view on HN]
+                    </a>
+                    <a
                       href={`/user/${user.id}`}
                       onClick={(e) => {
                         e.preventDefault();
-                        navigate(`/user/${user.id}`);
                         onClose();
+                        navigate(`/user/${user.id}`);
                       }}
-                      className="hover:opacity-75"
+                      className="text-sm opacity-50 hover:opacity-75 block"
                     >
-                      {user.id}
+                      [view full profile]
                     </a>
-                  </h2>
-                  <FollowButton userId={userId} theme={theme} />
-                  {isTopUser(user.id) && (
-                    <span className={`text-xs px-2 py-0.5 rounded-full border ${
-                      theme === 'green' 
-                        ? 'border-green-500/30 text-green-400' 
-                        : 'border-[#ff6600]/30 text-[#ff6600]'
-                    }`}>
-                      Top 100
-                    </span>
-                  )}
+                  </div>
                 </div>
-                <a 
-                  href={`https://news.ycombinator.com/user?id=${user.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm opacity-50 hover:opacity-75 block"
-                >
-                  [view on HN]
-                </a>
               </div>
               <button 
                 onClick={onClose}
@@ -390,73 +350,6 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
                 )}
               </div>
             </div>
-
-            {/* Recent Activity */}
-            {recentActivity && (
-              <div className="space-y-3">
-                <h3 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
-                  Recent Activity
-                </h3>
-                <div className="space-y-2">
-                  <div className="text-sm opacity-75">
-                    {formatTimeAgo(recentActivity.time)}
-                  </div>
-                  {recentActivity.type === 'story' ? (
-                    <div>
-                      <a
-                        href={recentActivity.url || `https://news.ycombinator.com/item?id=${recentActivity.id}`}
-                        onClick={(e) => {
-                          if (!recentActivity.url) {
-                            e.preventDefault();
-                            navigate(`/item/${recentActivity.id}`);
-                          }
-                          onClose();
-                        }}
-                        className="font-medium hover:opacity-75"
-                        target={recentActivity.url ? "_blank" : undefined}
-                        rel={recentActivity.url ? "noopener noreferrer" : undefined}
-                      >
-                        {recentActivity.title}
-                      </a>
-                      {recentActivity.url && (
-                        <span className="ml-2 opacity-50 text-sm">
-                          ({new URL(recentActivity.url).hostname})
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <div>
-                      <a
-                        href={`/item/${recentActivity.parent}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          // First fetch the parent story ID by traversing up the parent chain
-                          const fetchParentStory = async () => {
-                            let currentItem = recentActivity;
-                            while (currentItem.parent) {
-                              const response = await fetch(
-                                `https://hacker-news.firebaseio.com/v0/item/${currentItem.parent}.json`
-                              );
-                              currentItem = await response.json();
-                              if (currentItem.type === 'story') {
-                                // Navigate using the /item/storyId/comment/commentId format
-                                navigate(`/item/${currentItem.id}/comment/${recentActivity.id}`);
-                                onClose();
-                                break;
-                              }
-                            }
-                          };
-                          fetchParentStory();
-                        }}
-                        className="hover:opacity-75"
-                      >
-                        <div className="opacity-75">{recentActivity.text}</div>
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
 
             {/* Activity Summary */}
             {user.submitted && (

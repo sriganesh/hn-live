@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MobileBottomBar } from './MobileBottomBar';
 import { UserTag } from '../types/UserTag';
@@ -33,6 +33,24 @@ interface HNItem {
   deleted?: boolean;
 }
 
+interface AlgoliaResponse {
+  hits: any[];
+  nbPages: number;
+  page: number;
+  hitsPerPage: number;
+}
+
+interface UserActivity {
+  id: number;
+  type: 'story' | 'comment';
+  title?: string;
+  text?: string;
+  url?: string;
+  by: string;
+  time: number;
+  parent?: number;
+}
+
 const isTopUser = (userId: string) => topUsers.includes(userId);
 
 export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings }: UserPageProps) {
@@ -41,7 +59,6 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
   const [user, setUser] = useState<HNUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [recentActivity, setRecentActivity] = useState<HNItem | null>(null);
   const [userTags, setUserTags] = useState<string[]>(() => {
     try {
       const tags = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
@@ -53,6 +70,12 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
     }
   });
   const [newTag, setNewTag] = useState('');
+  const [activities, setActivities] = useState<UserActivity[]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [activityType, setActivityType] = useState<'all' | 'stories' | 'comments'>('all');
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   // Update the ESC key handler
   useEffect(() => {
@@ -75,18 +98,6 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
         }
         const userData = await response.json();
         setUser(userData);
-
-        if (userData.submitted && userData.submitted.length > 0) {
-          for (const itemId of userData.submitted.slice(0, 10)) {
-            const itemResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${itemId}.json`);
-            const itemData = await itemResponse.json();
-            
-            if (itemData && !itemData.dead && !itemData.deleted) {
-              setRecentActivity(itemData);
-              break;
-            }
-          }
-        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load user');
       } finally {
@@ -168,6 +179,85 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
     }
   };
 
+  const fetchUserActivity = useCallback(async (page = 0, append = false) => {
+    if (!userId) return;
+    
+    if (!append) {
+      setActivities([]); // Clear activities when not appending
+    }
+    setIsLoadingMore(true);
+
+    try {
+      const typeFilter = activityType === 'stories' 
+        ? 'story' 
+        : activityType === 'comments' 
+        ? 'comment' 
+        : '(story,comment)';
+      
+      const response = await fetch(
+        `https://hn.algolia.com/api/v1/search_by_date?tags=${typeFilter},author_${userId}&page=${page}&hitsPerPage=30`
+      );
+
+      if (!response.ok) throw new Error('Failed to fetch activity');
+      const data: AlgoliaResponse = await response.json();
+      
+      const hasMorePages = page < data.nbPages - 1 && data.hits.length > 0;
+      setHasMore(hasMorePages);
+
+      const newItems = data.hits.map(item => ({
+        id: item.objectID,
+        type: item.comment_text ? 'comment' : 'story',
+        title: item.title || item.story_title,
+        text: item.comment_text,
+        url: item.url,
+        by: item.author,
+        time: item.created_at_i,
+        parent: item.parent_id
+      }));
+
+      setActivities(prev => append ? [...prev, ...newItems] : newItems);
+      setCurrentPage(page);
+    } catch (e) {
+      console.error('Error fetching activity:', e);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [userId, activityType]);
+
+  // Initial fetch when user or activity type changes
+  useEffect(() => {
+    if (userId) {
+      setCurrentPage(0);
+      setHasMore(true);
+      fetchUserActivity(0, false);
+    }
+  }, [userId, activityType, fetchUserActivity]);
+
+  // Intersection observer for infinite scroll
+  useEffect(() => {
+    if (!hasMore || isLoadingMore || !userId) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+          fetchUserActivity(currentPage + 1, true);
+        }
+      },
+      { threshold: 0.1, rootMargin: '200px' }
+    );
+
+    const target = observerTarget.current;
+    if (target) {
+      observer.observe(target);
+    }
+
+    return () => {
+      if (target) {
+        observer.unobserve(target);
+      }
+    };
+  }, [currentPage, hasMore, isLoadingMore, userId, fetchUserActivity]);
+
   return (
     <>
       <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
@@ -187,7 +277,6 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                 <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
                   / USER
                 </span>
-                <span className="opacity-75">/ {userId}</span>
               </div>
               <button onClick={() => navigate(-1)} className="opacity-75 hover:opacity-100">
                 [ESC]
@@ -258,6 +347,12 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                     <div className="text-sm opacity-75">Karma</div>
                     <div className="text-lg">{user.karma.toLocaleString()}</div>
                   </div>
+                  {user.submitted && (
+                    <div className="space-y-2">
+                      <div className="text-sm opacity-75">Total Submissions</div>
+                      <div className="text-lg">{user.submitted.length.toLocaleString()}</div>
+                    </div>
+                  )}
                 </div>
 
                 {/* About Section */}
@@ -332,50 +427,85 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
               </div>
 
               {/* Recent Activity Section */}
-              {recentActivity && (
-                <div className="space-y-4">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
                   <h2 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} text-lg font-bold`}>
                     Recent Activity
                   </h2>
-                  <div className="space-y-2">
-                    <div className="text-sm opacity-75">
-                      <a
-                        href={recentActivity.type === 'comment'
-                          ? `/item/${recentActivity.parent}/comment/${recentActivity.id}`
-                          : `/item/${recentActivity.id}`
-                        }
-                        onClick={(e) => {
-                          e.preventDefault();
-                          navigate(recentActivity.type === 'comment'
-                            ? `/item/${recentActivity.parent}/comment/${recentActivity.id}`
-                            : `/item/${recentActivity.id}`
-                          );
-                        }}
-                        className="hover:opacity-75"
-                      >
-                        {formatTimeAgo(recentActivity.time)}
-                      </a>
-                    </div>
-                    {recentActivity.type === 'story' ? (
-                      <div>
+                  <select
+                    value={activityType}
+                    onChange={(e) => setActivityType(e.target.value as typeof activityType)}
+                    className={`px-2 py-1 rounded text-sm ${
+                      theme === 'green'
+                        ? 'bg-black border border-green-500/30 text-green-400'
+                        : theme === 'og'
+                        ? 'bg-[#f6f6ef] border border-[#ff6600]/30 text-[#828282]'
+                        : 'bg-[#1a1a1a] border border-[#828282]/30 text-[#828282]'
+                    }`}
+                  >
+                    <option value="all">All Items</option>
+                    <option value="stories">Stories Only</option>
+                    <option value="comments">Comments Only</option>
+                  </select>
+                </div>
+
+                <div className="space-y-6">
+                  {activities.map(item => (
+                    <div key={item.id} className="space-y-2">
+                      <div className="text-sm opacity-75">
                         <a
-                          href={recentActivity.url || `https://news.ycombinator.com/item?id=${recentActivity.id}`}
+                          href={item.type === 'comment'
+                            ? `/item/${item.parent}/comment/${item.id}`
+                            : `/item/${item.id}`
+                          }
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigate(item.type === 'comment'
+                              ? `/item/${item.parent}/comment/${item.id}`
+                              : `/item/${item.id}`
+                            );
+                          }}
                           className="hover:opacity-75"
-                          target="_blank"
-                          rel="noopener noreferrer"
                         >
-                          {recentActivity.title}
+                          {formatTimeAgo(item.time)}
                         </a>
                       </div>
-                    ) : (
-                      <div 
-                        className="prose prose-invert max-w-none"
-                        dangerouslySetInnerHTML={{ __html: recentActivity.text || '' }}
-                      />
-                    )}
-                  </div>
+                      {item.type === 'story' ? (
+                        <div>
+                          <a
+                            href={item.url || `https://news.ycombinator.com/item?id=${item.id}`}
+                            className="hover:opacity-75"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {item.title}
+                          </a>
+                        </div>
+                      ) : (
+                        <div 
+                          className="prose prose-invert max-w-none"
+                          dangerouslySetInnerHTML={{ __html: item.text || '' }}
+                        />
+                      )}
+                    </div>
+                  ))}
+                  
+                  {/* Infinite scroll observer */}
+                  <div ref={observerTarget} style={{ height: '10px' }} />
+                  
+                  {isLoadingMore && (
+                    <div className="py-4 text-center opacity-75">
+                      Loading more...
+                    </div>
+                  )}
+                  
+                  {!hasMore && activities.length > 0 && (
+                    <div className="py-4 text-center opacity-75">
+                      <div>That's all from {userId}!</div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           )}
         </div>
