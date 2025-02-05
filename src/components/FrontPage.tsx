@@ -452,9 +452,16 @@ export function FrontPage({
                           >
                             {story.by}
                           </a>{' '}
-                          <span title={new Date(story.time * 1000).toLocaleString()}>
+                          <span className="opacity-75">•</span>{' '}
+                          <a
+                            href={`https://news.ycombinator.com/item?id=${story.id}`}
+                            className="shrink-0 hover:underline"
+                            title={new Date(story.time * 1000).toLocaleString()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             {formatTimeAgo(story.time)}
-                          </span> • {' '}
+                          </a> • {' '}
                           <button
                             onClick={() => navigate(`/item/${story.id}`)}
                             className="hover:underline"
@@ -480,16 +487,28 @@ export function FrontPage({
                               {truncateUrl(new URL(story.url).hostname.replace('www.', ''), 40)}
                             </span>
                             <span className="mx-2">•</span>
-                            <span className="shrink-0" title={new Date(story.time * 1000).toLocaleString()}>
+                            <a
+                              href={`https://news.ycombinator.com/item?id=${story.id}`}
+                              className="shrink-0 hover:underline"
+                              title={new Date(story.time * 1000).toLocaleString()}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
                               {formatTimeAgo(story.time)}
-                            </span>
+                            </a>
                           </div>
                         )}
                         {!story.url && (
                           <div className="text-sm opacity-50">
-                            <span title={new Date(story.time * 1000).toLocaleString()}>
+                            <a
+                              href={`https://news.ycombinator.com/item?id=${story.id}`}
+                              className="shrink-0 hover:underline"
+                              title={new Date(story.time * 1000).toLocaleString()}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
                               {formatTimeAgo(story.time)}
-                            </span>
+                            </a>
                           </div>
                         )}
 
