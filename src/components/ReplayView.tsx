@@ -317,7 +317,11 @@ export function ReplayView({
                     setViewingUser(story.by);
                   }}
                   href={`/user/${story.by}`}
-                  className={`hover:underline text-[#ff6600] ${isTopUser(story.by) ? 'font-bold' : ''}`}
+                  className={`hover:underline ${
+                    theme === 'green' 
+                      ? 'text-green-400' 
+                      : 'text-[#ff6600]'
+                  } ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`}
                 >
                   {story.by}
                 </a> • 
@@ -354,7 +358,11 @@ export function ReplayView({
                           setViewingUser(comment.by);
                         }}
                         href={`/user/${comment.by}`}
-                        className={`hover:underline text-[#ff6600] ${isTopUser(comment.by) ? 'font-bold' : ''}`}
+                        className={`hover:underline ${
+                          theme === 'green' 
+                            ? 'text-green-400' 
+                            : 'text-[#ff6600]'
+                        } ${isTopUser(comment.by) ? getTopUserClass(theme) : ''}`}
                       >
                         {comment.by}
                       </a>
