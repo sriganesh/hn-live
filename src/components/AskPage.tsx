@@ -424,9 +424,11 @@ export function AskPage({
                             }}
                             href={`/user/${story.by}`}
                             className={`hover:underline ${
-                              colorizeUsernames 
-                                ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
-                                : 'opacity-75'
+                              theme === 'green'
+                                ? 'text-green-400'
+                                : colorizeUsernames 
+                                  ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
+                                  : 'opacity-75'
                             }`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -498,9 +500,11 @@ export function AskPage({
                             }}
                             href={`/user/${story.by}`}
                             className={`hover:underline ${
-                              colorizeUsernames 
-                                ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
-                                : 'opacity-75'
+                              theme === 'green'
+                                ? 'text-green-400'
+                                : colorizeUsernames 
+                                  ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
+                                  : 'opacity-75'
                             }`}
                           >
                             {story.by}

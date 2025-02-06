@@ -34,6 +34,8 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
   const [hasMore, setHasMore] = useState(true);
   const loadingRef = useRef<HTMLDivElement>(null);
   const ITEMS_PER_PAGE = 20;
+  const [isBackToTopVisible, setIsBackToTopVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const fetchBookmarks = async (pageNum: number) => {
     try {
@@ -110,6 +112,27 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
     return () => observer.disconnect();
   }, [hasMore, loading, page]);
 
+  // Add scroll handler
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      setIsBackToTopVisible(container.scrollTop > 500);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Add scroll to top function
+  const scrollToTop = () => {
+    containerRef.current?.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   const formatTimeAgo = (timestamp: number): string => {
     const seconds = Math.floor((Date.now() - timestamp * 1000) / 1000);
     const minutes = Math.floor(seconds / 60);
@@ -151,7 +174,10 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
         : 'bg-[#1a1a1a] text-[#828282]'}
       text-${fontSize}
     `}>
-      <div className="h-full overflow-y-auto p-4 pb-20">
+      <div 
+        ref={containerRef}
+        className="h-full overflow-y-auto p-4 pb-20"
+      >
         {/* Header */}
         <div className="max-w-3xl mx-auto mb-8">
           <div className="flex items-center justify-between">
@@ -161,7 +187,7 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
                 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider hover:opacity-75 flex items-center`}
               >
                 <span>HN</span>
-                <span className="text-2xl leading-[0] relative top-[1px] mx-[1px]">•</span>
+                <span className={`mx-1 animate-pulse ${!isRunning ? 'text-gray-500' : ''}`}>•</span>
                 <span>LIVE</span>
               </button>
               <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
@@ -278,6 +304,35 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
           )}
         </div>
       </div>
+
+      {isBackToTopVisible && (
+        <button
+          onClick={scrollToTop}
+          className={`fixed bottom-28 right-8 p-2 rounded-full shadow-lg z-[60] 
+            ${theme === 'green' 
+              ? 'bg-green-500/10 hover:bg-green-500/20 text-green-400' 
+              : theme === 'og'
+              ? 'bg-[#ff6600]/10 hover:bg-[#ff6600]/20 text-[#ff6600]'
+              : 'bg-gray-800 hover:bg-gray-700 text-gray-200'
+            }
+            transition-all duration-200 opacity-90 hover:opacity-100`}
+          aria-label="Back to top"
+        >
+          <svg 
+            className="w-6 h-6" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M5 10l7-7m0 0l7 7m-7-7v18"
+            />
+          </svg>
+        </button>
+      )}
 
       <MobileBottomBar 
         theme={theme}

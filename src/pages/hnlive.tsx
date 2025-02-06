@@ -1384,12 +1384,16 @@ export default function HNLiveTerminal() {
             </div>
             <div className="flex items-center gap-4">
               {/* Main navigation */}
-              <button 
-                onClick={() => navigate('/front')}
-                className="hidden sm:inline text-[#ff6600] font-bold"
+              <a 
+                href="/front" 
+                className="front-page-link hover:opacity-75"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate('/front');
+                }}
               >
                 [VIEW FRONT PAGE]
-              </button>
+              </a>
 
               {/* More dropdown */}
               <div className="relative hidden sm:inline-block more-dropdown">

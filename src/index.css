@@ -14,8 +14,17 @@ body {
   height: 100vh;
 }
 
-.hn-username {
+/* Replace the existing rule with these theme-specific rules */
+[data-theme='og'] .hn-username,
+[data-theme='dog'] .hn-username,
+[data-theme='og'] .front-page-link,
+[data-theme='dog'] .front-page-link {
   color: #ff6600 !important;
+}
+
+[data-theme='green'] .hn-username,
+[data-theme='green'] .front-page-link {
+  color: rgb(74 222 128) !important; /* text-green-400 color */
 }
 
 :root {

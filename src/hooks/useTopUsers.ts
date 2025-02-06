@@ -7,10 +7,10 @@ export const useTopUsers = () => {
   
   const getTopUserClass = (theme: 'green' | 'og' | 'dog') => 
     theme === 'green' 
-      ? 'text-green-300 font-semibold' 
+      ? 'text-green-300'
       : theme === 'dog'
-      ? 'text-yellow-500 font-semibold'
-      : 'text-[#ff6600] font-semibold';
+      ? 'text-yellow-500'
+      : 'text-[#ff6600]';
 
   return { isTopUser, getTopUserClass };
 }; 

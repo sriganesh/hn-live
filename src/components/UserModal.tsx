@@ -222,14 +222,6 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
                     )}
                   </div>
                   <div className="space-y-2">
-                    <a 
-                      href={`https://news.ycombinator.com/user?id=${user.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm opacity-50 hover:opacity-75 block"
-                    >
-                      [view on HN]
-                    </a>
                     <a
                       href={`/user/${user.id}`}
                       onClick={(e) => {
