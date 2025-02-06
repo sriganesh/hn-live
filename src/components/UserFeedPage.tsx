@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Following } from '../types/Following';
 import { UserTag } from '../types/UserTag';
 import { MobileBottomBar } from './MobileBottomBar';
-import { FontOption } from '../types/FontOption';
 
 interface UserFeedPageProps {
   theme: 'green' | 'og' | 'dog';
