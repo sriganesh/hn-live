@@ -244,6 +244,33 @@ export function FrontPage({
     }
   }, [handleObserver, state.stories.length, state.hasMore, state.loading]);
 
+  // Add these near the top with other state declarations
+  const [isBackToTopVisible, setIsBackToTopVisible] = useState(false);
+
+  // Add ref for the scrollable container
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Update scroll handler to use container's scroll position
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      setIsBackToTopVisible(container.scrollTop > 500);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Update scroll to top function to use container
+  const scrollToTop = () => {
+    containerRef.current?.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <>
       <div className={`
@@ -262,7 +289,10 @@ export function FrontPage({
           : 'bg-[#1a1a1a] text-[#828282]'}
         text-${fontSize}
       `}>
-        <div className="h-full overflow-y-auto p-4">
+        <div 
+          ref={containerRef}
+          className="h-full overflow-y-auto p-4"
+        >
           {/* Header */}
           <div className="mb-8">
             {/* Desktop view - single row */}
@@ -443,9 +473,11 @@ export function FrontPage({
                             }}
                             href={`/user/${story.by}`}
                             className={`hover:underline ${
-                              colorizeUsernames 
-                                ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
-                                : 'opacity-75'
+                              theme === 'green'
+                                ? 'text-green-400'
+                                : colorizeUsernames 
+                                  ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
+                                  : 'opacity-75'
                             }`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -544,9 +576,11 @@ export function FrontPage({
                             }}
                             href={`/user/${story.by}`}
                             className={`hover:underline ${
-                              colorizeUsernames 
-                                ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
-                                : 'opacity-75'
+                              theme === 'green'
+                                ? 'text-green-400'
+                                : colorizeUsernames 
+                                  ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
+                                  : 'opacity-75'
                             }`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -630,6 +664,35 @@ export function FrontPage({
         onShowSearch={onShowSearch}
         onShowSettings={onShowSettings}
       />
+
+      {isBackToTopVisible && (
+        <button
+          onClick={scrollToTop}
+          className={`fixed bottom-28 right-8 p-2 rounded-full shadow-lg z-[60] 
+            ${theme === 'green' 
+              ? 'bg-green-500/10 hover:bg-green-500/20 text-green-400' 
+              : theme === 'og'
+              ? 'bg-[#ff6600]/10 hover:bg-[#ff6600]/20 text-[#ff6600]'
+              : 'bg-gray-800 hover:bg-gray-700 text-gray-200'
+            }
+            transition-all duration-200 opacity-90 hover:opacity-100`}
+          aria-label="Back to top"
+        >
+          <svg 
+            className="w-6 h-6" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M5 10l7-7m0 0l7 7m-7-7v18"
+            />
+          </svg>
+        </button>
+      )}
     </>
   );
 } 

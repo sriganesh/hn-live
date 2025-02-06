@@ -459,9 +459,11 @@ export function ShowPage({
                             }}
                             href={`/user/${story.by}`}
                             className={`hover:underline ${
-                              colorizeUsernames 
-                                ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
-                                : 'opacity-75'
+                              theme === 'green'
+                                ? 'text-green-400'
+                                : colorizeUsernames 
+                                  ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
+                                  : 'opacity-75'
                             }`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -552,9 +554,11 @@ export function ShowPage({
                             }}
                             href={`/user/${story.by}`}
                             className={`hover:underline ${
-                              colorizeUsernames 
-                                ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
-                                : 'opacity-75'
+                              theme === 'green'
+                                ? 'text-green-400'
+                                : colorizeUsernames 
+                                  ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
+                                  : 'opacity-75'
                             }`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -649,6 +653,9 @@ export function ShowPage({
         theme={theme}
         onShowSearch={onShowSearch}
         onShowSettings={onShowSettings}
+        onCloseSearch={() => {}}
+        isRunning={isRunning}
+        username={null}
       />
     </>
   );

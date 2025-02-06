@@ -434,9 +434,11 @@ export function BestPage({
                             }}
                             href={`/user/${story.by}`}
                             className={`hover:underline ${
-                              colorizeUsernames 
-                                ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
-                                : 'opacity-75'
+                              theme === 'green'
+                                ? 'text-green-400'
+                                : colorizeUsernames 
+                                  ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
+                                  : 'opacity-75'
                             }`}
                           >
                             {story.by}
@@ -534,9 +536,11 @@ export function BestPage({
                             }}
                             href={`/user/${story.by}`}
                             className={`hover:underline ${
-                              colorizeUsernames 
-                                ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
-                                : 'opacity-75'
+                              theme === 'green'
+                                ? 'text-green-400'
+                                : colorizeUsernames 
+                                  ? `hn-username ${isTopUser(story.by) ? getTopUserClass(theme) : ''}`
+                                  : 'opacity-75'
                             }`}
                           >
                             {story.by}
@@ -589,6 +593,9 @@ export function BestPage({
         theme={theme}
         onShowSearch={onShowSearch}
         onShowSettings={onShowSettings}
+        onCloseSearch={() => {}}
+        isRunning={isRunning}
+        username={null}
       />
     </>
   );
