@@ -31,11 +31,11 @@ const formatTimeAgo = (timestamp: number): string => {
   const days = Math.floor(hours / 24);
 
   if (days > 0) {
-    return `${days} day${days === 1 ? '' : 's'} ago`;
+    return `${days}d ago`;
   } else if (hours > 0) {
-    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    return `${hours}h ago`;
   } else if (minutes > 0) {
-    return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+    return `${minutes}m ago`;
   } else {
     return 'just now';
   }
@@ -372,9 +372,15 @@ export function JobsPage({
                         )}
                       </div>
                       <div className="text-sm opacity-75">
-                        <span title={new Date(job.time * 1000).toLocaleString()}>
+                        <a
+                          href={`https://news.ycombinator.com/item?id=${job.id}`}
+                          className="shrink-0 hover:underline"
+                          title={new Date(job.time * 1000).toLocaleString()}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           {formatTimeAgo(job.time)}
-                        </span>
+                        </a>
                       </div>
                     </div>
                   </div>

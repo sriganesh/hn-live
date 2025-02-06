@@ -35,11 +35,11 @@ const formatTimeAgo = (timestamp: number): string => {
   const days = Math.floor(hours / 24);
 
   if (days > 0) {
-    return `${days} day${days === 1 ? '' : 's'} ago`;
+    return `${days}d ago`;
   } else if (hours > 0) {
-    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    return `${hours}h ago`;
   } else if (minutes > 0) {
-    return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+    return `${minutes}m ago`;
   } else {
     return 'just now';
   }
@@ -441,9 +441,16 @@ export function BestPage({
                           >
                             {story.by}
                           </a>{' '}
-                          <span title={new Date(story.time * 1000).toLocaleString()}>
+                          <span className="opacity-75">•</span>{' '}
+                          <a
+                            href={`https://news.ycombinator.com/item?id=${story.id}`}
+                            className="shrink-0 hover:underline"
+                            title={new Date(story.time * 1000).toLocaleString()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             {formatTimeAgo(story.time)}
-                          </span> • {' '}
+                          </a> • {' '}
                           <button
                             onClick={() => navigate(`/item/${story.id}`)}
                             className="hover:underline"
@@ -470,16 +477,28 @@ export function BestPage({
                               {new URL(story.url).hostname.replace('www.', '')}
                             </span>
                             <span className="mx-2">•</span>
-                            <span className="shrink-0" title={new Date(story.time * 1000).toLocaleString()}>
+                            <a
+                              href={`https://news.ycombinator.com/item?id=${story.id}`}
+                              className="shrink-0 hover:underline"
+                              title={new Date(story.time * 1000).toLocaleString()}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
                               {formatTimeAgo(story.time)}
-                            </span>
+                            </a>
                           </div>
                         )}
                         {!story.url && (
                           <div className="text-sm opacity-50">
-                            <span title={new Date(story.time * 1000).toLocaleString()}>
+                            <a
+                              href={`https://news.ycombinator.com/item?id=${story.id}`}
+                              className="shrink-0 hover:underline"
+                              title={new Date(story.time * 1000).toLocaleString()}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
                               {formatTimeAgo(story.time)}
-                            </span>
+                            </a>
                           </div>
                         )}
 
@@ -527,15 +546,13 @@ export function BestPage({
                             {story.score} points
                           </span>
                           <span className="opacity-75">•</span>
-                          <button
-                            onClick={() => navigate(`/item/${story.id}`)}
+                          <a
+                            href={`https://news.ycombinator.com/item?id=${story.id}`}
                             className="opacity-75 hover:opacity-100 hover:underline"
+                            title={new Date(story.time * 1000).toLocaleString()}
                           >
-                            {story.descendants 
-                              ? `${story.descendants} comment${story.descendants === 1 ? '' : 's'}`
-                              : 'discuss'
-                            }
-                          </button>
+                            {formatTimeAgo(story.time)}
+                          </a>
                         </div>
                       </div>
                     </div>

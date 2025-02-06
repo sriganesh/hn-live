@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MobileBottomBar } from './MobileBottomBar';
+import { UserTag } from '../types/UserTag';
+import { FollowButton } from './FollowButton';
+import { topUsers } from '../data/top-users.json';
 
 interface UserPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -30,13 +33,49 @@ interface HNItem {
   deleted?: boolean;
 }
 
+interface AlgoliaResponse {
+  hits: any[];
+  nbPages: number;
+  page: number;
+  hitsPerPage: number;
+}
+
+interface UserActivity {
+  id: number;
+  type: 'story' | 'comment';
+  title?: string;
+  text?: string;
+  url?: string;
+  by: string;
+  time: number;
+  parent?: number;
+}
+
+const isTopUser = (userId: string) => topUsers.includes(userId);
+
 export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings }: UserPageProps) {
   const { userId } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState<HNUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [recentActivity, setRecentActivity] = useState<HNItem | null>(null);
+  const [userTags, setUserTags] = useState<string[]>(() => {
+    try {
+      const tags = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
+      const userTag = tags.find((t: UserTag) => t.userId === userId);
+      return userTag?.tags || [];
+    } catch (e) {
+      console.error('Error parsing user tags:', e);
+      return [];
+    }
+  });
+  const [newTag, setNewTag] = useState('');
+  const [activities, setActivities] = useState<UserActivity[]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [activityType, setActivityType] = useState<'all' | 'stories' | 'comments'>('all');
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   // Update the ESC key handler
   useEffect(() => {
@@ -59,18 +98,6 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
         }
         const userData = await response.json();
         setUser(userData);
-
-        if (userData.submitted && userData.submitted.length > 0) {
-          for (const itemId of userData.submitted.slice(0, 10)) {
-            const itemResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${itemId}.json`);
-            const itemData = await itemResponse.json();
-            
-            if (itemData && !itemData.dead && !itemData.deleted) {
-              setRecentActivity(itemData);
-              break;
-            }
-          }
-        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load user');
       } finally {
@@ -107,12 +134,136 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
     ? 'text-[#828282] bg-[#f6f6ef]'
     : 'text-[#828282] bg-[#1a1a1a]';
 
+  const addTag = () => {
+    if (!newTag.trim()) return;
+    
+    try {
+      const tags: UserTag[] = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
+      const existingTagIndex = tags.findIndex(t => t.userId === userId);
+      
+      if (existingTagIndex >= 0) {
+        if (!tags[existingTagIndex].tags.includes(newTag)) {
+          tags[existingTagIndex].tags.push(newTag);
+          tags[existingTagIndex].timestamp = Date.now();
+        }
+      } else {
+        tags.push({
+          userId: userId!,
+          tags: [newTag],
+          timestamp: Date.now()
+        });
+      }
+      
+      localStorage.setItem('hn-user-tags', JSON.stringify(tags));
+      setUserTags(prev => [...prev, newTag]);
+      setNewTag('');
+    } catch (e) {
+      console.error('Error adding tag:', e);
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    const tags: UserTag[] = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
+    const userTagIndex = tags.findIndex(t => t.userId === userId);
+    
+    if (userTagIndex >= 0) {
+      tags[userTagIndex].tags = tags[userTagIndex].tags.filter(t => t !== tagToRemove);
+      tags[userTagIndex].timestamp = Date.now();
+      
+      if (tags[userTagIndex].tags.length === 0) {
+        tags.splice(userTagIndex, 1);
+      }
+      
+      localStorage.setItem('hn-user-tags', JSON.stringify(tags));
+      setUserTags(prev => prev.filter(t => t !== tagToRemove));
+    }
+  };
+
+  const fetchUserActivity = useCallback(async (page = 0, append = false) => {
+    if (!userId) return;
+    
+    if (!append) {
+      setActivities([]); // Clear activities when not appending
+    }
+    setIsLoadingMore(true);
+
+    try {
+      const typeFilter = activityType === 'stories' 
+        ? 'story' 
+        : activityType === 'comments' 
+        ? 'comment' 
+        : '(story,comment)';
+      
+      const response = await fetch(
+        `https://hn.algolia.com/api/v1/search_by_date?tags=${typeFilter},author_${userId}&page=${page}&hitsPerPage=30`
+      );
+
+      if (!response.ok) throw new Error('Failed to fetch activity');
+      const data: AlgoliaResponse = await response.json();
+      
+      const hasMorePages = page < data.nbPages - 1 && data.hits.length > 0;
+      setHasMore(hasMorePages);
+
+      const newItems = data.hits.map(item => ({
+        id: item.objectID,
+        type: item.comment_text ? 'comment' : 'story',
+        title: item.title || item.story_title,
+        text: item.comment_text,
+        url: item.url,
+        by: item.author,
+        time: item.created_at_i,
+        parent: item.parent_id
+      }));
+
+      setActivities(prev => append ? [...prev, ...newItems] : newItems);
+      setCurrentPage(page);
+    } catch (e) {
+      console.error('Error fetching activity:', e);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [userId, activityType]);
+
+  // Initial fetch when user or activity type changes
+  useEffect(() => {
+    if (userId) {
+      setCurrentPage(0);
+      setHasMore(true);
+      fetchUserActivity(0, false);
+    }
+  }, [userId, activityType, fetchUserActivity]);
+
+  // Intersection observer for infinite scroll
+  useEffect(() => {
+    if (!hasMore || isLoadingMore || !userId) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+          fetchUserActivity(currentPage + 1, true);
+        }
+      },
+      { threshold: 0.1, rootMargin: '200px' }
+    );
+
+    const target = observerTarget.current;
+    if (target) {
+      observer.observe(target);
+    }
+
+    return () => {
+      if (target) {
+        observer.unobserve(target);
+      }
+    };
+  }, [currentPage, hasMore, isLoadingMore, userId, fetchUserActivity]);
+
   return (
     <>
       <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
         <div className="h-full overflow-y-auto p-4">
           {/* Header */}
-          <div className="mb-8">
+          <div className="max-w-3xl mx-auto mb-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <button
@@ -124,18 +275,12 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                   <span>LIVE</span>
                 </button>
                 <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
-                  /user/{userId}
+                  / USER
                 </span>
               </div>
-              
-              <div className="hidden sm:flex items-center gap-4">
-                <button 
-                  onClick={() => navigate('/')}
-                  className="opacity-75 hover:opacity-100"
-                >
-                  [ESC]
-                </button>
-              </div>
+              <button onClick={() => navigate(-1)} className="opacity-75 hover:opacity-100">
+                [ESC]
+              </button>
             </div>
           </div>
 
@@ -155,36 +300,64 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
               </button>
             </div>
           ) : user && (
-            <div className="max-w-3xl mx-auto space-y-8">
-              {/* User Info */}
-              <div className="space-y-4">
-                <div className="flex items-baseline gap-4">
-                  <h1 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} text-xl font-bold`}>
-                    {user.id}
-                  </h1>
+            <div className="max-w-3xl mx-auto">
+              {/* User Header Section */}
+              <div className={`
+                p-6 rounded-lg mb-8
+                ${theme === 'green'
+                  ? 'bg-green-500/5'
+                  : theme === 'og'
+                  ? 'bg-[#ff6600]/5'
+                  : 'bg-[#828282]/5'}
+              `}>
+                {/* Username and Actions */}
+                <div className="space-y-1 mb-6">
+                  <div className="flex items-center gap-4">
+                    <h1 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} text-2xl font-bold`}>
+                      {user.id}
+                    </h1>
+                    <FollowButton userId={userId || ''} theme={theme} />
+                    {isTopUser(user.id) && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                        theme === 'green' 
+                          ? 'border-green-500/30 text-green-400' 
+                          : 'border-[#ff6600]/30 text-[#ff6600]'
+                      }`}>
+                        Top 100
+                      </span>
+                    )}
+                  </div>
                   <a 
                     href={`https://news.ycombinator.com/user?id=${user.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm opacity-50 hover:opacity-75"
+                    className="text-sm opacity-50 hover:opacity-75 block"
                   >
                     [view on HN]
                   </a>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* User Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <div className="text-sm opacity-75">Joined</div>
-                    <div>{formatDate(user.created)}</div>
+                    <div className="text-lg">{formatDate(user.created)}</div>
                   </div>
                   <div className="space-y-2">
                     <div className="text-sm opacity-75">Karma</div>
-                    <div>{user.karma.toLocaleString()}</div>
+                    <div className="text-lg">{user.karma.toLocaleString()}</div>
                   </div>
+                  {user.submitted && (
+                    <div className="space-y-2">
+                      <div className="text-sm opacity-75">Total Submissions</div>
+                      <div className="text-lg">{user.submitted.length.toLocaleString()}</div>
+                    </div>
+                  )}
                 </div>
 
+                {/* About Section */}
                 {user.about && (
-                  <div className="space-y-2 pt-4">
+                  <div className="mt-6 space-y-2">
                     <div className="text-sm opacity-75">About</div>
                     <div 
                       className="prose prose-invert max-w-none"
@@ -194,67 +367,145 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                 )}
               </div>
 
-              {recentActivity && (
-                <div className="space-y-4">
+              {/* Tags Section */}
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        addTag();
+                      }
+                    }}
+                    placeholder="Add tag..."
+                    className={`
+                      px-3 py-2 rounded text-sm w-full max-w-xs
+                      ${theme === 'green' 
+                        ? 'bg-black border border-green-500/30 text-green-400' 
+                        : theme === 'og'
+                        ? 'bg-[#f6f6ef] border border-[#ff6600]/30 text-[#828282]'
+                        : 'bg-[#1a1a1a] border border-[#828282]/30 text-[#828282]'
+                      }
+                    `}
+                  />
+                  <button
+                    onClick={addTag}
+                    className="opacity-75 hover:opacity-100"
+                  >
+                    [add]
+                  </button>
+                </div>
+                
+                {userTags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {userTags.map(tag => (
+                      <span
+                        key={tag}
+                        className={`
+                          inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm
+                          ${theme === 'green' 
+                            ? 'bg-green-500/10 border border-green-500/30' 
+                            : theme === 'og'
+                            ? 'bg-[#ff6600]/10 border border-[#ff6600]/30'
+                            : 'bg-[#828282]/10 border border-[#828282]/30'
+                          }
+                        `}
+                      >
+                        {tag}
+                        <button
+                          onClick={() => removeTag(tag)}
+                          className="opacity-75 hover:opacity-100 ml-1"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Recent Activity Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
                   <h2 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} text-lg font-bold`}>
                     Recent Activity
                   </h2>
-                  <div className="space-y-2">
-                    <div className="text-sm opacity-75">
-                      {formatTimeAgo(recentActivity.time)}
-                    </div>
-                    {recentActivity.type === 'story' ? (
-                      <div>
+                  <select
+                    value={activityType}
+                    onChange={(e) => setActivityType(e.target.value as typeof activityType)}
+                    className={`px-2 py-1 rounded text-sm ${
+                      theme === 'green'
+                        ? 'bg-black border border-green-500/30 text-green-400'
+                        : theme === 'og'
+                        ? 'bg-[#f6f6ef] border border-[#ff6600]/30 text-[#828282]'
+                        : 'bg-[#1a1a1a] border border-[#828282]/30 text-[#828282]'
+                    }`}
+                  >
+                    <option value="all">All Items</option>
+                    <option value="stories">Stories Only</option>
+                    <option value="comments">Comments Only</option>
+                  </select>
+                </div>
+
+                <div className="space-y-6">
+                  {activities.map(item => (
+                    <div key={item.id} className="space-y-2">
+                      <div className="text-sm opacity-75">
                         <a
-                          href={recentActivity.url || `https://news.ycombinator.com/item?id=${recentActivity.id}`}
-                          onClick={(e) => {
-                            if (!recentActivity.url) {
-                              e.preventDefault();
-                              navigate(`/item/${recentActivity.id}`);
-                            }
-                          }}
-                          className="font-medium hover:opacity-75"
-                          target={recentActivity.url ? "_blank" : undefined}
-                          rel={recentActivity.url ? "noopener noreferrer" : undefined}
-                        >
-                          {recentActivity.title}
-                        </a>
-                        {recentActivity.url && (
-                          <span className="ml-2 opacity-50 text-sm">
-                            ({new URL(recentActivity.url).hostname})
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <a
-                          href={`/item/${recentActivity.id}`}
+                          href={item.type === 'comment'
+                            ? `/item/${item.parent}/comment/${item.id}`
+                            : `/item/${item.id}`
+                          }
                           onClick={(e) => {
                             e.preventDefault();
-                            navigate(`/item/${recentActivity.id}`);
+                            navigate(item.type === 'comment'
+                              ? `/item/${item.parent}/comment/${item.id}`
+                              : `/item/${item.id}`
+                            );
                           }}
-                          className="opacity-75 hover:opacity-100"
+                          className="hover:opacity-75"
                         >
-                          {recentActivity.text}
+                          {formatTimeAgo(item.time)}
                         </a>
                       </div>
-                    )}
-                  </div>
+                      {item.type === 'story' ? (
+                        <div>
+                          <a
+                            href={item.url || `https://news.ycombinator.com/item?id=${item.id}`}
+                            className="hover:opacity-75"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {item.title}
+                          </a>
+                        </div>
+                      ) : (
+                        <div 
+                          className="prose prose-invert max-w-none"
+                          dangerouslySetInnerHTML={{ __html: item.text || '' }}
+                        />
+                      )}
+                    </div>
+                  ))}
+                  
+                  {/* Infinite scroll observer */}
+                  <div ref={observerTarget} style={{ height: '10px' }} />
+                  
+                  {isLoadingMore && (
+                    <div className="py-4 text-center opacity-75">
+                      Loading more...
+                    </div>
+                  )}
+                  
+                  {!hasMore && activities.length > 0 && (
+                    <div className="py-4 text-center opacity-75">
+                      <div>That's all from {userId}!</div>
+                    </div>
+                  )}
                 </div>
-              )}
-
-              {/* Activity Summary */}
-              {user.submitted && (
-                <div className="space-y-4">
-                  <h2 className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} text-lg font-bold`}>
-                    Activity
-                  </h2>
-                  <div className="text-sm opacity-75">
-                    {user.submitted.length.toLocaleString()} submissions
-                  </div>
-                  {/* We could add a paginated list of their submissions here */}
-                </div>
-              )}
+              </div>
             </div>
           )}
         </div>

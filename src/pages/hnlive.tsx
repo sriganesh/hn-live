@@ -21,6 +21,7 @@ import { ReplayView } from '../components/ReplayView';
 import { ProfilePage } from '../components/ProfilePage';
 import { UpdateNotifier } from '../components/UpdateNotifier';
 import { LinksView } from '../components/LinksView';
+import { UserFeedPage } from '../components/UserFeedPage';
 
 interface HNItem {
   id: number;
@@ -1957,6 +1958,19 @@ export default function HNLiveTerminal() {
             theme={options.theme}
             fontSize={options.fontSize}
             font={options.font}
+            isRunning={isRunning}
+          />
+        )}
+
+        {/* Add UserFeedPage component to the render */}
+        {location.pathname === '/feed' && (
+          <UserFeedPage 
+            theme={options.theme}
+            fontSize={options.fontSize}
+            font={options.font}
+            onShowSearch={() => setShowSearch(true)}
+            onCloseSearch={() => setShowSearch(false)}
+            onShowSettings={() => setShowSettings(true)}
             isRunning={isRunning}
           />
         )}

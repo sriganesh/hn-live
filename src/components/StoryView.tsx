@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { useTopUsers } from '../hooks/useTopUsers';
 import { UserModal } from './UserModal';
 import { BookmarkButton } from './BookmarkButton';
+import { CopyButton } from './CopyButton';
 
 interface StoryViewProps {
   itemId: number;
@@ -31,6 +32,7 @@ interface HNStory {
   kids?: number[];
   descendants?: number;
   comments?: HNComment[];
+  score: number;
 }
 
 interface HNComment {
@@ -280,47 +282,6 @@ const copyToClipboard = async (text: string) => {
   }
 };
 
-// Update the CopyButton component
-const CopyButton = ({ url, theme }: { url: string; theme: 'green' | 'og' | 'dog' }) => {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const success = await copyToClipboard(url);
-    if (success) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  return (
-    <button
-      onClick={handleCopy}
-      className={`hover:opacity-75 transition-opacity flex items-center ${
-        copied ? (theme === 'green' ? 'text-green-500' : 'text-[#ff6600]') : ''
-      }`}
-      title={copied ? 'Copied!' : 'Copy link'}
-    >
-      <svg 
-        className="w-5 h-5" 
-        fill="none" 
-        stroke="currentColor" 
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <path 
-          stroke="currentColor" 
-          strokeLinejoin="round" 
-          strokeWidth={2} 
-          d="M14 4v3a1 1 0 0 1-1 1h-3m4 10v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1h2m11-3v10a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1V7.87a1 1 0 0 1 .24-.65l2.46-2.87a1 1 0 0 1 .76-.35H18a1 1 0 0 1 1 1Z"
-        />
-      </svg>
-    </button>
-  );
-};
-
 // Add this helper function at the top of the file
 const formatTimeAgo = (timestamp: number): string => {
   const seconds = Math.floor((Date.now() - timestamp * 1000) / 1000);
@@ -437,7 +398,8 @@ const convertAlgoliaStory = (algoliaStory: AlgoliaStory): HNStory => {
     time: algoliaStory.created_at_i,
     kids: algoliaStory.children?.map(c => c.id),
     descendants: countAlgoliaComments(algoliaStory.children),
-    comments: convertAlgoliaComments(algoliaStory.children, 0)
+    comments: convertAlgoliaComments(algoliaStory.children, 0),
+    score: algoliaStory.points || 0
   };
 };
 
@@ -1158,14 +1120,9 @@ export function StoryView({
   const renderStoryPreview = (story: HNStory) => {
     return (
       <div className="group">
-        <div className="space-y-1">
-          {/* Title as main content */}
-          <div className="font-medium">
-            {story.title}
-          </div>
-
-          {/* Metadata row */}
-          <div className="text-sm opacity-75 mb-4 flex items-center flex-wrap gap-2">
+        <div className="space-y-2">
+          {/* Top row - user, time, points, and comments */}
+          <div className="text-sm opacity-75">
             <a 
               onClick={(e) => {
                 e.preventDefault();
@@ -1177,9 +1134,7 @@ export function StoryView({
               }`}
             >
               {story.by}
-            </a>
-            <span>•</span>
-            <a
+            </a> • <a
               href={`https://news.ycombinator.com/item?id=${story.id}`}
               className="hover:underline"
               target="_blank"
@@ -1187,25 +1142,25 @@ export function StoryView({
               title={new Date(story.time * 1000).toLocaleString()}
             >
               {formatTimeAgo(story.time)}
-            </a>
-            <span>•</span>
-            <div className="flex items-center gap-1">
-              <span>{story.descendants || 0}</span>
-              <svg 
-                className="w-4 h-4" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                />
-              </svg>
-            </div>
-            <span>•</span>
+            </a> • <span className="font-mono">{story.score} points</span> • {story.descendants || 0} comments
+          </div>
+
+          {/* Title */}
+          <h1 className="text-xl font-bold">
+            {story.url ? (
+              <a href={story.url} target="_blank" rel="noopener noreferrer" className="hover:opacity-75">
+                {story.title}
+                <span className="ml-2 font-normal text-base opacity-50">
+                  ({new URL(story.url).hostname})
+                </span>
+              </a>
+            ) : (
+              story.title
+            )}
+          </h1>
+
+          {/* Actions */}
+          <div className="text-sm opacity-75 flex items-center gap-2">
             <BookmarkButton
               item={{
                 id: story.id,
@@ -1216,59 +1171,41 @@ export function StoryView({
                 url: story.url
               }}
               theme={theme}
+              variant="text"
             />
             <span>•</span>
             <CopyButton 
               url={`https://hn.live/item/${itemId}`}
               theme={theme}
+              variant="text"
             />
-            {(story.descendants ?? 0) > 0 && (
+            {story.descendants > 0 && (
               <>
                 <span>•</span>
                 <button
                   onClick={() => navigate(`/links/${story.id}`)}
-                  className="hover:opacity-75 transition-opacity flex items-center"
-                  title="View all links shared in comments"
+                  className="hover:opacity-75 transition-opacity flex items-center gap-1"
+                  title="View shared links"
                 >
-                  <svg 
-                    className="w-4 h-4" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                    />
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                   </svg>
+                  links
                 </button>
                 <span>•</span>
                 <button
                   onClick={() => navigate(`/replay/${story.id}`)}
-                  className="hover:opacity-75 transition-opacity"
-                  title="Replay story discussion"
+                  className="hover:opacity-75 transition-opacity flex items-center gap-1"
+                  title="Replay discussion"
                 >
-                  <svg 
-                    className="w-4 h-4" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                    />
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2}
-                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-                    />
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
+                  replay
                 </button>
               </>
             )}
@@ -1361,154 +1298,35 @@ export function StoryView({
           <div className="max-w-4xl mx-auto">
             {story ? (
               <>
-                <h1 className={`text-xl font-bold mb-2 ${
-                  theme === 'dog' ? 'font-normal' : ''
-                }`}>
-                  {story.url ? (
-                    <a href={story.url} target="_blank" rel="noopener noreferrer" className="hover:opacity-75">
-                      {story.title}
-                      <span className="ml-2 font-normal text-base opacity-50">
-                        ({new URL(story.url).hostname})
-                      </span>
-                    </a>
-                  ) : (
-                    story.title
-                  )}
-                </h1>
-                
-                <div className="text-sm opacity-75 mb-4 flex items-center flex-wrap gap-2">
-                  <a 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setViewingUser(story.by);
-                    }}
-                    href={`/user/${story.by}`}
-                    className={`hn-username hover:underline ${
-                      isTopUser(story.by) ? getTopUserClass(theme) : ''
-                    }`}
-                  >
-                    {story.by}
-                  </a>
-                  <span>•</span>
-                  <a
-                    href={`https://news.ycombinator.com/item?id=${story.id}`}
-                    className="hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={new Date(story.time * 1000).toLocaleString()}
-                  >
-                    {formatTimeAgo(story.time)}
-                  </a>
-                  <span>•</span>
-                  <div className="flex items-center gap-1">
-                    <span>{story.descendants || 0}</span>
-                    <svg 
-                      className="w-4 h-4" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={2} 
-                        d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                      />
-                    </svg>
-                  </div>
-                  <span>•</span>
-                  <BookmarkButton
-                    item={{
-                      id: story.id,
-                      type: 'story',
-                      title: story.title,
-                      by: story.by,
-                      time: story.time,
-                      url: story.url
-                    }}
-                    theme={theme}
-                  />
-                  <span>•</span>
-                  <CopyButton 
-                    url={`https://hn.live/item/${itemId}`}
-                    theme={theme}
-                  />
-                  {(story.descendants ?? 0) > 0 && (
-                    <>
-                      <span>•</span>
-                      <button
-                        onClick={() => navigate(`/links/${story.id}`)}
-                        className="hover:opacity-75 transition-opacity flex items-center"
-                        title="View all links shared in comments"
-                      >
-                        <svg 
-                          className="w-4 h-4" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={2} 
-                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                          />
-                        </svg>
-                      </button>
-                      <span>•</span>
-                      <button
-                        onClick={() => navigate(`/replay/${story.id}`)}
-                        className="hover:opacity-75 transition-opacity"
-                        title="Replay story discussion"
-                      >
-                        <svg 
-                          className="w-4 h-4" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={2} 
-                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                          />
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={2}
-                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-                          />
-                        </svg>
-                      </button>
-                    </>
-                  )}
-                </div>
+                {renderStoryPreview(story)}
 
                 {story.text && (
                   <div 
-                    className="prose max-w-none mb-8 break-words whitespace-pre-wrap overflow-x-auto px-2 max-w-full"
-                    dangerouslySetHTML={{ __html: addTargetBlankToLinks(story.text) }}
+                    className="prose max-w-none my-4 break-words whitespace-pre-wrap overflow-x-auto px-2 max-w-full"
+                    dangerouslySetInnerHTML={{ __html: addTargetBlankToLinks(story.text) }}
                   />
                 )}
 
-                {useAlgoliaApi && story.descendants > 0 && (
-                  <div className="flex justify-end gap-2 text-sm opacity-75 mb-2">
-                    <button
-                      onClick={() => setSortMode('nested')}
-                      className={`hover:underline ${sortMode === 'nested' ? 'opacity-50' : ''}`}
-                    >
-                      default view
-                    </button>
-                    <span>|</span>
-                    <button
-                      onClick={() => setSortMode('recent')}
-                      className={`hover:underline ${sortMode === 'recent' ? 'opacity-50' : ''}`}
-                    >
-                      recent first
-                    </button>
-                  </div>
-                )}
+                {/* Comments header with sort options */}
+                <div className="text-sm opacity-75 flex justify-end items-center mt-4">
+                  {useAlgoliaApi && story.descendants > 0 && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setSortMode('nested')}
+                        className={`hover:underline ${sortMode === 'nested' ? 'opacity-50' : ''}`}
+                      >
+                        default view
+                      </button>
+                      <span>|</span>
+                      <button
+                        onClick={() => setSortMode('recent')}
+                        className={`hover:underline ${sortMode === 'recent' ? 'opacity-50' : ''}`}
+                      >
+                        recent first
+                      </button>
+                    </div>
+                  )}
+                </div>
 
                 <div className={`border-t my-4 ${
                   theme === 'green'

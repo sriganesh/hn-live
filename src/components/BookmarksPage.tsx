@@ -11,6 +11,7 @@ interface BookmarksPageProps {
   onCloseSearch: () => void;
   onShowSettings: () => void;
   isRunning: boolean;
+  username?: string;
 }
 
 interface Bookmark {
@@ -25,7 +26,7 @@ interface Bookmark {
   storyTitle?: string;
 }
 
-export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSearch, onShowSettings, isRunning }: BookmarksPageProps) {
+export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSearch, onShowSettings, isRunning, username }: BookmarksPageProps) {
   const navigate = useNavigate();
   const [bookmarks, setBookmarks] = useState<HNItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -284,6 +285,7 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
         onCloseSearch={onCloseSearch}
         onShowSettings={onShowSettings}
         isRunning={isRunning}
+        username={username}
       />
     </div>
   );
