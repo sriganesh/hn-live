@@ -4,6 +4,7 @@ interface NavigationItem {
   external?: boolean;
   id?: string;
   icon?: string;
+  onClick?: () => void;
 }
 
 // Main navigation items that appear in MORE dropdown
@@ -67,7 +68,7 @@ export const MOBILE_MENU_ITEMS: NavigationItem[] = [
   },
   {
     id: 'profile',
-    label: (username: string | null) => username || 'Profile',
+    label: (username: string | null) => username ? username : 'HN Profile',
     path: '/profile'
   }
 ]; 

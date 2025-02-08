@@ -2,6 +2,35 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookmarkManager } from './BookmarkManager';
 import { MobileBottomBar } from './MobileBottomBar';
+import { AUTH_TOKEN_KEY, API_BASE_URL } from '../types/auth';
+
+type FontOption = 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
+
+interface BookmarkEntry {
+  id: number;
+  type: 'story' | 'comment';
+  storyId?: number;
+  timestamp: number;
+}
+
+interface BookmarkCache {
+  [key: string]: HNItem;
+}
+
+interface HNItem {
+  id: number;
+  type: 'story' | 'comment';
+  title?: string;
+  text?: string;
+  by: string;
+  time: number;
+  url?: string;
+  score?: number;
+  kids?: number[];
+  parent?: number;
+  storyId?: number;
+  story?: HNItem;
+}
 
 interface BookmarksPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -12,18 +41,6 @@ interface BookmarksPageProps {
   onShowSettings: () => void;
   isRunning: boolean;
   username?: string;
-}
-
-interface Bookmark {
-  id: number;
-  type: 'story' | 'comment';
-  title?: string;
-  text?: string;
-  by: string;
-  time: number;
-  url?: string;
-  storyId?: number;
-  storyTitle?: string;
 }
 
 export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSearch, onShowSettings, isRunning, username }: BookmarksPageProps) {
@@ -39,44 +56,71 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
 
   const fetchBookmarks = async (pageNum: number) => {
     try {
-      const savedBookmarks: BookmarkEntry[] = JSON.parse(localStorage.getItem('hn-bookmarks') || '[]');
+      // Get core bookmark data
+      const bookmarkEntries: BookmarkEntry[] = JSON.parse(localStorage.getItem('hn-bookmarks') || '[]');
       
       // Sort by timestamp (newest first)
-      savedBookmarks.sort((a, b) => b.timestamp - a.timestamp);
+      bookmarkEntries.sort((a, b) => b.timestamp - a.timestamp);
 
       const start = pageNum * ITEMS_PER_PAGE;
       const end = start + ITEMS_PER_PAGE;
-      const pageBookmarks = savedBookmarks.slice(start, end);
+      const pageBookmarks = bookmarkEntries.slice(start, end);
 
       if (pageBookmarks.length < ITEMS_PER_PAGE) {
         setHasMore(false);
       }
 
-      // Fetch all bookmarked items for this page
-      const items = await Promise.all(
-        pageBookmarks.map(async (bookmark) => {
-          const response = await fetch(`https://hacker-news.firebaseio.com/v0/item/${bookmark.id}.json`);
-          const item = await response.json();
-          return {
-            ...item,
-            type: bookmark.type,
-            storyId: bookmark.storyId
-          };
-        })
-      );
+      // Get or initialize cache
+      let bookmarkCache: BookmarkCache = JSON.parse(localStorage.getItem('hn-bookmark-cache') || '{}');
 
-      // For comments, fetch their parent stories
+      // Fetch items not in cache
+      const itemsToFetch = pageBookmarks.filter(b => !bookmarkCache[b.id]);
+      
+      if (itemsToFetch.length > 0) {
+        const newItems = await Promise.all(
+          itemsToFetch.map(async (bookmark) => {
+            const response = await fetch(`https://hacker-news.firebaseio.com/v0/item/${bookmark.id}.json`);
+            const item = await response.json();
+            return {
+              ...item,
+              type: bookmark.type,
+              storyId: bookmark.storyId
+            };
+          })
+        );
+
+        // Update cache with new items
+        newItems.forEach(item => {
+          bookmarkCache[item.id] = item;
+        });
+        localStorage.setItem('hn-bookmark-cache', JSON.stringify(bookmarkCache));
+      }
+
+      // Get items for this page from cache
+      const pageItems = pageBookmarks.map(bookmark => ({
+        ...bookmarkCache[bookmark.id],
+        type: bookmark.type,
+        storyId: bookmark.storyId
+      }));
+
+      // For comments, fetch their parent stories if not in cache
       const itemsWithStories = await Promise.all(
-        items.map(async (item) => {
+        pageItems.map(async (item) => {
           if (item.type === 'comment' && item.storyId) {
-            const storyResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${item.storyId}.json`);
-            const story = await storyResponse.json();
-            return { ...item, story };
+            if (!bookmarkCache[item.storyId]) {
+              const storyResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${item.storyId}.json`);
+              const story = await storyResponse.json();
+              bookmarkCache[item.storyId] = story;
+              localStorage.setItem('hn-bookmark-cache', JSON.stringify(bookmarkCache));
+              return { ...item, story };
+            }
+            return { ...item, story: bookmarkCache[item.storyId] };
           }
           return item;
         })
       );
 
+      // Update bookmarks state
       if (pageNum === 0) {
         setBookmarks(itemsWithStories.filter(Boolean));
       } else {
@@ -91,25 +135,59 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
 
   useEffect(() => {
     fetchBookmarks(0);
+
+    // Listen for sync events and refresh bookmarks
+    const handleSync = async () => {
+      const currentScrollTop = containerRef.current?.scrollTop || 0;
+      setLoading(true);
+      setPage(0);
+      setHasMore(true);
+      setBookmarks([]);
+      await fetchBookmarks(0);
+      setLoading(false);
+      // Restore scroll position for sync if we were not at the top
+      if (currentScrollTop > 0) {
+        requestAnimationFrame(() => {
+          if (containerRef.current) {
+            containerRef.current.scrollTop = currentScrollTop;
+          }
+        });
+      }
+    };
+
+    window.addEventListener('bookmarks-synced', handleSync);
+    return () => window.removeEventListener('bookmarks-synced', handleSync);
   }, []);
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
+    let isMounted = true;
     const observer = new IntersectionObserver(
-      (entries) => {
+      async (entries) => {
         if (entries[0].isIntersecting && hasMore && !loading) {
-          setPage(prev => prev + 1);
-          fetchBookmarks(page + 1);
+          setLoading(true);
+          const nextPage = page + 1;
+          setPage(nextPage);
+          await fetchBookmarks(nextPage);
+          if (isMounted) {
+            setLoading(false);
+          }
         }
       },
-      { threshold: 0.5 }
+      { 
+        threshold: 0.5,
+        rootMargin: '100px' // Start loading earlier
+      }
     );
 
     if (loadingRef.current) {
       observer.observe(loadingRef.current);
     }
 
-    return () => observer.disconnect();
+    return () => {
+      isMounted = false;
+      observer.disconnect();
+    };
   }, [hasMore, loading, page]);
 
   // Add scroll handler
@@ -157,6 +235,47 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
     return () => document.removeEventListener('keydown', handleEscape);
   }, [navigate]);
 
+  // Add loading indicator component
+  const LoadingIndicator = () => (
+    <div className="py-4 text-center opacity-75 transition-opacity duration-200">
+      {loading ? 'Loading more bookmarks...' : hasMore ? 'Scroll for more' : ''}
+    </div>
+  );
+
+  const handleDeleteBookmark = async (bookmarkId: number) => {
+    try {
+      // Remove from local storage
+      const bookmarkEntries: BookmarkEntry[] = JSON.parse(localStorage.getItem('hn-bookmarks') || '[]');
+      const updatedBookmarks = bookmarkEntries.filter(b => b.id !== bookmarkId);
+      localStorage.setItem('hn-bookmarks', JSON.stringify(updatedBookmarks));
+
+      // Remove from cache
+      const bookmarkCache = JSON.parse(localStorage.getItem('hn-bookmark-cache') || '{}');
+      delete bookmarkCache[bookmarkId];
+      localStorage.setItem('hn-bookmark-cache', JSON.stringify(bookmarkCache));
+
+      // Update UI
+      setBookmarks(prev => prev.filter(b => b.id !== bookmarkId));
+
+      // Remove from cloud if user is logged in
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+      if (token) {
+        const deleteResponse = await fetch(`${API_BASE_URL}/api/bookmarks/item/${bookmarkId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        });
+
+        if (!deleteResponse.ok && deleteResponse.status !== 404) {
+          console.error('Failed to delete bookmark from cloud');
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting bookmark:', error);
+    }
+  };
+
   return (
     <div className={`
       fixed inset-0 z-50 overflow-hidden
@@ -176,7 +295,7 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
     `}>
       <div 
         ref={containerRef}
-        className="h-full overflow-y-auto p-4 pb-20"
+        className="h-full overflow-y-auto p-4 pb-20 transition-all duration-200"
       >
         {/* Header */}
         <div className="max-w-3xl mx-auto mb-8">
@@ -210,17 +329,13 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
         {/* Add the note about local storage at the top */}
         <div className="max-w-3xl mx-auto mb-8">
           <div className="text-sm opacity-75">
-            Note: Bookmarks are stored locally in your browser. They may be lost if you clear browser data. Use the [EXPORT] button above to save your bookmarks.
+            Note: Bookmarks are stored locally. Use [EXPORT] to save them, or create an HN Live account in Settings for cloud sync.
           </div>
         </div>
 
         {/* Bookmarks List */}
         <div className="max-w-3xl mx-auto">
-          {loading ? (
-            <div className="opacity-75">
-              Loading bookmarks...
-            </div>
-          ) : bookmarks.length === 0 ? (
+          {bookmarks.length === 0 ? (
             <div className="text-center py-8 opacity-75">
               No bookmarks yet. Use the bookmark button on stories or comments to save them here.
             </div>
@@ -255,11 +370,7 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
                       </a>
                       {' '}
                       <button
-                        onClick={() => {
-                          const updatedBookmarks = bookmarks.filter(b => b.id !== bookmark.id);
-                          localStorage.setItem('hn-bookmarks', JSON.stringify(updatedBookmarks));
-                          setBookmarks(updatedBookmarks);
-                        }}
+                        onClick={() => handleDeleteBookmark(bookmark.id)}
                         className="opacity-50 hover:opacity-100"
                       >
                         [remove]
@@ -281,11 +392,7 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
                       </a>
                       {' '}
                       <button
-                        onClick={() => {
-                          const updatedBookmarks = bookmarks.filter(b => b.id !== bookmark.id);
-                          localStorage.setItem('hn-bookmarks', JSON.stringify(updatedBookmarks));
-                          setBookmarks(updatedBookmarks);
-                        }}
+                        onClick={() => handleDeleteBookmark(bookmark.id)}
                         className="opacity-50 hover:opacity-100"
                       >
                         [remove]
@@ -295,9 +402,9 @@ export function BookmarksPage({ theme, fontSize, font, onShowSearch, onCloseSear
                 </div>
               ))}
               
-              {hasMore && (
-                <div ref={loadingRef} className="py-4 text-center opacity-50">
-                  Loading more bookmarks...
+              {(hasMore || loading) && (
+                <div ref={loadingRef}>
+                  <LoadingIndicator />
                 </div>
               )}
             </div>

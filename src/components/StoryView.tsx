@@ -16,7 +16,6 @@ interface StoryViewProps {
   onShowSettings: () => void;
   isSettingsOpen: boolean;
   isRunning: boolean;
-  showBackToTop: boolean;
   useAlgoliaApi: boolean;
 }
 
@@ -431,8 +430,7 @@ export function StoryView({
   font, 
   onShowSettings, 
   isSettingsOpen, 
-  isRunning, 
-  showBackToTop,
+  isRunning,
   useAlgoliaApi
 }: StoryViewProps) {
   const navigate = useNavigate();
@@ -1516,7 +1514,7 @@ export function StoryView({
       )}
 
       {/* Back to top button */}
-      {showBackToTop && isBackToTopVisible && (
+      {isBackToTopVisible && (
         <button
           onClick={scrollToTop}
           className={`fixed bottom-28 right-8 p-2 rounded-full shadow-lg z-[60] 

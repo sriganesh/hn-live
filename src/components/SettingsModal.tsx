@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { startTracking } from '../registerServiceWorker';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+
+type FontOption = 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -14,14 +17,12 @@ interface SettingsModalProps {
     classicLayout: boolean;
     showCommentParents: boolean;
     font: FontOption;
-    showBackToTop: boolean;
     useAlgoliaApi: boolean;
   };
   onUpdateOptions: (options: any) => void;
   colorizeUsernames: boolean;
   onColorizeUsernamesChange: (value: boolean) => void;
   isMobile?: boolean;
-  setStoredBackToTop: (value: boolean) => void;
   hnUsername: string | null;
   onUpdateHnUsername: (username: string | null) => void;
 }
@@ -53,11 +54,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   colorizeUsernames,
   onColorizeUsernamesChange,
   isMobile = window.innerWidth < 640,
-  setStoredBackToTop,
   hnUsername,
   onUpdateHnUsername
 }) => {
   const navigate = useNavigate();
+  const { user, isAuthenticated, requestAuth, verifyAuth, logout, isAuthenticating } = useAuth();
 
   // Add ESC key handler
   useEffect(() => {
@@ -86,7 +87,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     terminal: true,
     feedView: true,
     storyView: true,
-    account: true
+    account: true,
+    cloud: true
   });
 
   // Add state for HN username input
@@ -94,8 +96,42 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  // Add state for authentication UI
+  const [emailInput, setEmailInput] = useState('');
+  const [codeInput, setCodeInput] = useState('');
+  const [showVerifyCode, setShowVerifyCode] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // Add state for email validation
+  const [debouncedEmailError, setDebouncedEmailError] = useState<string | null>(null);
+  const emailValidationTimeout = useRef<NodeJS.Timeout>();
+
+  // Debounced email validation
+  const validateEmail = (email: string) => {
+    // Clear any existing timeout
+    if (emailValidationTimeout.current) {
+      clearTimeout(emailValidationTimeout.current);
+    }
+
+    // Clear error if field is empty
+    if (!email.trim()) {
+      setDebouncedEmailError(null);
+      return;
+    }
+
+    // Set new timeout for validation
+    emailValidationTimeout.current = setTimeout(() => {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(email)) {
+        setDebouncedEmailError('Please enter a valid email address');
+      } else {
+        setDebouncedEmailError(null);
+      }
+    }, 1500); // Wait 1.5s after user stops typing
+  };
+
   // Toggle handler for sections
-  const toggleSection = (section: 'terminal' | 'feedView' | 'storyView' | 'account') => {
+  const toggleSection = (section: 'terminal' | 'feedView' | 'storyView' | 'account' | 'cloud') => {
     setCollapsedSections(prev => ({
       ...prev,
       [section]: !prev[section]
@@ -161,6 +197,37 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       setValidationError('Error validating username');
     } finally {
       setIsValidating(false);
+    }
+  };
+
+  // Add handlers for authentication
+  const handleRequestCode = async () => {
+    // Basic email validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(emailInput)) {
+      setAuthError('Please enter a valid email address');
+      return;
+    }
+
+    try {
+      setAuthError(null);
+      await requestAuth(emailInput);
+      setShowVerifyCode(true);
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : 'Failed to send code');
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    try {
+      setAuthError(null);
+      await verifyAuth(codeInput, emailInput);
+      // Reset states after successful verification
+      setEmailInput('');
+      setCodeInput('');
+      setShowVerifyCode(false);
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : 'Invalid code');
     }
   };
 
@@ -450,29 +517,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="text-xs opacity-60 ml-6 mt-1">
                   Note: If stories fail to load, try unchecking this option
                 </div>
-                <button
-                  onClick={() => {
-                    const newValue = !options.showBackToTop;
-                    setStoredBackToTop(newValue);
-                    onUpdateOptions({
-                      ...options,
-                      showBackToTop: newValue
-                    });
-                  }}
-                  className="hover:opacity-75 transition-opacity block"
-                >
-                  [{options.showBackToTop ? 'x' : ' '}] Show scroll to top
-                </button>
               </div>
             </div>
 
-            {/* Account */}
             <div className="space-y-2">
               <button 
                 onClick={() => toggleSection('account')}
                 className="w-full flex items-center justify-between text-sm font-bold uppercase tracking-wider mb-2"
               >
-                <span>ACCOUNT</span>
+                <span>HN ACCOUNT (LOCAL)</span>
                 <svg 
                   className={`w-4 h-4 transform transition-transform ${collapsedSections.account ? '' : 'rotate-180'}`}
                   fill="none" 
@@ -509,7 +562,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 ) : (
                   // Show connect form
                   <div className="space-y-2">
-                    <div className="text-sm opacity-75">Connect your HN account (case-sensitive):</div>
+                    <div className="text-sm opacity-75">Track replies locally with just your HN username</div>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
@@ -534,7 +587,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         onClick={validateAndSaveUsername}
                         disabled={isValidating || !usernameInput.trim()}
                         className={`
-                          px-3 py-1 rounded transition-opacity
+                          px-2 py-1 rounded transition-opacity whitespace-nowrap
                           ${isValidating ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-75'}
                           ${theme === 'green'
                             ? 'bg-green-500/20 text-green-400'
@@ -544,12 +597,176 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                           }
                         `}
                       >
-                        {isValidating ? 'Checking...' : 'Connect'}
+                        [{isValidating ? '...' : 'connect'}]
                       </button>
                     </div>
                     {validationError && (
                       <div className="text-sm text-red-500">{validationError}</div>
                     )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Cloud Account section */}
+            <div className="space-y-2">
+              <button 
+                onClick={() => toggleSection('cloud')}
+                className="w-full flex items-center justify-between text-sm font-bold uppercase tracking-wider mb-2"
+              >
+                <span>HN LIVE ACCOUNT (CLOUD)</span>
+                <svg 
+                  className={`w-4 h-4 transform transition-transform ${collapsedSections.cloud ? '' : 'rotate-180'}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className={`space-y-4 transition-all duration-200 ${collapsedSections.cloud ? 'hidden' : ''}`}>
+                {/* Show authentication UI if not authenticated */}
+                {!user ? (
+                  <div className="space-y-4">
+                    {showVerifyCode ? (
+                      // Show verification code input
+                      <div className="space-y-2">
+                        <div className="text-sm opacity-75">Enter the verification code sent to {emailInput}:</div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={codeInput}
+                            onChange={(e) => {
+                              setCodeInput(e.target.value);
+                              setAuthError(null);
+                            }}
+                            placeholder="6-digit code"
+                            className={`
+                              bg-transparent border px-2 py-1 rounded w-full
+                              ${theme === 'green' 
+                                ? 'border-green-500/30 focus:border-green-500/50 placeholder-green-500/50' 
+                                : theme === 'og'
+                                ? 'border-[#ff6600]/30 focus:border-[#ff6600]/50 placeholder-[#828282]/75'
+                                : 'border-[#828282]/30 focus:border-[#828282]/50 placeholder-[#828282]'
+                              }
+                              focus:outline-none
+                            `}
+                            pattern="[0-9]{6}"
+                            maxLength={6}
+                          />
+                          <button
+                            onClick={() => handleVerifyCode()}
+                            disabled={isAuthenticating || !codeInput.trim()}
+                            className={`
+                              px-2 py-1 rounded transition-opacity whitespace-nowrap
+                              ${isAuthenticating ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-75'}
+                              ${theme === 'green'
+                                ? 'bg-green-500/20 text-green-400'
+                                : theme === 'og'
+                                ? 'bg-[#ff6600]/20 text-[#ff6600]'
+                                : 'bg-[#828282]/20'
+                              }
+                            `}
+                          >
+                            [{isAuthenticating ? '...' : 'verify'}]
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setShowVerifyCode(false);
+                            setCodeInput('');
+                            setAuthError(null);
+                          }}
+                          className="text-sm opacity-75 hover:opacity-100"
+                        >
+                          Use a different email
+                        </button>
+                      </div>
+                    ) : (
+                      // Show email input
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="text-sm opacity-75">Register for an HN Live account</div>
+                          <div className="relative group">
+                            <button className="opacity-50 hover:opacity-100">[?]</button>
+                            <div className={`
+                              absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 rounded text-sm
+                              opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none
+                              ${theme === 'green' 
+                                ? 'bg-black border border-green-500/30' 
+                                : theme === 'og'
+                                ? 'bg-white border border-[#ff6600]/30'
+                                : 'bg-[#1a1a1a] border border-[#828282]/30'
+                              }
+                            `}>
+                              <div className="space-y-1">
+                                <div>• Cross-device sync (bookmarks, more coming soon)</div>
+                                <div>• Enhanced HN features powered by custom APIs</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="email"
+                            value={emailInput}
+                            onChange={(e) => {
+                              setEmailInput(e.target.value);
+                              setAuthError(null);
+                              validateEmail(e.target.value);
+                            }}
+                            placeholder="Enter your email"
+                            className={`
+                              bg-transparent border px-2 py-1 rounded w-full
+                              ${theme === 'green' 
+                                ? 'border-green-500/30 focus:border-green-500/50 placeholder-green-500/50' 
+                                : theme === 'og'
+                                ? 'border-[#ff6600]/30 focus:border-[#ff6600]/50 placeholder-[#828282]/75'
+                                : 'border-[#828282]/30 focus:border-[#828282]/50 placeholder-[#828282]'
+                              }
+                              focus:outline-none
+                              ${debouncedEmailError ? 'border-red-500/50' : ''}
+                            `}
+                          />
+                          <button
+                            onClick={handleRequestCode}
+                            disabled={isAuthenticating || !emailInput.trim() || !!debouncedEmailError}
+                            className={`
+                              px-2 py-1 rounded transition-opacity whitespace-nowrap
+                              ${(isAuthenticating || !!debouncedEmailError) ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-75'}
+                              ${theme === 'green'
+                                ? 'bg-green-500/20 text-green-400'
+                                : theme === 'og'
+                                ? 'bg-[#ff6600]/20 text-[#ff6600]'
+                                : 'bg-[#828282]/20'
+                              }
+                            `}
+                          >
+                            [{isAuthenticating ? '...' : 'register'}]
+                          </button>
+                        </div>
+                        {debouncedEmailError && (
+                          <div className="text-sm text-red-500">{debouncedEmailError}</div>
+                        )}
+                      </div>
+                    )}
+                    {authError && (
+                      <div className="text-sm text-red-500">{authError}</div>
+                    )}
+                  </div>
+                ) : (
+                  // Show connected account status
+                  <div className="space-y-4">
+                    {/* Show connected account status */}
+                    <div className="flex items-center justify-between">
+                      <div className="opacity-75">Connected as: {user.email}</div>
+                      <button
+                        onClick={logout}
+                        className="text-sm hover:opacity-75"
+                      >
+                        [disconnect]
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
