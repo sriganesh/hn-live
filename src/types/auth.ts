@@ -29,5 +29,5 @@ export interface AuthResponse {
 export const AUTH_TOKEN_KEY = 'hnlive_token';
 export const AUTH_USER_KEY = 'hnlive_user';
 export const API_BASE_URL = process.env.NODE_ENV === 'development' 
-  ? 'https://localhost:8787'  // Development 
+  ? 'https://auth.hn.live'  // Development 
   : 'https://auth.hn.live';  // Production 
