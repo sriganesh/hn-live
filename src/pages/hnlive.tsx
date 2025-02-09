@@ -93,7 +93,7 @@ const getStoredSettings = () => {
       autoscroll: localStorage.getItem('hn-live-autoscroll') === 'true',
       directLinks: localStorage.getItem('hn-live-direct') === 'true',
       fontSize,
-      classicLayout: localStorage.getItem('hn-live-classic-layout') !== 'false',
+      classicLayout: localStorage.getItem('hn-live-classic-layout') === 'true',
       showCommentParents: localStorage.getItem('hn-live-comment-parents') !== 'false',
       font: localStorage.getItem('hn-live-font') as FontOption || 'mono',
       useAlgoliaApi: localStorage.getItem('hn-use-algolia-api') !== 'false'
@@ -107,7 +107,7 @@ const getStoredSettings = () => {
       autoscroll: false,
       directLinks: false,
       fontSize: isMobile ? 'sm' as const : 'base' as const,
-      classicLayout: true,
+      classicLayout: false,
       showCommentParents: true,
       font: 'mono' as FontOption,
       useAlgoliaApi: true
@@ -890,7 +890,7 @@ export default function HNLiveTerminal() {
   // Add state for username colorization
   const [colorizeUsernames, setColorizeUsernames] = useState(() => {
     const saved = localStorage.getItem('hn-live-colorize-usernames');
-    return saved ? JSON.parse(saved) : true; // Default to true - usernames colorized
+    return saved ? JSON.parse(saved) : false; // Default to false - usernames not colorized
   });
 
   // Add effect to save setting
