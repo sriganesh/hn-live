@@ -764,6 +764,28 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                             [{isAuthenticating ? '...' : 'register'}]
                           </button>
                         </div>
+                        <div className="text-xs opacity-75">
+                          By registering, you agree to our{' '}
+                          <button 
+                            onClick={() => {
+                              onClose();
+                              navigate('/terms');
+                            }}
+                            className="hover:opacity-100 underline"
+                          >
+                            Terms of Service
+                          </button>
+                          {' '}and{' '}
+                          <button
+                            onClick={() => {
+                              onClose();
+                              navigate('/privacy');
+                            }}
+                            className="hover:opacity-100 underline"
+                          >
+                            Privacy Policy
+                          </button>
+                        </div>
                         {debouncedEmailError && (
                           <div className="text-sm text-red-500">{debouncedEmailError}</div>
                         )}

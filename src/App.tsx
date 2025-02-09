@@ -4,6 +4,8 @@ import HNLiveTerminal from "./pages/hnlive";
 import { register as registerServiceWorker } from './registerServiceWorker';
 import { useEffect } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
+import { TermsPage } from './pages/Terms';
+import { PrivacyPage } from './pages/Privacy';
 
 // Add type definitions at the top
 interface NewReply {
@@ -125,6 +127,8 @@ export function App() {
               <Route path="profile" element={null} />
               <Route path="links/:itemId" element={null} />
               <Route path="feed" element={null} />
+              <Route path="terms" element={null} />
+              <Route path="privacy" element={null} />
             </Route>
           </Routes>
         </AuthProvider>

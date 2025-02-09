@@ -24,6 +24,8 @@ import { LinksView } from '../components/LinksView';
 import { UserFeedPage } from '../components/UserFeedPage';
 import { useAuth } from '../contexts/AuthContext';
 import { useSwipeable } from 'react-swipeable';
+import { TermsPage } from './Terms';
+import { PrivacyPage } from './Privacy';
 
 interface HNItem {
   id: number;
@@ -220,9 +222,14 @@ export default function HNLiveTerminal() {
 
   // Format item for display
   const formatItem = async (item: HNItem) => {
+    // Create a new AbortController for this format operation
+    const abortController = new AbortController();
+    
     if (!item.by || 
         (item.type === 'comment' && !item.text) || 
-        item.text === '[delayed]') return null;
+        item.text === '[delayed]') {
+      return null;
+    }
 
     let text = '';
     let links = {
@@ -243,18 +250,27 @@ export default function HNLiveTerminal() {
       // Fetch parent story if needed
       if (options.showCommentParents && item.parent) {
         try {
-          let currentParent = await fetch(`https://hacker-news.firebaseio.com/v0/item/${item.parent}.json`).then(r => r.json());
+          let currentParent = await fetch(
+            `https://hacker-news.firebaseio.com/v0/item/${item.parent}.json`,
+            { signal: abortController.signal }
+          ).then(r => r.json());
           
           // Keep going up until we find the root story
           while (currentParent.type === 'comment' && currentParent.parent) {
-            currentParent = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentParent.parent}.json`).then(r => r.json());
+            currentParent = await fetch(
+              `https://hacker-news.firebaseio.com/v0/item/${currentParent.parent}.json`,
+              { signal: abortController.signal }
+            ).then(r => r.json());
           }
           
           if (currentParent.type === 'story') {
             parentStory = currentParent;
           }
         } catch (error) {
-          console.error('Error fetching parent story:', error);
+          // Only log error if it's not an abort error
+          if (error.name !== 'AbortError') {
+            console.error('Error fetching parent story:', error);
+          }
         }
       }
 
@@ -1138,6 +1154,21 @@ export default function HNLiveTerminal() {
     reformatItems();
   }, [options.directLinks]); // Only re-run when directLinks changes
 
+  // Add effect to handle abort requests
+  useEffect(() => {
+    const handleAbortRequests = (e: CustomEvent) => {
+      const controller = e.detail;
+      if (controller && controller.abort) {
+        controller.abort();
+      }
+    };
+
+    window.addEventListener('abortRequests', handleAbortRequests as EventListener);
+    return () => {
+      window.removeEventListener('abortRequests', handleAbortRequests as EventListener);
+    };
+  }, []);
+
   return (
     <>
       <Helmet>
@@ -1800,6 +1831,22 @@ export default function HNLiveTerminal() {
               theme={options.theme}
             />
           </>
+        )}
+
+        {/* Add the Terms page component to the render */}
+        {location.pathname === '/terms' && (
+          <TermsPage 
+            theme={options.theme}
+            isRunning={isRunning}
+          />
+        )}
+
+        {/* Add the Privacy page component to the render */}
+        {location.pathname === '/privacy' && (
+          <PrivacyPage 
+            theme={options.theme}
+            isRunning={isRunning}
+          />
         )}
 
         {/* Center notification overlay */}
