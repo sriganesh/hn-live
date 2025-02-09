@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { StoryView } from '../components/StoryView';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate, useParams, useLocation, Outlet } from 'react-router-dom';
+import { useNavigate, useLocation, useParams, Outlet } from 'react-router-dom';
 import SearchModal from '../components/SearchModal';
 import { FrontPage } from '../components/FrontPage';
 import { ShowPage } from '../components/ShowPage';
@@ -23,6 +23,7 @@ import { UpdateNotifier } from '../components/UpdateNotifier';
 import { LinksView } from '../components/LinksView';
 import { UserFeedPage } from '../components/UserFeedPage';
 import { useAuth } from '../contexts/AuthContext';
+import { useSwipeable } from 'react-swipeable';
 
 interface HNItem {
   id: number;
@@ -188,8 +189,8 @@ export default function HNLiveTerminal() {
   const timeoutRef = useRef<NodeJS.Timeout>();
 
   const navigate = useNavigate();
-  const { itemId, commentId } = useParams();
   const location = useLocation();
+  const { itemId, commentId } = useParams();
 
   const { isTopUser, getTopUserClass } = useTopUsers();
   const { user, isAuthenticated } = useAuth();
@@ -802,6 +803,37 @@ export default function HNLiveTerminal() {
   // First add a new state for the settings menu
   const [showSettings, setShowSettings] = useState(false);
 
+  // Add page order array
+  const PAGE_ORDER = ['front', 'show', 'ask', 'jobs', 'best'] as const;
+
+  // Add swipe handlers
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      const currentPath = location.pathname.slice(1);
+      const currentIndex = PAGE_ORDER.indexOf(currentPath as typeof PAGE_ORDER[number]);
+      if (currentIndex >= 0) {
+        // If we're at the last page, go to the first page
+        const nextIndex = currentIndex === PAGE_ORDER.length - 1 ? 0 : currentIndex + 1;
+        navigate(`/${PAGE_ORDER[nextIndex]}`);
+      }
+    },
+    onSwipedRight: () => {
+      const currentPath = location.pathname.slice(1);
+      const currentIndex = PAGE_ORDER.indexOf(currentPath as typeof PAGE_ORDER[number]);
+      if (currentIndex >= 0) {
+        // If we're at the first page, go to the last page
+        const nextIndex = currentIndex === 0 ? PAGE_ORDER.length - 1 : currentIndex - 1;
+        navigate(`/${PAGE_ORDER[nextIndex]}`);
+      }
+    },
+    preventScrollOnSwipe: true,
+    trackTouch: true,
+    trackMouse: false,
+    delta: 50, // minimum swipe distance
+    swipeDuration: 500, // maximum time for swipe motion
+    touchEventOptions: { passive: false } // important for preventing default touch behavior
+  });
+
   // In the terminal view section where new stories are rendered
   const renderNewItem = (item: HNItem) => {
     if (item.type === 'story') {
@@ -1135,9 +1167,13 @@ export default function HNLiveTerminal() {
         <style>{themeStyles}</style>
         <style>{mobileNavStyles}</style>
       </Helmet>
-      <div className={`
+      <div {...swipeHandlers} className={`
         min-h-screen flex flex-col
-        ${theme === 'green' ? 'bg-black text-green-400' : theme === 'og' ? 'bg-[#f6f6ef] text-[#111]' : 'bg-[#1a1a1a] text-[#c9d1d9]'}
+        ${theme === 'green'
+          ? 'bg-black text-green-400'
+          : theme === 'og'
+          ? 'bg-[#f6f6ef] text-[#111]'
+          : 'bg-[#1a1a1a] text-[#c9d1d9]'}
         mt-[env(safe-area-inset-top)]
         pb-[env(safe-area-inset-bottom)]
         ${options.font === 'mono' ? 'font-mono' : 
