@@ -246,8 +246,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         onClick={onClose}
       />
       
-      <div className="relative z-[101] flex items-center justify-center h-full">
-        <div className={`w-full max-w-lg ${themeColors} border p-4 shadow-lg font-mono`}>
+      <div className="relative z-[101] flex items-center justify-center h-full p-4">
+        <div className={`w-full max-w-lg ${themeColors} border p-4 shadow-lg font-mono max-h-[85vh] overflow-y-auto mb-20 sm:mb-0`}>
           {/* Terminal-style header */}
           <div className="flex items-center justify-between mb-6 border-b border-current pb-2">
             <div className="flex items-center gap-2">
