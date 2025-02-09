@@ -94,7 +94,7 @@ const getStoredSettings = () => {
       directLinks: localStorage.getItem('hn-live-direct') === 'true',
       fontSize,
       classicLayout: localStorage.getItem('hn-live-classic-layout') !== 'false',
-      showCommentParents: localStorage.getItem('hn-live-comment-parents') === 'true',
+      showCommentParents: localStorage.getItem('hn-live-comment-parents') !== 'false',
       font: localStorage.getItem('hn-live-font') as FontOption || 'mono',
       useAlgoliaApi: localStorage.getItem('hn-use-algolia-api') !== 'false'
     };
@@ -108,7 +108,7 @@ const getStoredSettings = () => {
       directLinks: false,
       fontSize: isMobile ? 'sm' as const : 'base' as const,
       classicLayout: true,
-      showCommentParents: false,
+      showCommentParents: true,
       font: 'mono' as FontOption,
       useAlgoliaApi: true
     };
