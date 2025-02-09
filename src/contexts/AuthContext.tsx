@@ -104,26 +104,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
+      console.log('Starting logout process');
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
-      if (token) {
-        await fetch(`${API_BASE_URL}/auth/logout`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-      localStorage.removeItem(AUTH_USER_KEY);
+      
+      // First update the state to prevent any race conditions
       setAuthState({
         user: null,
         isAuthenticated: false,
         isLoading: false,
         isAuthenticating: false
       });
+
+      // Then clear localStorage
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem(AUTH_USER_KEY);
+
+      // Finally, make the API call (don't wait for it)
+      if (token) {
+        fetch(`${API_BASE_URL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        }).catch(error => {
+          console.error('Non-critical logout error:', error);
+        });
+      }
+      
+      console.log('Logout completed successfully');
+    } catch (error) {
+      console.error('Critical logout error:', error);
+      // Even if there's an error, ensure the user is logged out locally
+      setAuthState({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        isAuthenticating: false
+      });
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem(AUTH_USER_KEY);
+      throw error;
     }
   };
 

@@ -231,6 +231,25 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      console.log('Starting modal logout process');
+      // Close the modal first to prevent any UI issues
+      onClose();
+      // Then perform the logout
+      await logout();
+      console.log('Modal logout completed successfully');
+    } catch (error) {
+      console.error('Error during modal logout:', error);
+      // Show error message if needed
+      if (error instanceof Error) {
+        setAuthError(error.message);
+      } else {
+        setAuthError('An error occurred during logout');
+      }
+    }
+  };
+
   if (!isOpen) return null;
 
   const themeColors = theme === 'green'
@@ -761,7 +780,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div className="flex items-center justify-between">
                       <div className="opacity-75">Connected as: {user.email}</div>
                       <button
-                        onClick={logout}
+                        onClick={handleLogout}
                         className="text-sm hover:opacity-75"
                       >
                         [disconnect]
