@@ -1172,14 +1172,14 @@ export default function HNLiveTerminal() {
   return (
     <>
       <Helmet>
-        <title>HN Live - Real-time Hacker News Feed</title>
+        <title>HN Live - Real-time Hacker News Client</title>
         <meta name="description" content="Live, real-time feed of Hacker News stories and discussions as they happen. Watch new posts and comments appear instantly from the HN community." />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebApplication",
             "name": "HN Live",
-            "description": "Real-time Hacker News feed",
+            "description": "Real-time Hacker News Client",
             "url": "https://hn.live",
             "applicationCategory": "News",
             "operatingSystem": "Any",
@@ -1218,7 +1218,7 @@ export default function HNLiveTerminal() {
       `}>
         <noscript>
           <div className="p-4">
-            <h1>HN Live - Real-time Hacker News Feed</h1>
+            <h1>HN Live - Real-time Hacker News Client</h1>
             <p>This is a real-time feed of Hacker News content. JavaScript is required to view the live updates.</p>
           </div>
         </noscript>
