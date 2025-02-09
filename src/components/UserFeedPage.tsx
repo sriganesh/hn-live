@@ -597,7 +597,8 @@ export function UserFeedPage({
               </div>
               {following.length === 0 ? (
                 <div className="text-center py-8 opacity-75">
-                  No followed users yet. Click on usernames to follow users.
+                  <div>No followed users yet. Click on usernames to follow users.</div>
+                  <div className="mt-2 text-sm">Following users lets you see their stories and comments in your personalized feed.</div>
                 </div>
               ) : (
                 following.map(follow => (
