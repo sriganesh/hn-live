@@ -367,7 +367,7 @@ export function ProfilePage({
       </Helmet>
       
       <div className={`
-        fixed inset-0 overflow-y-auto z-50
+        fixed inset-0 overflow-y-auto overflow-x-hidden z-50
         ${font === 'mono' ? 'font-mono' : 
           font === 'jetbrains' ? 'font-jetbrains' :
           font === 'fira' ? 'font-fira' :
@@ -382,7 +382,7 @@ export function ProfilePage({
           : 'bg-[#1a1a1a] text-[#828282]'}
         text-${fontSize}
       `}>
-        <div className="h-full overflow-y-auto p-4">
+        <div className="h-full overflow-y-auto overflow-x-hidden p-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <button 
@@ -516,7 +516,7 @@ export function ProfilePage({
                                 href={originalComment.story_url || `https://news.ycombinator.com/item?id=${originalComment.story_id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className={`text-sm hover:underline ${
+                                className={`text-sm hover:underline break-words ${
                                   theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
                                 }`}
                               >
@@ -532,7 +532,7 @@ export function ProfilePage({
                                     <div className="text-xs opacity-70 mb-2">
                                       <button
                                         onClick={() => onUserClick(reply.author)}
-                                        className={`hover:underline ${
+                                        className={`hover:underline break-words ${
                                           theme === 'green' 
                                             ? 'text-green-500' 
                                             : 'text-[#ff6600]'
@@ -545,13 +545,13 @@ export function ProfilePage({
                                         href={`https://news.ycombinator.com/item?id=${reply.objectID}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="hover:underline"
+                                        className="hover:underline break-words"
                                       >
                                         {formatDistanceToNow(new Date(reply.created_at))} ago
                                       </a>
                                     </div>
                                     <div 
-                                      className="prose prose-sm max-w-none"
+                                      className="prose prose-sm max-w-none break-words"
                                       dangerouslySetInnerHTML={{ __html: reply.comment_text }}
                                     />
                                   </div>
@@ -567,7 +567,7 @@ export function ProfilePage({
                             {/* Original Comment - Now shown last */}
                             <div className="bg-current/5 p-4 rounded">
                               <div 
-                                className="prose prose-sm max-w-none mb-2"
+                                className="prose prose-sm max-w-none mb-2 break-words"
                                 dangerouslySetInnerHTML={{ __html: originalComment.comment_text }}
                               />
                               <div className={`text-xs ${
