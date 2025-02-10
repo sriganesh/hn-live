@@ -550,13 +550,15 @@ export function BestPage({
                             {story.score} points
                           </span>
                           <span className="opacity-75">•</span>
-                          <a
-                            href={`https://news.ycombinator.com/item?id=${story.id}`}
+                          <button
+                            onClick={() => navigate(`/item/${story.id}`)}
                             className="opacity-75 hover:opacity-100 hover:underline"
-                            title={new Date(story.time * 1000).toLocaleString()}
                           >
-                            {formatTimeAgo(story.time)}
-                          </a>
+                            {story.descendants 
+                              ? `${story.descendants} comment${story.descendants === 1 ? '' : 's'}`
+                              : 'discuss'
+                            }
+                          </button>
                         </div>
                       </div>
                     </div>
