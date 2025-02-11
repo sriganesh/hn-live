@@ -6,6 +6,8 @@ import { UserModal } from './UserModal';
 import { BookmarkButton } from './BookmarkButton';
 import { CopyButton } from './CopyButton';
 
+type FontOption = 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
+
 interface StoryViewProps {
   itemId: number;
   scrollToId?: number;
@@ -44,6 +46,7 @@ interface HNComment {
   level: number;
   hasDeepReplies?: boolean;
   isCollapsed?: boolean;
+  parentTitle?: string;
 }
 
 // Add these interfaces for Algolia API response
@@ -194,7 +197,7 @@ const findRequiredCommentIds = async (targetId: number): Promise<{
   return { parentChain, topLevelParentIndex };
 };
 
-// Update the fetchComments function to restore original behavior
+// Update the fetchComments function to handle nulls properly
 const fetchComments = async (
   commentIds: number[], 
   depth: number = 0,
@@ -242,7 +245,7 @@ const fetchComments = async (
           comments: kids,
           kids: comment.kids,
           hasDeepReplies: comment.kids?.length > kids.length
-        };
+        } as HNComment;
       } catch (error) {
         console.error('Error fetching comment:', error);
         return null;
@@ -260,14 +263,17 @@ const countCommentsInTree = (comments: HNComment[]): number => {
   }, 0);
 };
 
-// Update the state interface to track loaded comments
+// Update the state interface to track thread-collapsed comments
 interface StoryViewState {
   loadedComments: HNComment[];
   loadedCount: number;
-  loadedTotal: number;  // New field to track total including replies
+  loadedTotal: number;  
   hasMore: boolean;
   isLoadingMore: boolean;
   collapsedComments: Set<number>;
+  showCollapseThreadOption: Set<number>;
+  threadCollapsedComments: Set<number>;  // New state to track comments collapsed by "collapse thread"
+  isTopLevelOnly: boolean;  // Add this line
 }
 
 // Add this near the top with other utility functions
@@ -442,9 +448,12 @@ export function StoryView({
     loadedComments: [],
     loadedCount: 0,
     loadedTotal: 0,
-    hasMore: false,
+    hasMore: true,
     isLoadingMore: false,
-    collapsedComments: new Set()
+    collapsedComments: new Set(),
+    showCollapseThreadOption: new Set(),
+    threadCollapsedComments: new Set(),
+    isTopLevelOnly: false
   });
 
   // Add these inside the StoryView component, near other state declarations
@@ -501,28 +510,137 @@ export function StoryView({
     });
   };
 
-  // Add this helper to collapse entire thread
+  // Update the handleCollapseComment function
+  const handleCollapseComment = useCallback((commentId: number, level: number) => {
+    setCommentState(prev => {
+      const newCollapsed = new Set(prev.collapsedComments);
+      const newShowCollapseThread = new Set(prev.showCollapseThreadOption);
+      const newThreadCollapsed = new Set(prev.threadCollapsedComments);
+      
+      if (newCollapsed.has(commentId)) {
+        // Uncollapsing
+        newCollapsed.delete(commentId);
+        newShowCollapseThread.delete(commentId);
+        
+        // If this was collapsed by thread collapse, restore the thread
+        if (newThreadCollapsed.has(commentId)) {
+          // Remove all thread-collapsed comments under this one
+          const removeThreadCollapsed = (comments: HNComment[]) => {
+            for (const comment of comments) {
+              if (comment.id === commentId) {
+                const removeFromSets = (c: HNComment) => {
+                  newThreadCollapsed.delete(c.id);
+                  newCollapsed.delete(c.id);
+                  c.comments?.forEach(removeFromSets);
+                };
+                removeFromSets(comment);
+                return true;
+              }
+              if (comment.comments && removeThreadCollapsed(comment.comments)) {
+                return true;
+              }
+            }
+            return false;
+          };
+          removeThreadCollapsed(prev.loadedComments);
+        }
+      } else {
+        // Collapsing
+        newCollapsed.add(commentId);
+        if (level > 0) { // Only show collapse thread option for non-root comments
+          newShowCollapseThread.add(commentId);
+        }
+      }
+      
+      return {
+        ...prev,
+        collapsedComments: newCollapsed,
+        showCollapseThreadOption: newShowCollapseThread,
+        threadCollapsedComments: newThreadCollapsed
+      };
+    });
+  }, []);
+
+  // Update the collapseEntireThread function
   const collapseEntireThread = useCallback((commentId: number) => {
     setCommentState(prev => {
       const newCollapsed = new Set(prev.collapsedComments);
+      const newThreadCollapsed = new Set(prev.threadCollapsedComments);
       
-      // Helper to recursively find all comment IDs in a thread
-      const addThreadToCollapsed = (comments: HNComment[]) => {
-        comments.forEach(comment => {
-          if (comment.id === commentId) {
-            newCollapsed.add(comment.id);
-            comment.comments?.forEach(reply => {
-              newCollapsed.add(reply.id);
-              if (reply.comments) addThreadToCollapsed(reply.comments);
-            });
-          } else if (comment.comments) {
-            addThreadToCollapsed(comment.comments);
+      // First find the root parent of this comment
+      const findRootParent = (comments: HNComment[], targetId: number): HNComment | null => {
+        // First check if this comment is our target
+        const targetComment = comments.find(c => c.id === targetId);
+        if (targetComment) {
+          return targetComment;
+        }
+
+        // Then recursively check children
+        for (const comment of comments) {
+          if (comment.comments) {
+            const found = findRootParent(comment.comments, targetId);
+            if (found) {
+              // If we found the target in this comment's children, return this comment
+              return comment;
+            }
           }
-        });
+        }
+        return null;
       };
 
-      addThreadToCollapsed(prev.loadedComments);
-      return { ...prev, collapsedComments: newCollapsed };
+      // Find the root level comment for this thread
+      const findRootLevelComment = (comments: HNComment[], targetId: number): HNComment | null => {
+        for (const comment of comments) {
+          if (comment.level === 0) {
+            // Check if this root comment contains our target
+            const containsTarget = (c: HNComment): boolean => {
+              if (c.id === targetId) return true;
+              return c.comments?.some(containsTarget) || false;
+            };
+            
+            if (containsTarget(comment)) {
+              return comment;
+            }
+          }
+          
+          // Check nested comments
+          const found = comment.comments?.find(c => findRootLevelComment([c], targetId));
+          if (found) return findRootLevelComment([found], targetId);
+        }
+        return null;
+      };
+
+      const rootParent = findRootParent(prev.loadedComments, commentId);
+      
+      // If we found the root parent, collapse it and all its children
+      if (rootParent) {
+        const addToCollapsed = (comment: HNComment) => {
+          newCollapsed.add(comment.id);
+          newThreadCollapsed.add(comment.id);  // Mark as collapsed by thread
+          comment.comments?.forEach(addToCollapsed);
+        };
+        
+        // Start with the root parent itself
+        addToCollapsed(rootParent);
+
+        // Find and scroll to the root level comment
+        const rootLevelComment = findRootLevelComment(prev.loadedComments, commentId);
+        if (rootLevelComment) {
+          setTimeout(() => {
+            const element = document.getElementById(`comment-${rootLevelComment.id}`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }
+      }
+
+      return {
+        ...prev,
+        collapsedComments: newCollapsed,
+        threadCollapsedComments: newThreadCollapsed,
+        showCollapseThreadOption: new Set() // Clear all collapse thread options
+      };
     });
   }, []);
 
@@ -552,16 +670,6 @@ export function StoryView({
     }));
   };
 
-  // Add this handler outside renderComment
-  const handleCollapseComment = useCallback((commentId: number) => {
-    setCommentState(prev => ({
-      ...prev,
-      collapsedComments: prev.collapsedComments.has(commentId)
-        ? new Set([...prev.collapsedComments].filter(id => id !== commentId))
-        : new Set([...prev.collapsedComments, commentId])
-    }));
-  }, []);
-
   // Update the useEffect that handles initial data fetching
   useEffect(() => {
     const abortController = new AbortController();
@@ -582,6 +690,9 @@ export function StoryView({
             
             const convertedStory = convertAlgoliaStory(algoliaData);
             
+            // Check if story has more than 1000 comments
+            const shouldStartCollapsed = (convertedStory.descendants || 0) > 1000;
+            
             setStory(convertedStory);
             setCommentState({
               loadedComments: convertedStory.comments || [],
@@ -589,7 +700,14 @@ export function StoryView({
               loadedTotal: convertedStory.descendants || 0,
               hasMore: false, // Algolia gives us everything at once
               isLoadingMore: false,
-              collapsedComments: new Set()
+              collapsedComments: shouldStartCollapsed ? new Set(
+                convertedStory.comments?.flatMap(comment => 
+                  getAllNestedCommentIds(comment, true)
+                ) || []
+              ) : new Set(),
+              showCollapseThreadOption: new Set(),
+              threadCollapsedComments: new Set(),
+              isTopLevelOnly: shouldStartCollapsed
             });
 
             if (scrollToId) {
@@ -609,6 +727,9 @@ export function StoryView({
             const storyData = await fetchStory(rootStoryId, abortController.signal);
             let initialComments: HNComment[] = [];
             let requiredIds: Set<number> | undefined;
+
+            // Check if story has more than 1000 comments
+            const shouldStartCollapsed = (storyData.descendants || 0) > 1000;
 
             if (storyData.kids) {
               // First, if we have a scrollToId, find its parent chain
@@ -658,7 +779,14 @@ export function StoryView({
               loadedTotal: countCommentsInTree(initialComments),
               hasMore: (storyData.kids?.length || 0) > MAX_COMMENTS,
               isLoadingMore: false,
-              collapsedComments: new Set()
+              collapsedComments: shouldStartCollapsed ? new Set(
+                initialComments.flatMap(comment => 
+                  getAllNestedCommentIds(comment, true)
+                )
+              ) : new Set(),
+              showCollapseThreadOption: new Set(),
+              threadCollapsedComments: new Set(),
+              isTopLevelOnly: shouldStartCollapsed
             });
 
             if (scrollToId) {
@@ -677,6 +805,9 @@ export function StoryView({
           const storyData = await fetchStory(rootStoryId, abortController.signal);
           let initialComments: HNComment[] = [];
           let requiredIds: Set<number> | undefined;
+
+          // Check if story has more than 1000 comments
+          const shouldStartCollapsed = (storyData.descendants || 0) > 1000;
 
           if (storyData.kids) {
             // First, if we have a scrollToId, find its parent chain
@@ -726,7 +857,14 @@ export function StoryView({
             loadedTotal: countCommentsInTree(initialComments),
             hasMore: (storyData.kids?.length || 0) > MAX_COMMENTS,
             isLoadingMore: false,
-            collapsedComments: new Set()
+            collapsedComments: shouldStartCollapsed ? new Set(
+              initialComments.flatMap(comment => 
+                getAllNestedCommentIds(comment, true)
+              )
+            ) : new Set(),
+            showCollapseThreadOption: new Set(),
+            threadCollapsedComments: new Set(),
+            isTopLevelOnly: shouldStartCollapsed
           });
 
           if (scrollToId) {
@@ -756,6 +894,23 @@ export function StoryView({
       abortController.abort();
     };
   }, [itemId, scrollToId, useAlgoliaApi]);
+
+  // Add this helper function near the top with other utility functions
+  const getAllNestedCommentIds = (comment: HNComment, skipRoot: boolean = false): number[] => {
+    const ids: number[] = [];
+    if (!skipRoot) {
+      ids.push(comment.id);
+    }
+    if (comment.comments) {
+      comment.comments.forEach(child => {
+        ids.push(child.id);
+        if (child.comments) {
+          ids.push(...getAllNestedCommentIds(child));
+        }
+      });
+    }
+    return ids;
+  };
 
   // Add these refs at the top of the StoryView component
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -811,7 +966,9 @@ export function StoryView({
         loadedTotal: newTotal,
         hasMore: !isComplete && !noNewComments,
         isLoadingMore: false,
-        collapsedComments: prev.collapsedComments // Preserve collapsed state
+        collapsedComments: prev.collapsedComments,
+        showCollapseThreadOption: prev.showCollapseThreadOption,
+        threadCollapsedComments: prev.threadCollapsedComments
       }));
     } catch (error) {
       console.error('Error loading more comments:', error);
@@ -913,7 +1070,7 @@ export function StoryView({
     ? 'text-[#828282] bg-[#f6f6ef]'
     : 'text-[#828282] bg-[#1a1a1a]';
 
-  // Update the renderComment function
+  // Update the renderComment function to handle story null checks
   const renderComment = useCallback((comment: HNComment, path: string = '') => (
     <Fragment key={`${comment.id}-${path}`}>
       <div 
@@ -957,7 +1114,7 @@ export function StoryView({
                   >
                     {comment.by}
                   </a>
-                  {comment.by === story.by && (
+                  {comment.by === story?.by && (
                     <span className="opacity-50 ml-1">[OP]</span>
                   )}
                   <span>•</span>
@@ -979,8 +1136,8 @@ export function StoryView({
                       by: comment.by,
                       time: comment.time
                     }}
-                    storyId={story.id}
-                    storyTitle={story.title}
+                    storyId={story?.id ?? 0}
+                    storyTitle={story?.title ?? 'Unknown Story'}
                     theme={theme}
                   />
                   <span>•</span>
@@ -1014,16 +1171,30 @@ export function StoryView({
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleCollapseComment(comment.id)}
-                  className={`shrink-0 ${
-                    theme === 'green' 
-                      ? 'text-green-500/50 hover:text-green-500' 
-                      : 'text-[#ff6600]/50 hover:text-[#ff6600]'
-                  } font-mono`}
-                >
-                  {commentState?.collapsedComments?.has(comment.id) ? '[+]' : '[-]'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleCollapseComment(comment.id, comment.level)}
+                    className={`shrink-0 ${
+                      theme === 'green' 
+                        ? 'text-green-500/50 hover:text-green-500' 
+                        : 'text-[#ff6600]/50 hover:text-[#ff6600]'
+                    } font-mono`}
+                  >
+                    {commentState?.collapsedComments?.has(comment.id) ? '[+]' : '[-]'}
+                  </button>
+                  {commentState.showCollapseThreadOption.has(comment.id) && (
+                    <button
+                      onClick={() => collapseEntireThread(comment.id)}
+                      className={`text-xs ${
+                        theme === 'green' 
+                          ? 'text-green-500/50 hover:text-green-500' 
+                          : 'text-[#ff6600]/50 hover:text-[#ff6600]'
+                      }`}
+                    >
+                      [collapse thread]
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -1048,7 +1219,7 @@ export function StoryView({
           {commentState?.collapsedComments?.has(comment.id) && comment.comments && comment.comments.length > 0 && (
             <div className="text-sm opacity-50">
               <button 
-                onClick={() => handleCollapseComment(comment.id)}
+                onClick={() => handleCollapseComment(comment.id, comment.level)}
                 className="hover:opacity-75"
               >
                 {countReplies(comment)} hidden replies
@@ -1089,7 +1260,7 @@ export function StoryView({
         } my-4`} />
       )}
     </Fragment>
-  ), [commentState, theme, scrollToId, story, handleCollapseComment, fontSize]);
+  ), [commentState, theme, scrollToId, story, handleCollapseComment, fontSize, collapseEntireThread]);
 
   // Add this helper function for updating the comment tree
   const updateCommentTree = (comments: HNComment[], targetId: number, newReplies: HNComment[]): HNComment[] => {
@@ -1177,7 +1348,7 @@ export function StoryView({
               theme={theme}
               variant="text"
             />
-            {story.descendants > 0 && (
+            {story && story.descendants && story.descendants > 0 && (
               <>
                 <span>•</span>
                 <button
@@ -1212,6 +1383,41 @@ export function StoryView({
       </div>
     );
   };
+
+  // Add this function before the return statement
+  const toggleTopLevelOnly = useCallback(() => {
+    setCommentState(prev => {
+      const newCollapsed = new Set(prev.collapsedComments);
+      
+      // If turning on top level only mode
+      if (!prev.isTopLevelOnly) {
+        // Collapse all non-root comments
+        const collapseNonRootComments = (comments: HNComment[]) => {
+          comments.forEach(comment => {
+            if (comment.level > 0) {
+              newCollapsed.add(comment.id);
+            }
+            if (comment.comments) {
+              collapseNonRootComments(comment.comments);
+            }
+          });
+        };
+        
+        collapseNonRootComments(prev.loadedComments);
+      } else {
+        // If turning off, uncollapse everything
+        newCollapsed.clear();
+      }
+      
+      return {
+        ...prev,
+        isTopLevelOnly: !prev.isTopLevelOnly,
+        collapsedComments: newCollapsed,
+        showCollapseThreadOption: new Set(),
+        threadCollapsedComments: new Set()
+      };
+    });
+  }, []);
 
   return (
     <>
@@ -1307,8 +1513,19 @@ export function StoryView({
 
                 {/* Comments header with sort options */}
                 <div className="text-sm opacity-75 flex justify-end items-center mt-4">
-                  {useAlgoliaApi && story.descendants > 0 && (
+                  {useAlgoliaApi && story?.descendants && story.descendants > 0 && (
                     <div className="flex gap-2">
+                      {sortMode === 'nested' && (
+                        <>
+                          <button
+                            onClick={toggleTopLevelOnly}
+                            className={`hover:underline ${commentState.isTopLevelOnly ? 'opacity-50' : ''}`}
+                          >
+                            top level view
+                          </button>
+                          <span>|</span>
+                        </>
+                      )}
                       <button
                         onClick={() => setSortMode('nested')}
                         className={`hover:underline ${sortMode === 'nested' ? 'opacity-50' : ''}`}
@@ -1395,8 +1612,8 @@ export function StoryView({
                               by: comment.by,
                               time: comment.time
                             }}
-                            storyId={story.id}
-                            storyTitle={story.title}
+                            storyId={story?.id ?? 0}
+                            storyTitle={story?.title ?? 'Unknown Story'}
                             theme={theme}
                           />
                           <span>•</span>
@@ -1427,7 +1644,9 @@ export function StoryView({
                             </svg>
                           </a>
                           <span>•</span>
-                          <span className="break-words">re: {comment.parentTitle?.slice(0, 60)}{comment.parentTitle?.length > 60 ? '...' : ''}</span>
+                          <span className="break-words">
+                            re: {comment.parentTitle ? `${comment.parentTitle.slice(0, 60)}${comment.parentTitle.length > 60 ? '...' : ''}` : ''}
+                          </span>
                         </div>
                       </div>
                     ))
