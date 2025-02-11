@@ -1075,6 +1075,8 @@ export function StoryView({
     <Fragment key={`${comment.id}-${path}`}>
       <div 
         id={`comment-${comment.id}`}
+        data-level={comment.level}
+        data-comment-id={comment.id}
         className={`py-2 ${
           comment.level > 0 
             ? `sm:${getIndentClass(comment.level)} pl-2` 
@@ -1101,7 +1103,7 @@ export function StoryView({
           <div className={`text-${fontSize}`}>
             <div className="flex items-center justify-between gap-2 mb-1 opacity-75">
               <div className="flex items-center gap-1 min-w-0 flex-1">
-                <div className="flex items-center gap-1 min-w-0">
+                <div className="flex items-center gap-1 min-w-0 flex-wrap">
                   <a 
                     onClick={(e) => {
                       e.preventDefault();
@@ -1170,19 +1172,19 @@ export function StoryView({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleCollapseComment(comment.id, comment.level)}
-                    className={`shrink-0 ${
-                      theme === 'green' 
-                        ? 'text-green-500/50 hover:text-green-500' 
-                        : 'text-[#ff6600]/50 hover:text-[#ff6600]'
-                    } font-mono`}
-                  >
-                    {commentState?.collapsedComments?.has(comment.id) ? '[+]' : '[-]'}
-                  </button>
-                  {commentState.showCollapseThreadOption.has(comment.id) && (
+              <div className="flex items-center gap-2 flex-wrap justify-end">
+                <button
+                  onClick={() => handleCollapseComment(comment.id, comment.level)}
+                  className={`shrink-0 ${
+                    theme === 'green' 
+                      ? 'text-green-500/50 hover:text-green-500' 
+                      : 'text-[#ff6600]/50 hover:text-[#ff6600]'
+                  } font-mono`}
+                >
+                  {commentState?.collapsedComments?.has(comment.id) ? '[+]' : '[-]'}
+                </button>
+                {commentState.showCollapseThreadOption.has(comment.id) && (
+                  <>
                     <button
                       onClick={() => collapseEntireThread(comment.id)}
                       className={`text-xs ${
@@ -1193,8 +1195,42 @@ export function StoryView({
                     >
                       [collapse thread]
                     </button>
-                  )}
-                </div>
+                    <button
+                      onClick={() => {
+                        const parentLevel = comment.level - 1;
+                        const parentElement = Array.from(document.querySelectorAll(`[data-level="${parentLevel}"]`))
+                          .find(el => el.querySelector(`[data-comment-id="${comment.id}"]`));
+                        
+                        if (parentElement) {
+                          parentElement.classList.add(
+                            theme === 'dog'
+                              ? 'bg-yellow-500/5' 
+                              : theme === 'green'
+                              ? 'bg-green-500/20' 
+                              : 'bg-yellow-500/10'
+                          );
+                          
+                          parentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          
+                          setTimeout(() => {
+                            parentElement.classList.remove(
+                              'bg-yellow-500/5',
+                              'bg-green-500/20',
+                              'bg-yellow-500/10'
+                            );
+                          }, 2000);
+                        }
+                      }}
+                      className={`text-xs ${
+                        theme === 'green' 
+                          ? 'text-green-500/50 hover:text-green-500' 
+                          : 'text-[#ff6600]/50 hover:text-[#ff6600]'
+                      }`}
+                    >
+                      [parent]
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
