@@ -427,6 +427,18 @@ const countAlgoliaComments = (comments: AlgoliaComment[]): number => {
   }, 0);
 };
 
+// Add this helper function before the StoryView component
+const getRandomAnnouncement = (prefix: string): { text: string; link: string } => {
+  const variations = [1, 2, 3];
+  const randomIndex = Math.floor(Math.random() * variations.length);
+  const variation = variations[randomIndex];
+  
+  return {
+    text: import.meta.env[`VITE_STORY_${prefix}_ANNOUNCEMENT_${variation}`] || '',
+    link: import.meta.env[`VITE_STORY_${prefix}_ANNOUNCEMENT_LINK_${variation}`] || ''
+  };
+};
+
 export function StoryView({ 
   itemId, 
   scrollToId, 
@@ -441,6 +453,26 @@ export function StoryView({
 }: StoryViewProps) {
   const navigate = useNavigate();
   const { isTopUser, getTopUserClass } = useTopUsers();
+  
+  // Update announcement states to use random selection
+  const [topAnnouncement] = useState<string>(
+    getRandomAnnouncement('TOP').text
+  );
+  const [topAnnouncementLink] = useState<string>(
+    getRandomAnnouncement('TOP').link
+  );
+  const [bottomAnnouncement] = useState<string>(
+    getRandomAnnouncement('BOTTOM').text
+  );
+  const [bottomAnnouncementLink] = useState<string>(
+    getRandomAnnouncement('BOTTOM').link
+  );
+  const [preCommentsAnnouncement] = useState<string>(
+    getRandomAnnouncement('PRECOMMENTS').text
+  );
+  const [preCommentsAnnouncementLink] = useState<string>(
+    getRandomAnnouncement('PRECOMMENTS').link
+  );
   
   const [story, setStory] = useState<HNStory | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -1384,7 +1416,7 @@ export function StoryView({
               theme={theme}
               variant="text"
             />
-            {story && story.descendants && story.descendants > 0 && (
+            {story && typeof story.descendants === 'number' && story.descendants > 0 && (
               <>
                 <span>•</span>
                 <button
@@ -1538,6 +1570,28 @@ export function StoryView({
           <div className="max-w-4xl mx-auto">
             {story ? (
               <>
+                {/* Top Announcement */}
+                {topAnnouncement && (
+                  <div className={`mb-4 text-sm ${
+                    theme === 'green' 
+                      ? 'text-green-500' 
+                      : 'text-[#ff6600]'
+                  }`}>
+                    {topAnnouncementLink ? (
+                      <a 
+                        href={topAnnouncementLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:opacity-75"
+                      >
+                        {topAnnouncement}
+                      </a>
+                    ) : (
+                      topAnnouncement
+                    )}
+                  </div>
+                )}
+
                 {renderStoryPreview(story)}
 
                 {story.text && (
@@ -1549,7 +1603,7 @@ export function StoryView({
 
                 {/* Comments header with sort options */}
                 <div className="text-sm opacity-75 flex justify-end items-center mt-4">
-                  {useAlgoliaApi && story?.descendants && story.descendants > 0 && (
+                  {useAlgoliaApi && story && typeof story.descendants === 'number' && story.descendants > 0 && (
                     <div className="flex gap-2">
                       {sortMode === 'nested' && (
                         <>
@@ -1586,6 +1640,28 @@ export function StoryView({
                     ? 'border-[#ff6600]/10'
                     : 'border-[#828282]/10'
                 }`} />
+
+                {/* Pre-Comments Announcement */}
+                {preCommentsAnnouncement && (
+                  <div className={`mb-4 text-sm ${
+                    theme === 'green' 
+                      ? 'text-green-500' 
+                      : 'text-[#ff6600]'
+                  }`}>
+                    {preCommentsAnnouncementLink ? (
+                      <a 
+                        href={preCommentsAnnouncementLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:opacity-75"
+                      >
+                        {preCommentsAnnouncement}
+                      </a>
+                    ) : (
+                      preCommentsAnnouncement
+                    )}
+                  </div>
+                )}
 
                 {/* Comments section */}
                 <div className="space-y-4">
@@ -1718,6 +1794,28 @@ export function StoryView({
                 {/* Footer message */}
                 {!commentState.hasMore && (
                   <div className="text-center py-8 pb-24 sm:pb-8 space-y-4">
+                    {/* Bottom Announcement */}
+                    {bottomAnnouncement && (
+                      <div className={`mb-4 text-sm ${
+                        theme === 'green' 
+                          ? 'text-green-500' 
+                          : 'text-[#ff6600]'
+                      }`}>
+                        {bottomAnnouncementLink ? (
+                          <a 
+                            href={bottomAnnouncementLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:opacity-75"
+                          >
+                            {bottomAnnouncement}
+                          </a>
+                        ) : (
+                          bottomAnnouncement
+                        )}
+                      </div>
+                    )}
+
                     <div className="text-sm space-y-2">
                       <div>
                         <a
