@@ -13,6 +13,7 @@ interface ProfilePageProps {
   isSettingsOpen: boolean;
   isRunning: boolean;
   onUserClick: (username: string) => void;
+  onUpdateHnUsername: (username: string | null) => void;
 }
 
 interface Comment {
@@ -81,7 +82,8 @@ export function ProfilePage({
   onShowSettings,
   isSettingsOpen,
   isRunning,
-  onUserClick
+  onUserClick,
+  onUpdateHnUsername
 }: ProfilePageProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -365,7 +367,7 @@ export function ProfilePage({
       </Helmet>
       
       <div className={`
-        fixed inset-0 overflow-y-auto z-50
+        fixed inset-0 overflow-y-auto overflow-x-hidden z-50
         ${font === 'mono' ? 'font-mono' : 
           font === 'jetbrains' ? 'font-jetbrains' :
           font === 'fira' ? 'font-fira' :
@@ -380,7 +382,7 @@ export function ProfilePage({
           : 'bg-[#1a1a1a] text-[#828282]'}
         text-${fontSize}
       `}>
-        <div className="h-full overflow-y-auto p-4">
+        <div className="h-full overflow-y-auto overflow-x-hidden p-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <button 
@@ -418,7 +420,7 @@ export function ProfilePage({
             {!hnUsername ? (
               <div className="text-center py-8">
                 <div className="mb-4">
-                  Connect your HN username to get notified when someone replies to your comments
+                  Connect your HN username to track replies locally in your browser
                   <span className="block mt-1 text-sm opacity-75">(Beta feature - notifications may be delayed or intermittent)</span>
                 </div>
                 <button
@@ -438,13 +440,38 @@ export function ProfilePage({
                     ? 'text-green-400' 
                     : 'text-[#828282]'
                 }`}>
-                  <span className="opacity-75">Connected as </span>
-                  <span className={
-                    theme === 'green' 
-                      ? 'text-green-500' 
-                      : 'text-[#ff6600]'
-                  }>{hnUsername}</span>
-                  <span className="text-xs opacity-75 ml-2">(Beta)</span>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="opacity-75">Connected as </span>
+                        <span className={
+                          theme === 'green' 
+                            ? 'text-green-500' 
+                            : 'text-[#ff6600]'
+                        }>{hnUsername}</span>
+                        <span className="text-xs opacity-75">(Beta)</span>
+                      </div>
+                      <div className="text-xs opacity-75 mt-1">
+                        Notifications may be delayed or intermittent
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={() => {
+                          // Clear only the keys we're actually using
+                          localStorage.removeItem('hn-username');
+                          localStorage.removeItem('hn-new-replies');
+                          localStorage.removeItem('hn-unread-count');
+                          localStorage.removeItem('hn-comment-tracker');
+                          onUpdateHnUsername(null);
+                          onShowSettings(); // Show settings modal after disconnecting
+                        }}
+                        className="text-sm opacity-75 hover:opacity-100"
+                      >
+                        [disconnect]
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between mb-4">
@@ -489,7 +516,7 @@ export function ProfilePage({
                                 href={originalComment.story_url || `https://news.ycombinator.com/item?id=${originalComment.story_id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className={`text-sm hover:underline ${
+                                className={`text-sm hover:underline break-words ${
                                   theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
                                 }`}
                               >
@@ -505,7 +532,7 @@ export function ProfilePage({
                                     <div className="text-xs opacity-70 mb-2">
                                       <button
                                         onClick={() => onUserClick(reply.author)}
-                                        className={`hover:underline ${
+                                        className={`hover:underline break-words ${
                                           theme === 'green' 
                                             ? 'text-green-500' 
                                             : 'text-[#ff6600]'
@@ -518,13 +545,13 @@ export function ProfilePage({
                                         href={`https://news.ycombinator.com/item?id=${reply.objectID}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="hover:underline"
+                                        className="hover:underline break-words"
                                       >
                                         {formatDistanceToNow(new Date(reply.created_at))} ago
                                       </a>
                                     </div>
                                     <div 
-                                      className="prose prose-sm max-w-none"
+                                      className="prose prose-sm max-w-none break-words"
                                       dangerouslySetInnerHTML={{ __html: reply.comment_text }}
                                     />
                                   </div>
@@ -540,7 +567,7 @@ export function ProfilePage({
                             {/* Original Comment - Now shown last */}
                             <div className="bg-current/5 p-4 rounded">
                               <div 
-                                className="prose prose-sm max-w-none mb-2"
+                                className="prose prose-sm max-w-none mb-2 break-words"
                                 dangerouslySetInnerHTML={{ __html: originalComment.comment_text }}
                               />
                               <div className={`text-xs ${

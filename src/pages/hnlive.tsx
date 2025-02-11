@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { StoryView } from '../components/StoryView';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate, useParams, useLocation, Outlet } from 'react-router-dom';
+import { useNavigate, useLocation, useParams, Outlet } from 'react-router-dom';
 import SearchModal from '../components/SearchModal';
 import { FrontPage } from '../components/FrontPage';
 import { ShowPage } from '../components/ShowPage';
@@ -22,6 +22,10 @@ import { ProfilePage } from '../components/ProfilePage';
 import { UpdateNotifier } from '../components/UpdateNotifier';
 import { LinksView } from '../components/LinksView';
 import { UserFeedPage } from '../components/UserFeedPage';
+import { useAuth } from '../contexts/AuthContext';
+import { useSwipeable } from 'react-swipeable';
+import { TermsPage } from './Terms';
+import { PrivacyPage } from './Privacy';
 
 interface HNItem {
   id: number;
@@ -58,7 +62,6 @@ interface TerminalOptions {
   classicLayout: boolean;
   showCommentParents: boolean;
   font: FontOption;
-  showBackToTop: boolean;
   useAlgoliaApi: boolean;
 }
 
@@ -71,113 +74,61 @@ const UPDATE_INTERVAL = 30000;   // How often to fetch new items (30 seconds)
 const MIN_DISPLAY_INTERVAL = 800;  // Minimum time between displaying items
 const MAX_DISPLAY_INTERVAL = 2000; // Maximum time between displaying items
 
-const getStoredTheme = () => {
-  try {
-    const storedTheme = localStorage.getItem('hn-live-theme');
-    if (storedTheme && ['green', 'og', 'dog'].includes(storedTheme)) {
-      return storedTheme as 'green' | 'og' | 'dog';
-    }
-  } catch (e) {
-    // Handle cases where localStorage might be unavailable
-    console.warn('Could not access localStorage');
-  }
-  return 'og'; // Default theme if nothing is stored
-};
-
-const getStoredDirectLinks = () => {
-  try {
-    const storedDirectLinks = localStorage.getItem('hn-live-direct');
-    return storedDirectLinks === 'true';
-  } catch (e) {
-    console.warn('Could not access localStorage');
-  }
-  return false; // Default to our site view
-};
-
-const getStoredAutoscroll = () => {
-  try {
-    const storedAutoscroll = localStorage.getItem('hn-live-autoscroll');
-    // Return false if no value is stored (first visit) or if the stored value is 'false'
-    return storedAutoscroll === 'true';
-  } catch (e) {
-    console.warn('Could not access localStorage');
-  }
-  return false; // Default to autoscroll off
-};
-
-const getStoredFontSize = () => {
+const getStoredSettings = () => {
   try {
     const storedSize = localStorage.getItem('hn-live-font-size');
-    if (storedSize && ['xs', 'sm', 'base', 'lg', 'xl', '2xl'].includes(storedSize)) {
-      return storedSize as 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl';
-    }
-    
-    // If no stored preference, check screen width for default
-    const isMobile = window.innerWidth < 640; // 640px is Tailwind's 'sm' breakpoint
-    return isMobile ? 'sm' : 'base'; // 'sm' for mobile, 'base' for desktop
-    
+    // Determine default font size based on screen width
+    const defaultSize = (() => {
+      const isMobile = window.innerWidth < 640; // 640px is Tailwind's 'sm' breakpoint
+      return isMobile ? 'sm' as const : 'base' as const;
+    })();
+
+    // Validate stored font size
+    const fontSize = storedSize && ['xs', 'sm', 'base', 'lg', 'xl', '2xl'].includes(storedSize) 
+      ? storedSize as 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl'
+      : defaultSize;
+
+    return {
+      theme: localStorage.getItem('hn-live-theme') as 'green' | 'og' | 'dog' || 'og',
+      autoscroll: localStorage.getItem('hn-live-autoscroll') === 'true',
+      directLinks: localStorage.getItem('hn-live-direct') === 'true',
+      fontSize,
+      classicLayout: localStorage.getItem('hn-live-classic-layout') === 'true',
+      showCommentParents: localStorage.getItem('hn-live-comment-parents') !== 'false',
+      font: localStorage.getItem('hn-live-font') as FontOption || 'mono',
+      useAlgoliaApi: localStorage.getItem('hn-use-algolia-api') !== 'false'
+    };
   } catch (e) {
     console.warn('Could not access localStorage');
-    // Fallback to same mobile check if localStorage fails
+    // Still handle mobile default even in error case
     const isMobile = window.innerWidth < 640;
-    return isMobile ? 'sm' : 'base';
+    return {
+      theme: 'og' as const,
+      autoscroll: false,
+      directLinks: false,
+      fontSize: isMobile ? 'sm' as const : 'base' as const,
+      classicLayout: false,
+      showCommentParents: true,
+      font: 'mono' as FontOption,
+      useAlgoliaApi: true
+    };
   }
 };
 
-const getStoredLayout = () => {
-  try {
-    const storedLayout = localStorage.getItem('hn-live-classic-layout');
-    // Return false only if explicitly set to 'false'
-    return storedLayout === null ? true : storedLayout === 'true';
-  } catch (e) {
-    console.warn('Could not access localStorage');
-  }
-  return true; // Default to classic HN layout
-};
-
-const getStoredCommentParents = () => {
-  try {
-    const stored = localStorage.getItem('hn-live-comment-parents');
-    return stored === 'true';
-  } catch (e) {
-    console.warn('Could not access localStorage');
-  }
-  return false; // Default to not showing parents
-};
-
-const getStoredFont = () => {
-  try {
-    const storedFont = localStorage.getItem('hn-live-font');
-    if (storedFont && ['mono', 'jetbrains', 'fira', 'source', 'sans', 'serif', 'system'].includes(storedFont)) {
-      return storedFont as FontOption;
-    }
-  } catch (e) {
-    console.warn('Could not access localStorage');
-  }
-  return 'mono'; // Default to monospace
-};
-
-const getStoredBackToTop = () => {
-  const stored = localStorage.getItem('hn-show-back-to-top');
-  return stored === null ? true : stored === 'true';
-};
-
-const setStoredBackToTop = (value: boolean) => {
-  localStorage.setItem('hn-show-back-to-top', value.toString());
-};
-
-const getStoredAlgoliaApi = () => {
-  try {
-    const stored = localStorage.getItem('hn-use-algolia-api');
-    return stored === null ? true : stored === 'true'; // Default to true if not set
-  } catch (e) {
-    console.warn('Could not access localStorage');
-  }
-  return true;  // Default to Algolia API
-};
-
-// Update the style to handle both dark and green themes
+// Define theme-specific styles
 const themeStyles = `
+  [data-theme='og'] .hn-username,
+  [data-theme='dog'] .hn-username,
+  [data-theme='og'] .front-page-link,
+  [data-theme='dog'] .front-page-link {
+    color: #ff6600 !important;
+  }
+
+  [data-theme='green'] .hn-username,
+  [data-theme='green'] .front-page-link {
+    color: rgb(74 222 128) !important;
+  }
+
   [data-theme='dog'] ::selection {
     background: rgba(255, 255, 0, 0.1);
     color: inherit;
@@ -194,38 +145,30 @@ const themeStyles = `
   }
 `;
 
-// Add this near other style definitions at the top
+// Define mobile navigation styles
 const mobileNavStyles = `
-  .mobile-nav-button {
-    @apply flex-1 py-3 flex items-center justify-center transition-colors border-r last:border-r-0 border-current/30;
+  @supports (padding: env(safe-area-inset-top)) {
+    .pt-safe {
+      padding-top: env(safe-area-inset-top);
+    }
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
+
+  .pt-safe {
+    padding-top: max(env(safe-area-inset-top), 16px);
+  }
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom), 16px);
   }
 `;
-
-const defaultSettings = {
-  theme: 'og' as const,
-  fontSize: 'base',
-  font: 'system' as FontOption,
-  classicLayout: false,
-  colorizeUsernames: true,
-  showCommentParents: true,
-  showBackToTop: true,
-};
 
 export default function HNLiveTerminal() {
   useDocumentTitle('Hacker News Live');
   
   const [items, setItems] = useState<HNItem[]>([]);
-  const [options, setOptions] = useState<TerminalOptions>({
-    theme: getStoredTheme(),
-    autoscroll: getStoredAutoscroll(),
-    directLinks: getStoredDirectLinks(),
-    fontSize: getStoredFontSize(),
-    classicLayout: getStoredLayout(),
-    showCommentParents: getStoredCommentParents(),
-    font: getStoredFont(),
-    showBackToTop: getStoredBackToTop(),
-    useAlgoliaApi: getStoredAlgoliaApi(),
-  });
+  const [options, setOptions] = useState(getStoredSettings());
   const [isRunning, setIsRunning] = useState(true);
   
   const [filters, setFilters] = useState<SearchFilters>({
@@ -248,10 +191,11 @@ export default function HNLiveTerminal() {
   const timeoutRef = useRef<NodeJS.Timeout>();
 
   const navigate = useNavigate();
-  const { itemId, commentId } = useParams();
   const location = useLocation();
+  const { itemId, commentId } = useParams();
 
   const { isTopUser, getTopUserClass } = useTopUsers();
+  const { user, isAuthenticated } = useAuth();
 
   // Format timestamp
   const formatTimestamp = (timestamp: number) => {
@@ -278,9 +222,14 @@ export default function HNLiveTerminal() {
 
   // Format item for display
   const formatItem = async (item: HNItem) => {
+    // Create a new AbortController for this format operation
+    const abortController = new AbortController();
+    
     if (!item.by || 
         (item.type === 'comment' && !item.text) || 
-        item.text === '[delayed]') return null;
+        item.text === '[delayed]') {
+      return null;
+    }
 
     let text = '';
     let links = {
@@ -301,18 +250,27 @@ export default function HNLiveTerminal() {
       // Fetch parent story if needed
       if (options.showCommentParents && item.parent) {
         try {
-          let currentParent = await fetch(`https://hacker-news.firebaseio.com/v0/item/${item.parent}.json`).then(r => r.json());
+          let currentParent = await fetch(
+            `https://hacker-news.firebaseio.com/v0/item/${item.parent}.json`,
+            { signal: abortController.signal }
+          ).then(r => r.json());
           
           // Keep going up until we find the root story
           while (currentParent.type === 'comment' && currentParent.parent) {
-            currentParent = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentParent.parent}.json`).then(r => r.json());
+            currentParent = await fetch(
+              `https://hacker-news.firebaseio.com/v0/item/${currentParent.parent}.json`,
+              { signal: abortController.signal }
+            ).then(r => r.json());
           }
           
           if (currentParent.type === 'story') {
             parentStory = currentParent;
           }
         } catch (error) {
-          console.error('Error fetching parent story:', error);
+          // Only log error if it's not an abort error
+          if (error.name !== 'AbortError') {
+            console.error('Error fetching parent story:', error);
+          }
         }
       }
 
@@ -861,6 +819,37 @@ export default function HNLiveTerminal() {
   // First add a new state for the settings menu
   const [showSettings, setShowSettings] = useState(false);
 
+  // Add page order array
+  const PAGE_ORDER = ['front', 'show', 'ask', 'jobs', 'best'] as const;
+
+  // Add swipe handlers
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      const currentPath = location.pathname.slice(1);
+      const currentIndex = PAGE_ORDER.indexOf(currentPath as typeof PAGE_ORDER[number]);
+      if (currentIndex >= 0) {
+        // If we're at the last page, go to the first page
+        const nextIndex = currentIndex === PAGE_ORDER.length - 1 ? 0 : currentIndex + 1;
+        navigate(`/${PAGE_ORDER[nextIndex]}`);
+      }
+    },
+    onSwipedRight: () => {
+      const currentPath = location.pathname.slice(1);
+      const currentIndex = PAGE_ORDER.indexOf(currentPath as typeof PAGE_ORDER[number]);
+      if (currentIndex >= 0) {
+        // If we're at the first page, go to the last page
+        const nextIndex = currentIndex === 0 ? PAGE_ORDER.length - 1 : currentIndex - 1;
+        navigate(`/${PAGE_ORDER[nextIndex]}`);
+      }
+    },
+    preventScrollOnSwipe: true,
+    trackTouch: true,
+    trackMouse: false,
+    delta: 50, // minimum swipe distance
+    swipeDuration: 500, // maximum time for swipe motion
+    touchEventOptions: { passive: false } // important for preventing default touch behavior
+  });
+
   // In the terminal view section where new stories are rendered
   const renderNewItem = (item: HNItem) => {
     if (item.type === 'story') {
@@ -901,7 +890,7 @@ export default function HNLiveTerminal() {
   // Add state for username colorization
   const [colorizeUsernames, setColorizeUsernames] = useState(() => {
     const saved = localStorage.getItem('hn-live-colorize-usernames');
-    return saved ? JSON.parse(saved) : true; // Default to true - usernames colorized
+    return saved ? JSON.parse(saved) : false; // Default to false - usernames not colorized
   });
 
   // Add effect to save setting
@@ -1165,17 +1154,32 @@ export default function HNLiveTerminal() {
     reformatItems();
   }, [options.directLinks]); // Only re-run when directLinks changes
 
+  // Add effect to handle abort requests
+  useEffect(() => {
+    const handleAbortRequests = (e: CustomEvent) => {
+      const controller = e.detail;
+      if (controller && controller.abort) {
+        controller.abort();
+      }
+    };
+
+    window.addEventListener('abortRequests', handleAbortRequests as EventListener);
+    return () => {
+      window.removeEventListener('abortRequests', handleAbortRequests as EventListener);
+    };
+  }, []);
+
   return (
     <>
       <Helmet>
-        <title>HN Live - Real-time Hacker News Feed</title>
+        <title>HN Live - Real-time Hacker News Client</title>
         <meta name="description" content="Live, real-time feed of Hacker News stories and discussions as they happen. Watch new posts and comments appear instantly from the HN community." />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebApplication",
             "name": "HN Live",
-            "description": "Real-time Hacker News feed",
+            "description": "Real-time Hacker News Client",
             "url": "https://hn.live",
             "applicationCategory": "News",
             "operatingSystem": "Any",
@@ -1194,9 +1198,13 @@ export default function HNLiveTerminal() {
         <style>{themeStyles}</style>
         <style>{mobileNavStyles}</style>
       </Helmet>
-      <div className={`
+      <div {...swipeHandlers} className={`
         min-h-screen flex flex-col
-        ${theme === 'green' ? 'bg-black text-green-400' : theme === 'og' ? 'bg-[#f6f6ef] text-[#111]' : 'bg-[#1a1a1a] text-[#c9d1d9]'}
+        ${theme === 'green'
+          ? 'bg-black text-green-400'
+          : theme === 'og'
+          ? 'bg-[#f6f6ef] text-[#111]'
+          : 'bg-[#1a1a1a] text-[#c9d1d9]'}
         mt-[env(safe-area-inset-top)]
         pb-[env(safe-area-inset-bottom)]
         ${options.font === 'mono' ? 'font-mono' : 
@@ -1210,7 +1218,7 @@ export default function HNLiveTerminal() {
       `}>
         <noscript>
           <div className="p-4">
-            <h1>HN Live - Real-time Hacker News Feed</h1>
+            <h1>HN Live - Real-time Hacker News Client</h1>
             <p>This is a real-time feed of Hacker News content. JavaScript is required to view the live updates.</p>
           </div>
         </noscript>
@@ -1481,17 +1489,13 @@ export default function HNLiveTerminal() {
                 )}
               </div>
 
-              {/* Profile button with badge */}
+              {/* Profile button with badge - now available to all users */}
               <div className="relative">
-                <button 
+                <button
                   onClick={() => navigate('/profile')}
-                  className={`${
-                    theme === 'green' 
-                      ? themeColors 
-                      : 'text-[#ff6600]'
-                  }`}
+                  className={`${themeColors} hover:opacity-75`}
                 >
-                  [{hnUsername || 'PROFILE'}]
+                  [{hnUsername || 'HN PROFILE'}]
                 </button>
                 {unreadReplies > 0 && (
                   <span className={`
@@ -1711,7 +1715,6 @@ export default function HNLiveTerminal() {
             onShowSettings={() => setShowSettings(true)}
             isSettingsOpen={showSettings}
             isRunning={isRunning}
-            showBackToTop={options.showBackToTop}
             useAlgoliaApi={options.useAlgoliaApi}
           />
         )}
@@ -1794,6 +1797,8 @@ export default function HNLiveTerminal() {
               isSettingsOpen={showSettings}
               isSearchOpen={showSearch}
               isRunning={isRunning}
+              colorizeUsernames={colorizeUsernames}
+              classicLayout={options.classicLayout}
             />
             <SearchModal 
               isOpen={showSearch}
@@ -1826,6 +1831,22 @@ export default function HNLiveTerminal() {
               theme={options.theme}
             />
           </>
+        )}
+
+        {/* Add the Terms page component to the render */}
+        {location.pathname === '/terms' && (
+          <TermsPage 
+            theme={options.theme}
+            isRunning={isRunning}
+          />
+        )}
+
+        {/* Add the Privacy page component to the render */}
+        {location.pathname === '/privacy' && (
+          <PrivacyPage 
+            theme={options.theme}
+            isRunning={isRunning}
+          />
         )}
 
         {/* Center notification overlay */}
@@ -1877,18 +1898,19 @@ export default function HNLiveTerminal() {
           </div>
         )}
 
-        <SettingsModal
-          isOpen={showSettings}
-          onClose={() => setShowSettings(false)}
-          theme={theme}
-          options={options}
-          onUpdateOptions={handleSettingsUpdate}
-          colorizeUsernames={colorizeUsernames}
-          onColorizeUsernamesChange={setColorizeUsernames}
-          setStoredBackToTop={setStoredBackToTop}
-          hnUsername={hnUsername}
-          onUpdateHnUsername={handleUpdateHnUsername}
-        />
+        {showSettings && (
+          <SettingsModal
+            isOpen={showSettings}
+            onClose={() => setShowSettings(false)}
+            theme={options.theme}
+            options={options}
+            onUpdateOptions={handleSettingsUpdate}
+            colorizeUsernames={colorizeUsernames}
+            onColorizeUsernamesChange={setColorizeUsernames}
+            hnUsername={hnUsername}
+            onUpdateHnUsername={handleUpdateHnUsername}
+          />
+        )}
 
         {/* Replace the mobile bottom bar with the new component */}
         <MobileBottomBar 
@@ -1904,7 +1926,7 @@ export default function HNLiveTerminal() {
         {location.pathname.startsWith('/user/') && (
           <UserPage 
             theme={options.theme}
-            fontSize={options.fontSize}
+            fontSize={'base' as const}  // Force to base size for UserPage
             onShowSearch={() => setShowSearch(true)}
             onShowSettings={() => setShowSettings(true)}
           />
@@ -1953,6 +1975,7 @@ export default function HNLiveTerminal() {
             isSettingsOpen={showSettings}
             isRunning={isRunning}
             onUserClick={handleUserClick}
+            onUpdateHnUsername={handleUpdateHnUsername}
           />
         )}
 

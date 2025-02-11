@@ -1,10 +1,36 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { AUTH_TOKEN_KEY, API_BASE_URL } from '../types/auth';
 
 interface BookmarkEntry {
   id: number;
   type: 'story' | 'comment';
   storyId?: number;
   timestamp: number;
+}
+
+interface HNItem {
+  id: number;
+  type: 'story' | 'comment';
+  title?: string;
+  text?: string;
+  by: string;
+  time: number;
+  url?: string;
+  score?: number;
+  kids?: number[];
+  parent?: number;
+  storyId?: number;
+  story?: HNItem;
+}
+
+interface CloudBookmark {
+  id: string;
+  user_id: string;
+  item_id: string;
+  type: 'story' | 'comment';
+  story_id: string;
+  created_at: string;
 }
 
 interface BookmarkButtonProps {
@@ -25,20 +51,51 @@ interface BookmarkButtonProps {
 
 export function BookmarkButton({ item, storyId, storyTitle, theme, variant = 'icon' }: BookmarkButtonProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     const bookmarks: BookmarkEntry[] = JSON.parse(localStorage.getItem('hn-bookmarks') || '[]');
     setIsBookmarked(bookmarks.some(b => b.id === item.id));
   }, [item.id]);
 
-  const toggleBookmark = () => {
+  const toggleBookmark = async () => {
     const bookmarks: BookmarkEntry[] = JSON.parse(localStorage.getItem('hn-bookmarks') || '[]');
+    let bookmarkCache: Record<string, HNItem> = JSON.parse(localStorage.getItem('hn-bookmark-cache') || '{}');
     
     if (isBookmarked) {
+      // Remove from local storage
       const updatedBookmarks = bookmarks.filter(b => b.id !== item.id);
       localStorage.setItem('hn-bookmarks', JSON.stringify(updatedBookmarks));
+      
+      // Remove from cache
+      delete bookmarkCache[item.id];
+      localStorage.setItem('hn-bookmark-cache', JSON.stringify(bookmarkCache));
+      
       setIsBookmarked(false);
+
+      // If user is logged in, remove from cloud
+      if (user) {
+        try {
+          const token = localStorage.getItem(AUTH_TOKEN_KEY);
+          if (!token) return;
+
+          // Try to delete - backend will handle if it doesn't exist
+          const deleteResponse = await fetch(`${API_BASE_URL}/api/bookmarks/item/${item.id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            }
+          });
+
+          if (!deleteResponse.ok && deleteResponse.status !== 404) {
+            console.error('Failed to remove bookmark from cloud');
+          }
+        } catch (error) {
+          console.error('Error removing bookmark from cloud:', error);
+        }
+      }
     } else {
+      // Add to local storage
       const newBookmark: BookmarkEntry = {
         id: item.id,
         type: item.type,
@@ -46,7 +103,40 @@ export function BookmarkButton({ item, storyId, storyTitle, theme, variant = 'ic
         timestamp: Date.now()
       };
       localStorage.setItem('hn-bookmarks', JSON.stringify([...bookmarks, newBookmark]));
+
+      // Add to cache
+      bookmarkCache[item.id] = item;
+      localStorage.setItem('hn-bookmark-cache', JSON.stringify(bookmarkCache));
+      
       setIsBookmarked(true);
+
+      // If user is logged in, add to cloud
+      if (user) {
+        try {
+          const token = localStorage.getItem(AUTH_TOKEN_KEY);
+          if (!token) return;
+
+          // Try to add - backend will handle if it already exists
+          const addResponse = await fetch(`${API_BASE_URL}/api/bookmarks`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              item_id: item.id.toString(),
+              type: item.type,
+              story_id: (item.type === 'comment' && storyId ? storyId : item.id).toString()
+            })
+          });
+
+          if (!addResponse.ok && addResponse.status !== 409) {
+            console.error('Failed to add bookmark to cloud');
+          }
+        } catch (error) {
+          console.error('Error adding bookmark to cloud:', error);
+        }
+      }
     }
   };
 

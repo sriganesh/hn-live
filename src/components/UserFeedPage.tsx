@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSwipeable } from 'react-swipeable';
 import { Following } from '../types/Following';
 import { UserTag } from '../types/UserTag';
 import { MobileBottomBar } from './MobileBottomBar';
@@ -64,6 +65,35 @@ export function UserFeedPage({
   const [error, setError] = useState<string | null>(null);
   const [isBackToTopVisible, setIsBackToTopVisible] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Add tab order array
+  const TAB_ORDER: Tab[] = ['feed', 'following', 'tags'];
+
+  // Add swipe handlers
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      const currentIndex = TAB_ORDER.indexOf(activeTab);
+      if (currentIndex >= 0) {
+        // If we're at the last tab, go to the first tab
+        const nextIndex = currentIndex === TAB_ORDER.length - 1 ? 0 : currentIndex + 1;
+        setActiveTab(TAB_ORDER[nextIndex]);
+      }
+    },
+    onSwipedRight: () => {
+      const currentIndex = TAB_ORDER.indexOf(activeTab);
+      if (currentIndex >= 0) {
+        // If we're at the first tab, go to the last tab
+        const nextIndex = currentIndex === 0 ? TAB_ORDER.length - 1 : currentIndex - 1;
+        setActiveTab(TAB_ORDER[nextIndex]);
+      }
+    },
+    preventScrollOnSwipe: true,
+    trackTouch: true,
+    trackMouse: false,
+    delta: 50,
+    swipeDuration: 500,
+    touchEventOptions: { passive: false }
+  });
 
   // Load following and tags data
   useEffect(() => {
@@ -285,7 +315,7 @@ export function UserFeedPage({
   };
 
   return (
-    <div className={`
+    <div {...swipeHandlers} className={`
       fixed inset-0 z-50 overflow-hidden
       ${font === 'mono' ? 'font-mono' : 
         font === 'jetbrains' ? 'font-jetbrains' :
@@ -301,11 +331,7 @@ export function UserFeedPage({
         : 'bg-[#1a1a1a] text-[#828282]'}
       text-${fontSize}
     `}>
-      <div 
-        ref={containerRef}
-        className="h-full overflow-y-auto p-4 pb-20"
-      >
-        {/* Header */}
+      <div ref={containerRef} className="h-full overflow-y-auto overflow-x-hidden p-4 pb-20">
         <div className="max-w-3xl mx-auto mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -336,19 +362,37 @@ export function UserFeedPage({
           <div className="flex items-center gap-4">
             <button
               onClick={() => setActiveTab('feed')}
-              className={`${activeTab === 'feed' ? 'opacity-100' : 'opacity-50'} hover:opacity-100`}
+              className={`hover:opacity-100 ${
+                activeTab === 'feed' 
+                  ? theme === 'green' 
+                    ? 'text-green-500' 
+                    : 'text-[#ff6600]'
+                  : 'opacity-50'
+              }`}
             >
               [FEED]
             </button>
             <button
               onClick={() => setActiveTab('following')}
-              className={`${activeTab === 'following' ? 'opacity-100' : 'opacity-50'} hover:opacity-100`}
+              className={`hover:opacity-100 ${
+                activeTab === 'following'
+                  ? theme === 'green'
+                    ? 'text-green-500'
+                    : 'text-[#ff6600]'
+                  : 'opacity-50'
+              }`}
             >
               [FOLLOWING]
             </button>
             <button
               onClick={() => setActiveTab('tags')}
-              className={`${activeTab === 'tags' ? 'opacity-100' : 'opacity-50'} hover:opacity-100`}
+              className={`hover:opacity-100 ${
+                activeTab === 'tags'
+                  ? theme === 'green'
+                    ? 'text-green-500'
+                    : 'text-[#ff6600]'
+                  : 'opacity-50'
+              }`}
             >
               [TAGS]
             </button>
@@ -461,7 +505,12 @@ export function UserFeedPage({
                         // Comment
                         <div>
                           <div 
-                            className="prose prose-sm max-w-none"
+                            className="prose prose-sm max-w-none break-words
+                              [&>*]:max-w-full [&>*]:break-words
+                              [&_a]:inline-block [&_a]:max-w-full [&_a]:overflow-hidden [&_a]:text-ellipsis
+                              [&_p]:max-w-full [&_p]:break-words
+                              [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:whitespace-pre-wrap
+                              [&_code]:max-w-full [&_code]:break-words"
                             dangerouslySetInnerHTML={{ __html: item.text }}
                           />
                           <div className="text-sm mt-2">
@@ -472,7 +521,7 @@ export function UserFeedPage({
                                 e.preventDefault();
                                 navigate(`/item/${item.parent}`);
                               }}
-                              className="hover:opacity-75"
+                              className="hover:opacity-75 break-words"
                             >
                               {item.title}
                             </a>
@@ -480,7 +529,7 @@ export function UserFeedPage({
                         </div>
                       ) : (
                         // Story
-                        <div>
+                        <div className="break-words">
                           <a
                             href={item.url || `/item/${item.id}`}
                             onClick={(e) => {
@@ -489,14 +538,14 @@ export function UserFeedPage({
                                 navigate(`/item/${item.id}`);
                               }
                             }}
-                            className="hover:opacity-75"
+                            className="hover:opacity-75 break-all inline-block max-w-full"
                             target={item.url ? "_blank" : undefined}
                             rel={item.url ? "noopener noreferrer" : undefined}
                           >
                             {item.title}
                           </a>
                           {item.url && (
-                            <span className="ml-2 opacity-50 text-sm">
+                            <span className="ml-2 opacity-50 text-sm break-all">
                               ({new URL(item.url).hostname})
                             </span>
                           )}
@@ -548,7 +597,8 @@ export function UserFeedPage({
               </div>
               {following.length === 0 ? (
                 <div className="text-center py-8 opacity-75">
-                  No followed users yet. Click on usernames to follow users.
+                  <div>No followed users yet. Click on usernames to follow users.</div>
+                  <div className="mt-2 text-sm">Following users lets you see their stories and comments in your personalized feed.</div>
                 </div>
               ) : (
                 following.map(follow => (
@@ -607,7 +657,8 @@ export function UserFeedPage({
               </div>
               {userTags.length === 0 ? (
                 <div className="text-center py-8 opacity-75">
-                  No tagged users yet. Click on usernames to add tags.
+                  <div>No tagged users yet. Click on usernames to add tags.</div>
+                  <div className="mt-2 text-sm">Tags are private to you and stored locally in your browser.</div>
                 </div>
               ) : (
                 userTags.map(tag => (

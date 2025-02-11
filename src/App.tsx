@@ -3,6 +3,9 @@ import { HelmetProvider } from 'react-helmet-async';
 import HNLiveTerminal from "./pages/hnlive";
 import { register as registerServiceWorker } from './registerServiceWorker';
 import { useEffect } from 'react';
+import { AuthProvider } from './contexts/AuthContext';
+import { TermsPage } from './pages/Terms';
+import { PrivacyPage } from './pages/Privacy';
 
 // Add type definitions at the top
 interface NewReply {
@@ -108,23 +111,27 @@ export function App() {
   return (
     <HelmetProvider>
       <Router>
-        <Routes>
-          <Route path="/" element={<HNLiveTerminal />}>
-            <Route path="front" element={null} />
-            <Route path="item/:itemId" element={null} />
-            <Route path="item/:itemId/comment/:commentId" element={null} />
-            <Route path="show" element={null} />
-            <Route path="ask" element={null} />
-            <Route path="jobs" element={null} />
-            <Route path="best" element={null} />
-            <Route path="user/:userId" element={null} />
-            <Route path="bookmarks" element={null} />
-            <Route path="replay/:itemId" element={null} />
-            <Route path="profile" element={null} />
-            <Route path="links/:itemId" element={null} />
-            <Route path="feed" element={null} />
-          </Route>
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<HNLiveTerminal />}>
+              <Route path="front" element={null} />
+              <Route path="item/:itemId" element={null} />
+              <Route path="item/:itemId/comment/:commentId" element={null} />
+              <Route path="show" element={null} />
+              <Route path="ask" element={null} />
+              <Route path="jobs" element={null} />
+              <Route path="best" element={null} />
+              <Route path="user/:userId" element={null} />
+              <Route path="bookmarks" element={null} />
+              <Route path="replay/:itemId" element={null} />
+              <Route path="profile" element={null} />
+              <Route path="links/:itemId" element={null} />
+              <Route path="feed" element={null} />
+              <Route path="terms" element={null} />
+              <Route path="privacy" element={null} />
+            </Route>
+          </Routes>
+        </AuthProvider>
       </Router>
     </HelmetProvider>
   );
