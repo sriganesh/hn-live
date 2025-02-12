@@ -1215,6 +1215,22 @@ export function StoryView({
                 >
                   {commentState?.collapsedComments?.has(comment.id) ? '[+]' : '[-]'}
                 </button>
+                {/* Add expand thread option for root comments */}
+                {comment.level === 0 && 
+                 commentState?.collapsedComments?.has(comment.id) && 
+                 comment.comments && 
+                 comment.comments.length > 0 ? (
+                  <button
+                    onClick={() => expandEntireThread(comment.id)}
+                    className={`text-xs ${
+                      theme === 'green' 
+                        ? 'text-green-500/50 hover:text-green-500' 
+                        : 'text-[#ff6600]/50 hover:text-[#ff6600]'
+                    }`}
+                  >
+                    [expand thread]
+                  </button>
+                ) : null}
                 {commentState.showCollapseThreadOption.has(comment.id) && (
                   <>
                     <button
@@ -1483,6 +1499,45 @@ export function StoryView({
         collapsedComments: newCollapsed,
         showCollapseThreadOption: new Set(),
         threadCollapsedComments: new Set()
+      };
+    });
+  }, []);
+
+  // Add the expandEntireThread function near other thread-related functions
+  const expandEntireThread = useCallback((commentId: number): void => {
+    setCommentState((prev: StoryViewState) => {
+      const newCollapsed = new Set(prev.collapsedComments);
+      
+      // Find the comment and all its children
+      const expandThread = (comments: HNComment[]): boolean => {
+        for (const comment of comments) {
+          if (comment.id === commentId) {
+            // Remove this comment and all its children from collapsed set
+            const removeFromCollapsed = (c: HNComment): void => {
+              newCollapsed.delete(c.id);
+              if (c.comments) {
+                c.comments.forEach(removeFromCollapsed);
+              }
+            };
+            removeFromCollapsed(comment);
+            return true;
+          }
+          if (comment.comments && expandThread(comment.comments)) {
+            return true;
+          }
+        }
+        return false;
+      };
+      
+      expandThread(prev.loadedComments);
+      
+      return {
+        ...prev,
+        collapsedComments: newCollapsed,
+        threadCollapsedComments: new Set(
+          Array.from(prev.threadCollapsedComments)
+            .filter(id => !Array.from(newCollapsed).includes(id))
+        )
       };
     });
   }, []);
