@@ -1929,6 +1929,7 @@ export default function HNLiveTerminal() {
             fontSize={'base' as const}  // Force to base size for UserPage
             onShowSearch={() => setShowSearch(true)}
             onShowSettings={() => setShowSettings(true)}
+            isRunning={isRunning}
           />
         )}
 
