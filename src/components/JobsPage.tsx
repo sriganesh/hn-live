@@ -243,16 +243,16 @@ export function JobsPage({
                 [ASK]
               </button>
               <button 
-                onClick={() => navigate('/jobs')}
-                className={`${themeColors} opacity-30 hover:opacity-50`}
-              >
-                [JOBS]
-              </button>
-              <button 
                 onClick={() => navigate('/best')}
                 className={themeColors}
               >
                 [BEST]
+              </button>
+              <button 
+                onClick={() => navigate('/jobs')}
+                className={`${themeColors} opacity-30 hover:opacity-50`}
+              >
+                [JOBS]
               </button>
               <button 
                 onClick={onShowSearch}

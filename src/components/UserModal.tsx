@@ -149,6 +149,26 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
     }
   }, [userId]); // Add userId as dependency
 
+  // Add the date check functions
+  const isUserAnniversary = (createdTimestamp: number): boolean => {
+    const created = new Date(createdTimestamp * 1000);
+    const today = new Date();
+    
+    // Only show cake if at least one year has passed
+    return created.getDate() === today.getDate() && 
+           created.getMonth() === today.getMonth() &&
+           created.getFullYear() < today.getFullYear();
+  };
+
+  const isCreatedToday = (createdTimestamp: number): boolean => {
+    const created = new Date(createdTimestamp * 1000);
+    const today = new Date();
+    
+    return created.getDate() === today.getDate() && 
+           created.getMonth() === today.getMonth() &&
+           created.getFullYear() === today.getFullYear();
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -251,7 +271,24 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="text-sm opacity-75">Joined</div>
-                  <div>{formatDate(user.created)}</div>
+                  <div className="flex items-center flex-wrap gap-2">
+                    {formatDate(user.created)}
+                    {user.created < 1202860800 && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                        theme === 'green' 
+                          ? 'border-green-500/30 text-green-400' 
+                          : 'border-[#ff6600]/30 text-[#ff6600]'
+                      }`}>
+                        Early User
+                      </span>
+                    )}
+                    {isUserAnniversary(user.created) && (
+                      <span className="text-lg">🎂</span>
+                    )}
+                    {isCreatedToday(user.created) && (
+                      <span className="text-lg">👶</span>
+                    )}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <div className="text-sm opacity-75">Karma</div>

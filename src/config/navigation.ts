@@ -18,12 +18,12 @@ export const navigationItems: NavigationItem[] = [
     path: '/ask'
   },
   {
-    label: 'JOBS',
-    path: '/jobs'
-  },
-  {
     label: 'BEST',
     path: '/best'
+  },
+  {
+    label: 'JOBS',
+    path: '/jobs'
   },
   // Separator can be handled by a special path
   { 
@@ -51,12 +51,12 @@ export const MOBILE_MENU_ITEMS: NavigationItem[] = [
     path: '/ask'
   },
   {
-    label: 'Jobs',
-    path: '/jobs'
-  },
-  {
     label: 'Best',
     path: '/best'
+  },
+  {
+    label: 'Jobs',
+    path: '/jobs'
   },
   {
     label: 'Bookmarks',

@@ -10,6 +10,7 @@ interface UserPageProps {
   fontSize: 'xs' | 'sm' | 'base';
   onShowSearch: () => void;
   onShowSettings: () => void;
+  isRunning: boolean;
 }
 
 interface HNUser {
@@ -53,7 +54,28 @@ interface UserActivity {
 
 const isTopUser = (userId: string) => topUsers.includes(userId);
 
-export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings }: UserPageProps) {
+// Add function to check if it's user's anniversary
+const isUserAnniversary = (createdTimestamp: number): boolean => {
+  const created = new Date(createdTimestamp * 1000);
+  const today = new Date();
+  
+  // Only show cake if at least one year has passed
+  return created.getDate() === today.getDate() && 
+         created.getMonth() === today.getMonth() &&
+         created.getFullYear() < today.getFullYear();
+};
+
+// Add function to check if user was created today
+const isCreatedToday = (createdTimestamp: number): boolean => {
+  const created = new Date(createdTimestamp * 1000);
+  const today = new Date();
+  
+  return created.getDate() === today.getDate() && 
+         created.getMonth() === today.getMonth() &&
+         created.getFullYear() === today.getFullYear();
+};
+
+export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings, isRunning }: UserPageProps) {
   const { userId } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState<HNUser | null>(null);
@@ -205,8 +227,8 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
       setHasMore(hasMorePages);
 
       const newItems = data.hits.map(item => ({
-        id: item.objectID,
-        type: item.comment_text ? 'comment' : 'story',
+        id: parseInt(item.objectID),
+        type: item.comment_text ? 'comment' as const : 'story' as const,
         title: item.title || item.story_title,
         text: item.comment_text,
         url: item.url,
@@ -261,7 +283,7 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
   return (
     <>
       <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
-        <div className="h-full overflow-y-auto p-4">
+        <div className="h-full overflow-y-auto overflow-x-hidden p-4">
           {/* Header */}
           <div className="max-w-3xl mx-auto mb-8">
             <div className="flex items-center justify-between">
@@ -271,7 +293,7 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                   className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold tracking-wider hover:opacity-75 flex items-center`}
                 >
                   <span>HN</span>
-                  <span className="text-2xl leading-[0] relative top-[1px] mx-[1px]">•</span>
+                  <span className={`mx-1 animate-pulse ${!isRunning ? 'text-gray-500' : ''}`}>•</span>
                   <span>LIVE</span>
                 </button>
                 <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
@@ -338,10 +360,27 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                 </div>
 
                 {/* User Stats */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                   <div className="space-y-2">
                     <div className="text-sm opacity-75">Joined</div>
-                    <div className="text-lg">{formatDate(user.created)}</div>
+                    <div className="text-lg flex items-center flex-wrap gap-2">
+                      {formatDate(user.created)}
+                      {user.created < 1202860800 && (
+                        <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                          theme === 'green' 
+                            ? 'border-green-500/30 text-green-400' 
+                            : 'border-[#ff6600]/30 text-[#ff6600]'
+                        }`}>
+                          Early User
+                        </span>
+                      )}
+                      {isUserAnniversary(user.created) && (
+                        <span className="text-lg">🎂</span>
+                      )}
+                      {isCreatedToday(user.created) && (
+                        <span className="text-lg">👶</span>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <div className="text-sm opacity-75">Karma</div>
@@ -360,7 +399,7 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                   <div className="mt-6 space-y-2">
                     <div className="text-sm opacity-75">About</div>
                     <div 
-                      className="prose prose-invert max-w-none"
+                      className="prose prose-invert max-w-none break-words [&_*]:break-words [&_a]:break-all"
                       dangerouslySetInnerHTML={{ __html: user.about }}
                     />
                   </div>
@@ -471,10 +510,10 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                         </a>
                       </div>
                       {item.type === 'story' ? (
-                        <div>
+                        <div className="break-words">
                           <a
                             href={item.url || `https://news.ycombinator.com/item?id=${item.id}`}
-                            className="hover:opacity-75"
+                            className="hover:opacity-75 break-all"
                             target="_blank"
                             rel="noopener noreferrer"
                           >
@@ -483,7 +522,7 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
                         </div>
                       ) : (
                         <div 
-                          className="prose prose-invert max-w-none"
+                          className="prose prose-invert max-w-none break-words [&_*]:break-words [&_a]:break-all"
                           dangerouslySetInnerHTML={{ __html: item.text || '' }}
                         />
                       )}
@@ -516,6 +555,8 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
         onShowSearch={onShowSearch}
         onShowSettings={onShowSettings}
         onCloseSearch={onShowSearch}
+        isRunning={isRunning}
+        username={null}
       />
     </>
   );

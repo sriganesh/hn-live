@@ -820,7 +820,7 @@ export default function HNLiveTerminal() {
   const [showSettings, setShowSettings] = useState(false);
 
   // Add page order array
-  const PAGE_ORDER = ['front', 'show', 'ask', 'jobs', 'best'] as const;
+  const PAGE_ORDER = ['front', 'show', 'ask', 'best', 'jobs'] as const;
 
   // Add swipe handlers
   const swipeHandlers = useSwipeable({
@@ -1929,6 +1929,7 @@ export default function HNLiveTerminal() {
             fontSize={'base' as const}  // Force to base size for UserPage
             onShowSearch={() => setShowSearch(true)}
             onShowSettings={() => setShowSettings(true)}
+            isRunning={isRunning}
           />
         )}
 
