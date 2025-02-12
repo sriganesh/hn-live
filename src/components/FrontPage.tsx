@@ -343,16 +343,16 @@ export function FrontPage({
                   [ASK]
                 </button>
                 <button 
-                  onClick={() => navigate('/jobs')}
-                  className={themeColors}
-                >
-                  [JOBS]
-                </button>
-                <button 
                   onClick={() => navigate('/best')}
                   className={themeColors}
                 >
                   [BEST]
+                </button>
+                <button 
+                  onClick={() => navigate('/jobs')}
+                  className={themeColors}
+                >
+                  [JOBS]
                 </button>
                 <button 
                   onClick={onShowSearch}
