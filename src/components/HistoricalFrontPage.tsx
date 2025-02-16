@@ -258,23 +258,6 @@ const HistoricalFrontPage = ({
   };
 
   // Add these helper functions from FrontPage.tsx
-  const formatTimeAgo = (timestamp: number): string => {
-    const seconds = Math.floor((Date.now() - timestamp * 1000) / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) {
-      return `${days}d ago`;
-    } else if (hours > 0) {
-      return `${hours}h ago`;
-    } else if (minutes > 0) {
-      return `${minutes}m ago`;
-    } else {
-      return 'just now';
-    }
-  };
-
   const truncateUrl = (url: string, maxLength: number): string => {
     return url.length > maxLength ? url.slice(0, maxLength) + '...' : url;
   };
@@ -452,15 +435,6 @@ const HistoricalFrontPage = ({
                             {story.by}
                           </button>{' '}
                           <span className="opacity-75">•</span>{' '}
-                          <a
-                            href={`https://news.ycombinator.com/item?id=${story.id}`}
-                            className="shrink-0 hover:underline"
-                            title={new Date(story.time * 1000).toLocaleString()}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {formatTimeAgo(story.time)}
-                          </a> • {' '}
                           <button
                             onClick={() => navigate(`/item/${story.id}`)}
                             className="hover:underline"
@@ -480,10 +454,6 @@ const HistoricalFrontPage = ({
                           <div className="flex items-center text-sm opacity-50">
                             <span className="truncate">
                               {truncateUrl(new URL(story.url).hostname.replace('www.', ''), 40)}
-                            </span>
-                            <span className="mx-2">•</span>
-                            <span className="shrink-0">
-                              {formatTimeAgo(story.time)}
                             </span>
                           </div>
                         )}
