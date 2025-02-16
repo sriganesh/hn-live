@@ -538,9 +538,9 @@ const HistoricalFrontPage = ({
         </div>
       </div>
 
-      {/* Fixed Bottom Slider - adjust bottom position to be higher above mobile bar */}
+      {/* Fixed Bottom Slider - use dynamic viewport calculation */}
       <div className={`
-        fixed bottom-16 sm:bottom-0 left-0 right-0 z-20
+        fixed sm:bottom-0 left-0 right-0 z-20
         ${theme === 'green'
           ? 'bg-black'
           : theme === 'og'
@@ -554,6 +554,7 @@ const HistoricalFrontPage = ({
             : 'border-[#828282]/20'
         }
         px-4 py-6
+        bottom-[calc(env(safe-area-inset-bottom,_0px)_+_3.5rem)]
       `}>
         <div className="max-w-3xl mx-auto space-y-4">
           {/* Date display */}
