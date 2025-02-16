@@ -96,7 +96,7 @@ const HistoricalFrontPage = ({
     return `${year}-${month}-${day}`;
   };
 
-  // Format date for display
+  // Format date for display (with weekday) - for header
   const formatDisplayDate = (date: Date) => {
     return new Date(date.getTime()).toLocaleDateString(undefined, {
       weekday: 'long',
@@ -104,6 +104,16 @@ const HistoricalFrontPage = ({
       month: 'long',
       day: 'numeric',
       timeZone: 'UTC' // Force UTC timezone for display
+    });
+  };
+
+  // Format date for slider (without weekday)
+  const formatSliderDate = (date: Date) => {
+    return new Date(date.getTime()).toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'UTC'
     });
   };
 
@@ -569,7 +579,7 @@ const HistoricalFrontPage = ({
           <div className="flex justify-between items-center text-sm">
             <span>Feb 19, 2007</span>
             <span className={`${isDragging ? 'opacity-100' : 'opacity-50'} transition-opacity`}>
-              {formatDisplayDate(tempDate || selectedDate)}
+              {formatSliderDate(tempDate || selectedDate)}
             </span>
             <span>Today</span>
           </div>
