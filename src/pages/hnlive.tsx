@@ -26,6 +26,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSwipeable } from 'react-swipeable';
 import { TermsPage } from './Terms';
 import { PrivacyPage } from './Privacy';
+import HistoricalFrontPage from '../components/HistoricalFrontPage';
 
 interface HNItem {
   id: number;
@@ -1366,7 +1367,7 @@ export default function HNLiveTerminal() {
                   </span>
                 )}
               </span>
-              <button
+              <button 
                 onClick={() => setShowAbout(true)}
                 className={`${headerColor} opacity-75 hover:opacity-100 transition-opacity`}
                 title="About"
@@ -1999,6 +2000,24 @@ export default function HNLiveTerminal() {
             onShowSearch={() => setShowSearch(true)}
             onCloseSearch={() => setShowSearch(false)}
             onShowSettings={() => setShowSettings(true)}
+            isRunning={isRunning}
+          />
+        )}
+
+        {/* Add HistoricalFrontPage component to the render */}
+        {location.pathname === '/frontpage-history' && (
+          <HistoricalFrontPage 
+            theme={options.theme}
+            fontSize={options.fontSize}
+            font={options.font}
+            colorizeUsernames={colorizeUsernames}
+            classicLayout={options.classicLayout}
+            onShowSearch={() => setShowSearch(true)}
+            onShowGrep={() => setShowGrep(true)}
+            onShowSettings={() => setShowSettings(true)}
+            isSettingsOpen={showSettings}
+            isSearchOpen={showSearch}
+            onViewUser={(userId) => setViewingUser(userId)}
             isRunning={isRunning}
           />
         )}

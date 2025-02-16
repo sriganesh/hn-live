@@ -10,8 +10,6 @@ interface BookmarkEntry {
 }
 
 interface CloudBookmark {
-  id: string;
-  user_id: string;
   item_id: string;
   type: 'story' | 'comment';
   story_id: string;

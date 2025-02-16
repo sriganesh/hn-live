@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { TermsPage } from './pages/Terms';
 import { PrivacyPage } from './pages/Privacy';
+import HistoricalFrontPage from './components/HistoricalFrontPage';
 
 // Add type definitions at the top
 interface NewReply {
@@ -115,6 +116,7 @@ export function App() {
           <Routes>
             <Route path="/" element={<HNLiveTerminal />}>
               <Route path="front" element={null} />
+              <Route path="frontpage-history" element={null} />
               <Route path="item/:itemId" element={null} />
               <Route path="item/:itemId/comment/:commentId" element={null} />
               <Route path="show" element={null} />

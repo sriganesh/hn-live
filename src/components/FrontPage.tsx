@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTopUsers } from '../hooks/useTopUsers';
 import { MobileBottomBar } from './MobileBottomBar';
+import type { FontOption } from '../types';
 
 interface FrontPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -295,8 +296,8 @@ export function FrontPage({
         >
           {/* Header */}
           <div className="mb-8">
-            {/* Desktop view - single row */}
-            <div className="hidden sm:flex items-center justify-between">
+            {/* Desktop view */}
+            <div className="hidden sm:flex items-center justify-between mb-8">
               <div className="flex items-center">
                 <div className="flex items-center">
                   <button 
@@ -319,6 +320,16 @@ export function FrontPage({
                   <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
                     FRONT PAGE
                   </span>
+                  <a
+                    href="/frontpage-history"
+                    className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} opacity-75 hover:opacity-100 ml-4`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/frontpage-history');
+                    }}
+                  >
+                    [VIEW HISTORY]
+                  </a>
                 </div>
               </div>
 
@@ -418,6 +429,16 @@ export function FrontPage({
                   <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
                     / FRONT PAGE
                   </span>
+                  <a
+                    href="/frontpage-history"
+                    className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} opacity-75 hover:opacity-100 ml-4`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/frontpage-history');
+                    }}
+                  >
+                    [VIEW HISTORY]
+                  </a>
                 </div>
               </div>
             </div>

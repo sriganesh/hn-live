@@ -61,3 +61,97 @@ html, body {
 .pb-safe {
   padding-bottom: max(env(safe-area-inset-bottom), 16px);
 }
+
+/* Add slider styles after existing styles */
+/* Slider styles for different themes */
+.range-slider-green::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgb(34 197 94) !important; /* green-500 */
+  cursor: pointer;
+  margin-top: -4px; /* This centers the thumb on the track */
+}
+
+.range-slider-orange::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ff6600 !important;
+  cursor: pointer;
+  margin-top: -4px; /* This centers the thumb on the track */
+}
+
+.range-slider-green::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgb(34 197 94) !important; /* green-500 */
+  cursor: pointer;
+  border: none;
+  margin-top: -4px;
+}
+
+.range-slider-orange::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ff6600 !important;
+  cursor: pointer;
+  border: none;
+  margin-top: -4px;
+}
+
+/* Remove default focus styles */
+.range-slider:focus {
+  outline: none;
+}
+
+/* Optional: Add hover effect */
+.range-slider-green::-webkit-slider-thumb:hover,
+.range-slider-orange::-webkit-slider-thumb:hover,
+.range-slider-green::-moz-range-thumb:hover,
+.range-slider-orange::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  transition: transform 0.15s ease;
+}
+
+/* Base slider track styles */
+.range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Track styles for green theme */
+.range-slider-green::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: rgb(34 197 94 / 0.2); /* green-500/20 */
+}
+
+.range-slider-green::-moz-range-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: rgb(34 197 94 / 0.2); /* green-500/20 */
+}
+
+/* Track styles for orange theme */
+.range-slider-orange::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: rgb(255 102 0 / 0.2); /* ff6600/20 */
+}
+
+.range-slider-orange::-moz-range-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: rgb(255 102 0 / 0.2); /* ff6600/20 */
+}
