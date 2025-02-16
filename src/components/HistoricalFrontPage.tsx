@@ -257,9 +257,20 @@ const HistoricalFrontPage = ({
     setSelectedDate(newDate);
   };
 
-  // Add these helper functions from FrontPage.tsx
+  // Update the truncateUrl function to be more aggressive with long URLs
   const truncateUrl = (url: string, maxLength: number): string => {
-    return url.length > maxLength ? url.slice(0, maxLength) + '...' : url;
+    if (url.length <= maxLength) return url;
+    
+    // Split into parts (e.g., ["subdomain", "domain", "com"])
+    const parts = url.split('.');
+    if (parts.length <= 2) return url.slice(0, maxLength) + '...';
+    
+    // If we have a long subdomain, truncate it
+    if (parts[0].length > 15) {
+      parts[0] = parts[0].slice(0, 15) + '...';
+    }
+    
+    return parts.join('.');
   };
 
   // Update the escape key handler
@@ -323,7 +334,7 @@ const HistoricalFrontPage = ({
 
   return (
     <div className={`
-      fixed inset-0 z-50
+      fixed inset-0 z-50 overflow-x-hidden
       ${font === 'mono' ? 'font-mono' : 
         font === 'jetbrains' ? 'font-jetbrains' :
         font === 'fira' ? 'font-fira' :
@@ -387,7 +398,7 @@ const HistoricalFrontPage = ({
               Loading stories...
             </div>
           ) : (
-            <div className="max-w-3xl mx-auto space-y-6">
+            <div className={`max-w-3xl mx-auto space-y-6 ${!hasMore ? 'pb-16' : ''}`}>
               {stories.map((story, index) => (
                 <div key={story.id} className="group relative">
                   {classicLayout ? (
@@ -415,8 +426,8 @@ const HistoricalFrontPage = ({
                             {story.title}
                           </a>
                           {story.url && (
-                            <span className="ml-2 opacity-50 text-sm">
-                              ({new URL(story.url).hostname})
+                            <span className="ml-2 opacity-50 text-sm break-all">
+                              ({truncateUrl(new URL(story.url).hostname.replace('www.', ''), 30)})
                             </span>
                           )}
                         </div>
@@ -452,8 +463,8 @@ const HistoricalFrontPage = ({
                       <div className="space-y-1 flex-1">
                         {story.url && (
                           <div className="flex items-center text-sm opacity-50">
-                            <span className="truncate">
-                              {truncateUrl(new URL(story.url).hostname.replace('www.', ''), 40)}
+                            <span className="truncate max-w-full inline-block break-all">
+                              {truncateUrl(new URL(story.url).hostname.replace('www.', ''), 60)}
                             </span>
                           </div>
                         )}
@@ -523,7 +534,6 @@ const HistoricalFrontPage = ({
                   {loadingMore ? (
                     <div className="opacity-75">Loading more stories...</div>
                   ) : (
-                    // Spacer for intersection observer
                     <div className="h-20"></div>
                   )}
                 </div>
