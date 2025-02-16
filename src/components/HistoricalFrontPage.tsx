@@ -398,7 +398,7 @@ const HistoricalFrontPage = ({
               Loading stories...
             </div>
           ) : (
-            <div className={`max-w-3xl mx-auto space-y-6 ${!hasMore ? 'pb-8' : ''}`}>
+            <div className={`max-w-3xl mx-auto space-y-6 ${!hasMore ? 'pb-4' : ''}`}>
               {stories.map((story, index) => (
                 <div key={story.id} className="group relative">
                   {classicLayout ? (
