@@ -58,6 +58,7 @@ const HistoricalFrontPage = ({
   const [loadingMore, setLoadingMore] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadingRef = useRef<HTMLDivElement>(null);
+  const [allStoryIds, setAllStoryIds] = useState<string[]>([]);
 
   // Constants for date range - use UTC dates
   const START_DATE = new Date(Date.UTC(2007, 1, 19)); // February 19, 2007 UTC
@@ -134,16 +135,23 @@ const HistoricalFrontPage = ({
         date.getUTCDate()
       ));
       
-      // If date is today, use Firebase topstories API
+      // If date is today, use Firebase topstories API with pagination
       if (selectedDate.toISOString().split('T')[0] === new Date().toISOString().split('T')[0]) {
         const response = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json');
         const allIds = await response.json();
-        const storyIds = allIds.slice(0, 30).map(String);
-        const storyPromises = storyIds.map(id => fetchStoryDetails(id));
-        const stories = await Promise.all(storyPromises);
-        const validStories = stories.filter((story): story is HNStory => story !== null);
-        setStories(validStories);
-        setHasMore(false); // No pagination for today's stories
+        setAllStoryIds(allIds.map(String));
+
+        // Load first 30 stories immediately for page 1
+        const start = (page - 1) * 30;
+        const end = start + 30;
+        const pageStoryIds = allIds.slice(start, end).map(String);
+        
+        const storyPromises = pageStoryIds.map(id => fetchStoryDetails(id));
+        const newStories = await Promise.all(storyPromises);
+        const validStories = newStories.filter((story): story is HNStory => story !== null);
+        
+        setStories(prev => append ? [...prev, ...validStories] : validStories);
+        setHasMore(end < allIds.length);
       } else if (selectedDate.getTime() >= START_DATE.getTime()) {
         const formattedDate = formatDateForApi(selectedDate);
         const response = await fetch(`https://fp-api.hn.live/?date=${formattedDate}&page=${page}`);
