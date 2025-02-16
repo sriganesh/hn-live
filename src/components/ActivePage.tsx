@@ -238,11 +238,116 @@ export function ActivePage({
         : 'bg-[#1a1a1a] text-[#828282]'}
       text-${fontSize}
     `}>
-      {/* Header */}
-      <div className="p-4">
-        <div className="mb-8">
-          {/* Desktop view */}
-          <div className="hidden sm:flex items-center justify-between mb-8">
+      <div className="h-full overflow-y-auto p-4">
+        {/* Desktop view */}
+        <div className="hidden sm:flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <button 
+              onClick={() => navigate('/')}
+              className={`${
+                theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
+              } font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
+            >
+              HN
+              <span className="animate-pulse">
+                <span className={`inline-block w-2 h-2 rounded-full ${
+                  isRunning ? 'bg-red-500' : 'bg-gray-500'
+                }`}></span>
+              </span>
+              LIVE
+            </button>
+            <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
+              /
+            </span>
+            <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
+              TRENDING
+            </span>
+          </div>
+
+          {/* Desktop controls */}
+          <div className="hidden sm:flex items-center gap-4">
+            <button 
+              onClick={() => navigate('/front')}
+              className={themeColors}
+            >
+              [FRONT PAGE]
+            </button>
+            <button 
+              onClick={() => navigate('/trending')}
+              className={`${themeColors} opacity-30 hover:opacity-50`}
+            >
+              [TRENDING]
+            </button>
+            <button 
+              onClick={() => navigate('/show')}
+              className={themeColors}
+            >
+              [SHOW]
+            </button>
+            <button 
+              onClick={() => navigate('/ask')}
+              className={themeColors}
+            >
+              [ASK]
+            </button>
+            <button 
+              onClick={() => navigate('/best')}
+              className={themeColors}
+            >
+              [BEST]
+            </button>
+            <button 
+              onClick={() => navigate('/jobs')}
+              className={themeColors}
+            >
+              [JOBS]
+            </button>
+            <button 
+              onClick={onShowSearch}
+              className={themeColors}
+              title="Ctrl/Cmd + K"
+            >
+              [SEARCH]
+            </button>
+            {showGrep ? (
+              <div className="flex items-center gap-2">
+                <span>grep:</span>
+                <input
+                  type="text"
+                  value={grepFilter}
+                  onChange={(e) => setGrepFilter(e.target.value)}
+                  className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
+                  placeholder="filter..."
+                  autoFocus
+                />
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowGrep(true)}
+                className={themeColors}
+                title="Ctrl/Cmd + F"
+              >
+                [GREP]
+              </button>
+            )}
+            <button
+              onClick={onShowSettings}
+              className={themeColors}
+            >
+              [SETTINGS]
+            </button>
+            <button 
+              onClick={() => navigate(-1)}
+              className="opacity-75 hover:opacity-100"
+            >
+              [ESC]
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile view */}
+        <div className="sm:hidden mb-8">
+          <div className="flex items-center justify-between">
             <div className="flex items-center">
               <button 
                 onClick={() => navigate('/')}
@@ -259,300 +364,188 @@ export function ActivePage({
                 LIVE
               </button>
               <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
-                /
+                / TRENDING
               </span>
-              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
-                TRENDING
-              </span>
-            </div>
-
-            {/* Desktop controls */}
-            <div className="hidden sm:flex items-center gap-4">
-              <button 
-                onClick={() => navigate('/front')}
-                className={themeColors}
-              >
-                [FRONT PAGE]
-              </button>
-              <button 
-                onClick={() => navigate('/trending')}
-                className={`${themeColors} opacity-30 hover:opacity-50`}
-              >
-                [TRENDING]
-              </button>
-              <button 
-                onClick={() => navigate('/show')}
-                className={themeColors}
-              >
-                [SHOW]
-              </button>
-              <button 
-                onClick={() => navigate('/ask')}
-                className={themeColors}
-              >
-                [ASK]
-              </button>
-              <button 
-                onClick={() => navigate('/best')}
-                className={themeColors}
-              >
-                [BEST]
-              </button>
-              <button 
-                onClick={() => navigate('/jobs')}
-                className={themeColors}
-              >
-                [JOBS]
-              </button>
-              <button 
-                onClick={onShowSearch}
-                className={themeColors}
-                title="Ctrl/Cmd + K"
-              >
-                [SEARCH]
-              </button>
-              {showGrep ? (
-                <div className="flex items-center gap-2">
-                  <span>grep:</span>
-                  <input
-                    type="text"
-                    value={grepFilter}
-                    onChange={(e) => setGrepFilter(e.target.value)}
-                    className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
-                    placeholder="filter..."
-                    autoFocus
-                  />
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowGrep(true)}
-                  className={themeColors}
-                  title="Ctrl/Cmd + F"
-                >
-                  [GREP]
-                </button>
-              )}
-              <button
-                onClick={onShowSettings}
-                className={themeColors}
-              >
-                [SETTINGS]
-              </button>
-              <button 
-                onClick={() => navigate(-1)}
-                className="opacity-75 hover:opacity-100"
-              >
-                [ESC]
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile view */}
-          <div className="sm:hidden">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <button 
-                  onClick={() => navigate('/')}
-                  className={`${
-                    theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
-                  } font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
-                >
-                  HN
-                  <span className="animate-pulse">
-                    <span className={`inline-block w-2 h-2 rounded-full ${
-                      isRunning ? 'bg-red-500' : 'bg-gray-500'
-                    }`}></span>
-                  </span>
-                  LIVE
-                </button>
-                <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
-                  / TRENDING
-                </span>
-              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Story list */}
-      <div className="overflow-y-auto h-full pb-20">
-        <div className="px-4">
-          {loading ? (
-            <div className="flex items-center justify-center h-32">
-              Loading stories...
-            </div>
-          ) : (
-            <div className="max-w-3xl mx-auto space-y-6">
-              {filteredStories.map((story, index) => (
-                <div key={story.id} className="group relative">
-                  {classicLayout ? (
-                    <div className="flex items-baseline gap-2">
-                      <span className="opacity-50">{index + 1}.</span>
-                      <div className="space-y-1">
-                        <div>
-                          <a
-                            href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
-                            onClick={(e) => {
-                              if (!story.url) {
-                                e.preventDefault();
-                                navigate(`/item/${story.id}`);
-                              }
-                            }}
-                            className={`
-                              group-hover:opacity-75
-                              ${story.url && theme === 'green' && 'visited:text-green-600/30'}
-                              ${story.url && theme === 'og' && 'visited:text-[#999999]'}
-                              ${story.url && theme === 'dog' && 'visited:text-[#666666]'}
-                            `}
-                            target={story.url ? "_blank" : undefined}
-                            rel={story.url ? "noopener noreferrer" : undefined}
-                          >
-                            {story.title}
-                          </a>
-                          {story.url && (
-                            <span className="ml-2 opacity-50 text-sm">
-                              ({truncateUrl(new URL(story.url).hostname, 30)})
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm opacity-75">
-                          {story.score} points by{' '}
-                          <button 
-                            onClick={() => onViewUser(story.by)}
-                            className={`hover:underline ${
-                              theme === 'green'
-                                ? 'text-green-400'
-                                : colorizeUsernames 
-                                  ? 'hn-username'
-                                  : 'opacity-75'
-                            }`}
-                          >
-                            {story.by}
-                          </button>{' '}
-                          <span className="opacity-75">•</span>{' '}
+        {/* Main content */}
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            Loading stories...
+          </div>
+        ) : (
+          <div className="max-w-3xl mx-auto space-y-4">
+            {filteredStories.map((story, index) => (
+              <div key={story.id} className="group relative">
+                {classicLayout ? (
+                  <div className="flex items-baseline gap-2">
+                    <span className="opacity-50">{index + 1}.</span>
+                    <div className="space-y-1">
+                      <div>
+                        <a
+                          href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
+                          onClick={(e) => {
+                            if (!story.url) {
+                              e.preventDefault();
+                              navigate(`/item/${story.id}`);
+                            }
+                          }}
+                          className={`
+                            group-hover:opacity-75
+                            ${story.url && theme === 'green' && 'visited:text-green-600/30'}
+                            ${story.url && theme === 'og' && 'visited:text-[#999999]'}
+                            ${story.url && theme === 'dog' && 'visited:text-[#666666]'}
+                          `}
+                          target={story.url ? "_blank" : undefined}
+                          rel={story.url ? "noopener noreferrer" : undefined}
+                        >
+                          {story.title}
+                        </a>
+                        {story.url && (
+                          <span className="ml-2 opacity-50 text-sm">
+                            ({truncateUrl(new URL(story.url).hostname, 30)})
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm opacity-75">
+                        {story.score} points by{' '}
+                        <button 
+                          onClick={() => onViewUser(story.by)}
+                          className={`hover:underline ${
+                            theme === 'green'
+                              ? 'text-green-400'
+                              : colorizeUsernames 
+                                ? 'hn-username'
+                                : 'opacity-75'
+                          }`}
+                        >
+                          {story.by}
+                        </button>{' '}
+                        <span className="opacity-75">•</span>{' '}
+                        <span className="shrink-0">
+                          {formatTimeAgo(story.time)}
+                        </span>{' '}
+                        <span className="opacity-75">•</span>{' '}
+                        <button
+                          onClick={() => navigate(`/item/${story.id}`)}
+                          className="hover:underline"
+                        >
+                          {story.descendants || 0} comments
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-baseline gap-3">
+                    <span className={`${theme === 'green' ? 'text-green-500/50' : 'text-[#ff6600]/50'} text-sm font-mono`}>
+                      {(index + 1).toString().padStart(2, '0')}
+                    </span>
+                    <div className="space-y-1 flex-1">
+                      {story.url && (
+                        <div className="flex items-center text-sm opacity-50">
+                          <span className="truncate">
+                            {truncateUrl(new URL(story.url).hostname.replace('www.', ''), 40)}
+                          </span>
+                          <span className="mx-2">•</span>
                           <span className="shrink-0">
                             {formatTimeAgo(story.time)}
-                          </span>{' '}
-                          <span className="opacity-75">•</span>{' '}
-                          <button
-                            onClick={() => navigate(`/item/${story.id}`)}
-                            className="hover:underline"
-                          >
-                            {story.descendants || 0} comments
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-baseline gap-3">
-                      <span className={`${theme === 'green' ? 'text-green-500/50' : 'text-[#ff6600]/50'} text-sm font-mono`}>
-                        {(index + 1).toString().padStart(2, '0')}
-                      </span>
-                      <div className="space-y-1 flex-1">
-                        {story.url && (
-                          <div className="flex items-center text-sm opacity-50">
-                            <span className="truncate">
-                              {truncateUrl(new URL(story.url).hostname.replace('www.', ''), 40)}
-                            </span>
-                            <span className="mx-2">•</span>
-                            <span className="shrink-0">
-                              {formatTimeAgo(story.time)}
-                            </span>
-                          </div>
-                        )}
-                        {!story.url && (
-                          <div className="text-sm opacity-50">
-                            <span className="shrink-0">
-                              {formatTimeAgo(story.time)}
-                            </span>
-                          </div>
-                        )}
-                        <div className="pr-4">
-                          <a
-                            href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
-                            onClick={(e) => {
-                              if (!story.url) {
-                                e.preventDefault();
-                                navigate(`/item/${story.id}`);
-                              }
-                            }}
-                            className={`
-                              group-hover:opacity-75
-                              ${story.url && theme === 'green' && 'visited:text-green-600/30'}
-                              ${story.url && theme === 'og' && 'visited:text-[#999999]'}
-                              ${story.url && theme === 'dog' && 'visited:text-[#666666]'}
-                            `}
-                            target={story.url ? "_blank" : undefined}
-                            rel={story.url ? "noopener noreferrer" : undefined}
-                          >
-                            {story.title}
-                          </a>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                          <button 
-                            onClick={() => onViewUser(story.by)}
-                            className={`hover:underline ${
-                              theme === 'green'
-                                ? 'text-green-400'
-                                : colorizeUsernames 
-                                  ? 'hn-username'
-                                  : 'opacity-75'
-                            }`}
-                          >
-                            {story.by}
-                          </button>
-                          <span className="opacity-75">•</span>
-                          <span className="font-mono opacity-75">
-                            {story.score} points
                           </span>
-                          <span className="opacity-75">•</span>
-                          <button
-                            onClick={() => navigate(`/item/${story.id}`)}
-                            className="opacity-75 hover:opacity-100 hover:underline"
-                          >
-                            {story.descendants 
-                              ? `${story.descendants} comment${story.descendants === 1 ? '' : 's'}`
-                              : 'discuss'
-                            }
-                          </button>
                         </div>
+                      )}
+                      {!story.url && (
+                        <div className="text-sm opacity-50">
+                          <span className="shrink-0">
+                            {formatTimeAgo(story.time)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="pr-4">
+                        <a
+                          href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
+                          onClick={(e) => {
+                            if (!story.url) {
+                              e.preventDefault();
+                              navigate(`/item/${story.id}`);
+                            }
+                          }}
+                          className={`
+                            group-hover:opacity-75
+                            ${story.url && theme === 'green' && 'visited:text-green-600/30'}
+                            ${story.url && theme === 'og' && 'visited:text-[#999999]'}
+                            ${story.url && theme === 'dog' && 'visited:text-[#666666]'}
+                          `}
+                          target={story.url ? "_blank" : undefined}
+                          rel={story.url ? "noopener noreferrer" : undefined}
+                        >
+                          {story.title}
+                        </a>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                        <button 
+                          onClick={() => onViewUser(story.by)}
+                          className={`hover:underline ${
+                            theme === 'green'
+                              ? 'text-green-400'
+                              : colorizeUsernames 
+                                ? 'hn-username'
+                                : 'opacity-75'
+                          }`}
+                        >
+                          {story.by}
+                        </button>
+                        <span className="opacity-75">•</span>
+                        <span className="font-mono opacity-75">
+                          {story.score} points
+                        </span>
+                        <span className="opacity-75">•</span>
+                        <button
+                          onClick={() => navigate(`/item/${story.id}`)}
+                          className="opacity-75 hover:opacity-100 hover:underline"
+                        >
+                          {story.descendants 
+                            ? `${story.descendants} comment${story.descendants === 1 ? '' : 's'}`
+                            : 'discuss'
+                          }
+                        </button>
                       </div>
                     </div>
-                  )}
-                  <div className={`border-b ${
-                    theme === 'green' 
-                      ? 'border-green-500/10' 
-                      : theme === 'og'
-                      ? 'border-[#ff6600]/5'
-                      : 'border-[#828282]/10'
-                  } mt-4`} />
-                </div>
-              ))}
+                  </div>
+                )}
+                <div className={`border-b ${
+                  theme === 'green' 
+                    ? 'border-green-500/10' 
+                    : theme === 'og'
+                    ? 'border-[#ff6600]/5'
+                    : 'border-[#828282]/10'
+                } mt-4`} />
+              </div>
+            ))}
 
-              {!grepFilter && (
-                <div ref={loadingRef} className="text-center py-8">
-                  {loadingMore ? (
+            {!grepFilter && (
+              <div ref={loadingRef} className="text-center py-8">
+                {loadingMore ? (
+                  <div className={`${
+                    theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
+                  } opacity-75`}>
+                    Loading more stories...
+                  </div>
+                ) : hasMore ? (
+                  <div className="h-20"></div>
+                ) : (
+                  <div className="space-y-2">
                     <div className={`${
-                      theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
-                    } opacity-75`}>
-                      Loading more stories...
+                      theme === 'green' ? 'text-green-500/50' : 'text-[#ff6600]/50'
+                    } text-sm`}>
+                      That's all for now!
                     </div>
-                  ) : hasMore ? (
-                    <div className="h-20"></div>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className={`${
-                        theme === 'green' ? 'text-green-500/50' : 'text-[#ff6600]/50'
-                      } text-sm`}>
-                        That's all for now!
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <MobileBottomBar 
