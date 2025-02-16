@@ -10,6 +10,10 @@ interface NavigationItem {
 // Main navigation items that appear in MORE dropdown
 export const navigationItems: NavigationItem[] = [
   {
+    label: 'TRENDING',
+    path: '/trending'
+  },
+  {
     label: 'SHOW HN',
     path: '/show'
   },
@@ -42,6 +46,10 @@ export const navigationItems: NavigationItem[] = [
 
 // Mobile menu items (with different labels)
 export const MOBILE_MENU_ITEMS: NavigationItem[] = [
+  {
+    label: 'TRENDING',
+    path: '/trending'
+  },
   {
     label: 'Show HN',
     path: '/show'

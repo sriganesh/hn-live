@@ -298,6 +298,12 @@ export function ShowPage({
                 [FRONT PAGE]
               </button>
               <button 
+                onClick={() => navigate('/trending')}
+                className={`${themeColors}`}
+              >
+                [TRENDING]
+              </button>
+              <button 
                 onClick={() => navigate('/show')}
                 className={`${themeColors} opacity-30 hover:opacity-50`}
               >

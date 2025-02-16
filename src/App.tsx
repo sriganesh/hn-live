@@ -116,6 +116,7 @@ export function App() {
           <Routes>
             <Route path="/" element={<HNLiveTerminal />}>
               <Route path="front" element={null} />
+              <Route path="trending" element={null} />
               <Route path="frontpage-history" element={null} />
               <Route path="item/:itemId" element={null} />
               <Route path="item/:itemId/comment/:commentId" element={null} />

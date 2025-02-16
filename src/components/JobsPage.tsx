@@ -218,7 +218,7 @@ export function JobsPage({
                   /
                 </span>
                 <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
-                  JOBS
+                  YC JOBS
                 </span>
               </div>
             </div>
@@ -229,6 +229,12 @@ export function JobsPage({
                 className={themeColors}
               >
                 [FRONT PAGE]
+              </button>
+              <button 
+                onClick={() => navigate('/trending')}
+                className={themeColors}
+              >
+                [TRENDING]
               </button>
               <button 
                 onClick={() => navigate('/show')}
