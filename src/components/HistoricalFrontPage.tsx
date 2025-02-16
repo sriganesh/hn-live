@@ -540,7 +540,7 @@ const HistoricalFrontPage = ({
 
       {/* Fixed Bottom Slider - adjust bottom position to be higher above mobile bar */}
       <div className={`
-        fixed bottom-20 sm:bottom-0 left-0 right-0 z-20
+        fixed bottom-16 sm:bottom-0 left-0 right-0 z-20
         ${theme === 'green'
           ? 'bg-black'
           : theme === 'og'
