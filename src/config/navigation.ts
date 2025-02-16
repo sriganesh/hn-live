@@ -47,7 +47,7 @@ export const navigationItems: NavigationItem[] = [
 // Mobile menu items (with different labels)
 export const MOBILE_MENU_ITEMS: NavigationItem[] = [
   {
-    label: 'TRENDING',
+    label: 'Trending',
     path: '/trending'
   },
   {
