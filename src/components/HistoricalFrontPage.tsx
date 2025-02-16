@@ -107,13 +107,20 @@ const HistoricalFrontPage = ({
     });
   };
 
-  // Format date for slider (without weekday)
+  // Format date for slider (without weekday and with short month)
   const formatSliderDate = (date: Date) => {
     return new Date(date.getTime()).toLocaleDateString(undefined, {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
       timeZone: 'UTC'
+    });
+  };
+
+  // Format start date to show only year
+  const formatStartDate = (date: Date) => {
+    return new Date(date.getTime()).toLocaleDateString(undefined, {
+      year: 'numeric'
     });
   };
 
@@ -576,12 +583,16 @@ const HistoricalFrontPage = ({
       `}>
         <div className="max-w-3xl mx-auto space-y-4">
           {/* Date display */}
-          <div className="flex justify-between items-center text-sm">
-            <span>Feb 19, 2007</span>
-            <span className={`${isDragging ? 'opacity-100' : 'opacity-50'} transition-opacity`}>
+          <div className="relative flex justify-between items-center text-sm">
+            <span className="opacity-50">
+              {formatStartDate(new Date('2007-02-19'))}
+            </span>
+            <span className={`absolute left-1/2 -translate-x-1/2 ${
+              isDragging ? 'opacity-100' : 'opacity-50'
+            } transition-opacity`}>
               {formatSliderDate(tempDate || selectedDate)}
             </span>
-            <span>Today</span>
+            <span className="opacity-50">Today</span>
           </div>
           
           {/* Slider */}
