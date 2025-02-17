@@ -6,12 +6,14 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  min-height: -webkit-fill-available;
   background: black;
 }
 
 #root {
   width: 100%;
   height: 100vh;
+  height: -webkit-fill-available;
 }
 
 /* Replace the existing rule with these theme-specific rules */
@@ -29,6 +31,25 @@ body {
 
 :root {
   --sat: env(safe-area-inset-bottom);
+}
+
+/* PWA-specific styles */
+@media all and (display-mode: standalone) {
+  html, body {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+
+  #root {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+
+  /* Ensure text is properly sized in PWA mode */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
 }
 
 /* Add this to handle mobile browser chrome and PWA display */
