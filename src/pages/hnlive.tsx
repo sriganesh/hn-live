@@ -84,9 +84,8 @@ const getStoredSettings = () => {
     const defaultSize = (() => {
       const isPWA = window.matchMedia('(display-mode: standalone)').matches;
       const isMobile = window.innerWidth < 640; // 640px is Tailwind's 'sm' breakpoint
-      // In PWA mode, we use base size for better readability
       if (isPWA) {
-        return 'base' as const;
+        return 'sm' as const;
       }
       return isMobile ? 'sm' as const : 'base' as const;
     })();
