@@ -80,9 +80,14 @@ const MAX_DISPLAY_INTERVAL = 2000; // Maximum time between displaying items
 const getStoredSettings = () => {
   try {
     const storedSize = localStorage.getItem('hn-live-font-size');
-    // Determine default font size based on screen width
+    // Determine default font size based on screen width and PWA mode
     const defaultSize = (() => {
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches;
       const isMobile = window.innerWidth < 640; // 640px is Tailwind's 'sm' breakpoint
+      // In PWA mode, we use base size for better readability
+      if (isPWA) {
+        return 'base' as const;
+      }
       return isMobile ? 'sm' as const : 'base' as const;
     })();
 
@@ -104,12 +109,13 @@ const getStoredSettings = () => {
   } catch (e) {
     console.warn('Could not access localStorage');
     // Still handle mobile default even in error case
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches;
     const isMobile = window.innerWidth < 640;
     return {
       theme: 'og' as const,
       autoscroll: false,
       directLinks: false,
-      fontSize: isMobile ? 'sm' as const : 'base' as const,
+      fontSize: isPWA ? 'base' as const : (isMobile ? 'sm' as const : 'base' as const),
       classicLayout: false,
       showCommentParents: true,
       font: 'mono' as FontOption,
