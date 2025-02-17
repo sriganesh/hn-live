@@ -248,13 +248,17 @@ export function ActivePage({
                 theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
               } font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
             >
-              HN
+              <span>HN</span>
               <span className="animate-pulse">
                 <span className={`inline-block w-2 h-2 rounded-full ${
-                  isRunning ? 'bg-red-500' : 'bg-gray-500'
+                  isRunning 
+                    ? theme === 'green'
+                      ? 'bg-green-500'
+                      : 'bg-[#ff6600]'
+                    : 'bg-gray-500'
                 }`}></span>
               </span>
-              LIVE
+              <span>LIVE</span>
             </button>
             <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
               /
@@ -355,13 +359,17 @@ export function ActivePage({
                   theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
                 } font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
               >
-                HN
+                <span>HN</span>
                 <span className="animate-pulse">
                   <span className={`inline-block w-2 h-2 rounded-full ${
-                    isRunning ? 'bg-red-500' : 'bg-gray-500'
+                    isRunning 
+                      ? theme === 'green'
+                        ? 'bg-green-500'
+                        : 'bg-[#ff6600]'
+                      : 'bg-gray-500'
                   }`}></span>
                 </span>
-                LIVE
+                <span>LIVE</span>
               </button>
               <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
                 / TRENDING

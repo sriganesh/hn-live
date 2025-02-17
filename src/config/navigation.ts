@@ -26,6 +26,10 @@ export const navigationItems: NavigationItem[] = [
     path: '/best'
   },
   {
+    label: 'BEST COMMENTS',
+    path: '/best-comments'
+  },
+  {
     label: 'JOBS',
     path: '/jobs'
   },
@@ -61,6 +65,10 @@ export const MOBILE_MENU_ITEMS: NavigationItem[] = [
   {
     label: 'Best',
     path: '/best'
+  },
+  {
+    label: 'Best Comments',
+    path: '/best-comments'
   },
   {
     label: 'Jobs',
