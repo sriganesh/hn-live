@@ -218,7 +218,7 @@ export function JobsPage({
                   /
                 </span>
                 <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
-                  YC JOBS
+                  JOBS
                 </span>
               </div>
             </div>
