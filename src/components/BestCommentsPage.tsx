@@ -118,7 +118,7 @@ export function BestCommentsPage({
     }
 
     try {
-      const response = await fetch(`http://bc-api.hn.live/?page=${page}`);
+      const response = await fetch(`https://bc-api.hn.live/?page=${page}`);
       
       if (response.status === 404) {
         setHasMore(false);
