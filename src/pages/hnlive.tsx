@@ -27,6 +27,7 @@ import { useSwipeable } from 'react-swipeable';
 import { TermsPage } from './Terms';
 import { PrivacyPage } from './Privacy';
 import HistoricalFrontPage from '../components/HistoricalFrontPage';
+import { ActivePage } from '../components/ActivePage';
 
 interface HNItem {
   id: number;
@@ -821,7 +822,7 @@ export default function HNLiveTerminal() {
   const [showSettings, setShowSettings] = useState(false);
 
   // Add page order array
-  const PAGE_ORDER = ['front', 'show', 'ask', 'best', 'jobs'] as const;
+  const PAGE_ORDER = ['front', 'trending', 'show', 'ask', 'best', 'jobs'] as const;
 
   // Add swipe handlers
   const swipeHandlers = useSwipeable({
@@ -2021,6 +2022,24 @@ export default function HNLiveTerminal() {
             isRunning={isRunning}
           />
         )}
+
+                {/* Add ActivePage component to the render */}
+                {location.pathname === '/trending' && (
+            <ActivePage 
+              theme={options.theme}
+              fontSize={options.fontSize}
+              font={options.font}
+              colorizeUsernames={colorizeUsernames}
+              classicLayout={options.classicLayout}
+              onShowSearch={() => setShowSearch(true)}
+              onShowGrep={() => setShowGrep(true)}
+              onShowSettings={() => setShowSettings(true)}
+              isSettingsOpen={showSettings}
+              isSearchOpen={showSearch}
+              onViewUser={(userId) => setViewingUser(userId)}
+              isRunning={isRunning}
+            />
+          )}
       </div>
 
       <Outlet />
