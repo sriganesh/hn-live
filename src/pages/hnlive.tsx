@@ -9,6 +9,7 @@ import { ShowPage } from '../components/ShowPage';
 import { AskPage } from '../components/AskPage';
 import { JobsPage } from '../components/JobsPage';
 import { BestPage } from '../components/BestPage';
+import { BestCommentsPage } from '../components/BestCommentsPage';
 import { useTopUsers } from '../hooks/useTopUsers';
 import SettingsModal from '../components/SettingsModal';
 import { MobileBottomBar } from '../components/MobileBottomBar';
@@ -2023,23 +2024,42 @@ export default function HNLiveTerminal() {
           />
         )}
 
-                {/* Add ActivePage component to the render */}
-                {location.pathname === '/trending' && (
-            <ActivePage 
-              theme={options.theme}
-              fontSize={options.fontSize}
-              font={options.font}
-              colorizeUsernames={colorizeUsernames}
-              classicLayout={options.classicLayout}
-              onShowSearch={() => setShowSearch(true)}
-              onShowGrep={() => setShowGrep(true)}
-              onShowSettings={() => setShowSettings(true)}
-              isSettingsOpen={showSettings}
-              isSearchOpen={showSearch}
-              onViewUser={(userId) => setViewingUser(userId)}
-              isRunning={isRunning}
-            />
-          )}
+        {/* Add ActivePage component to the render */}
+        {location.pathname === '/trending' && (
+          <ActivePage 
+            theme={options.theme}
+            fontSize={options.fontSize}
+            font={options.font}
+            colorizeUsernames={colorizeUsernames}
+            classicLayout={options.classicLayout}
+            onShowSearch={() => setShowSearch(true)}
+            onShowGrep={() => setShowGrep(true)}
+            onShowSettings={() => setShowSettings(true)}
+            isSettingsOpen={showSettings}
+            isSearchOpen={showSearch}
+            onViewUser={(userId) => setViewingUser(userId)}
+            isRunning={isRunning}
+          />
+        )}
+
+        {/* Add BestCommentsPage component to the render */}
+        {location.pathname === '/best-comments' && (
+          <BestCommentsPage 
+            theme={options.theme}
+            fontSize={options.fontSize}
+            font={options.font}
+            colorizeUsernames={colorizeUsernames}
+            onShowSearch={() => setShowSearch(true)}
+            onCloseSearch={() => setShowSearch(false)}
+            onShowSettings={() => setShowSettings(true)}
+            isSettingsOpen={showSettings}
+            isSearchOpen={showSearch}
+            onViewUser={(userId) => setViewingUser(userId)}
+            isRunning={isRunning}
+            username={hnUsername}
+            unreadCount={unreadReplies}
+          />
+        )}
       </div>
 
       <Outlet />

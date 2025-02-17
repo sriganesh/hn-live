@@ -502,7 +502,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   })}
                   className={`hover:opacity-75 transition-opacity block`}
                 >
-                  [{options.classicLayout ? 'x' : ' '}] Classic HN layout
+                  [{options.classicLayout ? 'x' : ' '}] Standard HN layout
                 </button>
               </div>
             </div>
