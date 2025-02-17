@@ -318,7 +318,7 @@ export function BestCommentsPage({
                       ? 'bg-[#222222]'
                       : theme === 'green'
                       ? 'bg-green-500/[0.04]'
-                      : 'bg-white'
+                      : 'bg-[#fafaf7]'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
