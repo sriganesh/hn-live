@@ -1,0 +1,43 @@
+{
+  "name": "HN Live",
+  "short_name": "HN Live",
+  "description": "Real-time Hacker News Feed and Client",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f6ef",
+  "theme_color": "#ff6600",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Front Page",
+      "url": "/front",
+      "description": "View HN Front Page"
+    },
+    {
+      "name": "Best Comments",
+      "url": "/best-comments",
+      "description": "View Best Comments"
+    }
+  ],
+  "categories": ["news", "technology"],
+  "display_override": ["standalone"],
+  "scope": "/",
+  "prefer_related_applications": false
+} 
