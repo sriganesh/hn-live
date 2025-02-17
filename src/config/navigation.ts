@@ -45,6 +45,11 @@ export const navigationItems: NavigationItem[] = [
   {
     label: 'MY FEED',
     path: '/feed'
+  },
+  {
+    label: 'DASHBOARD',
+    path: '/dashboard',
+    external: false
   }
 ];
 

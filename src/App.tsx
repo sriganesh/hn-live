@@ -133,6 +133,7 @@ export function App() {
               <Route path="terms" element={null} />
               <Route path="privacy" element={null} />
               <Route path="best-comments" element={null} />
+              <Route path="dashboard" element={null} />
             </Route>
           </Routes>
         </AuthProvider>

@@ -29,6 +29,7 @@ import { TermsPage } from './Terms';
 import { PrivacyPage } from './Privacy';
 import HistoricalFrontPage from '../components/HistoricalFrontPage';
 import { ActivePage } from '../components/ActivePage';
+import { UserDashboardPage } from '../components/UserDashboardPage';
 
 interface HNItem {
   id: number;
@@ -2063,6 +2064,22 @@ export default function HNLiveTerminal() {
             isRunning={isRunning}
             username={hnUsername}
             unreadCount={unreadReplies}
+          />
+        )}
+
+        {/* Add UserDashboardPage component to the render */}
+        {location.pathname === '/dashboard' && (
+          <UserDashboardPage 
+            theme={options.theme}
+            fontSize={options.fontSize}
+            font={options.font}
+            onShowSearch={() => setShowSearch(true)}
+            onCloseSearch={() => setShowSearch(false)}
+            onShowSettings={() => setShowSettings(true)}
+            isRunning={isRunning}
+            onUserClick={(username) => setViewingUser(username)}
+            onUpdateHnUsername={handleUpdateHnUsername}
+            username={hnUsername}
           />
         )}
       </div>
