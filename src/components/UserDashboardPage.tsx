@@ -94,6 +94,29 @@ const safeDate = (timestamp: number | string | undefined): string => {
   }
 };
 
+// Add proper types for tracker data
+interface TrackerComment {
+  id: string;
+  replyIds: string[];
+  timestamp: number;
+}
+
+interface TrackerData {
+  lastChecked: number;
+  comments: TrackerComment[];
+  lastSeenReplies: Record<string, string[]>;
+}
+
+interface AlgoliaReply {
+  objectID: string;
+  comment_text?: string;
+  author: string;
+  created_at_i: number;
+  parent_id?: string;
+  story_id?: string;
+  parent?: string;
+}
+
 export function UserDashboardPage({ 
   theme, 
   fontSize, 
@@ -120,7 +143,9 @@ export function UserDashboardPage({
       return [];
     }
   });
-  const [userTags, setUserTags] = useState<UserTag[]>([]);
+  const [userTags, setUserTags] = useState<UserTag[]>(() => {
+    return JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
+  });
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [comments, setComments] = useState<DashboardComment[]>([]);
@@ -209,11 +234,11 @@ export function UserDashboardPage({
   };
 
   const handleUnfollow = (userId: string) => {
-    const updated = following.filter(f => f.userId !== userId);
-    localStorage.setItem('hn-following', JSON.stringify(updated));
-    setFollowing(updated);
+    const updatedFollowing = following.filter(f => f.userId !== userId);
+    localStorage.setItem('hn-following', JSON.stringify(updatedFollowing));
+    setFollowing(updatedFollowing);
     
-    if (updated.length === 0) {
+    if (updatedFollowing.length === 0) {
       setFeedItems([]);
       setHasMore(false);
     }
@@ -249,383 +274,62 @@ export function UserDashboardPage({
     }
   }, []);
 
-  const renderTabContent = () => {
-    if (loadingStates[activeTab]) {
-      return <LoadingIndicator message={`Loading ${activeTab}...`} />;
-    }
-
-    if (error) {
-      return (
-        <div className="text-center py-8">
-          <div className="text-red-500 dark:text-red-400 mb-2">
-            {error}
-          </div>
-          <button
-            onClick={() => {
-              setError(null);
-              if (activeTab === 'feed') fetchFeedItems(0);
-            }}
-            className="opacity-75 hover:opacity-100"
-          >
-            [RETRY]
-          </button>
-        </div>
-      );
-    }
-
-    if (loading && !feedItems.length) {
-      return (
-        <div className="text-center py-8 opacity-75">
-          Loading...
-        </div>
-      );
-    }
-
-    switch (activeTab) {
-      case 'profile':
-        return (
-          <ProfileTabContent 
-            theme={theme}
-            hnUsername={username || null}
-            onShowSettings={onShowSettings}
-            onUpdateHnUsername={onUpdateHnUsername}
-            comments={comments}
-            loading={loading}
-            unreadCount={unreadCount}
-            onMarkAllAsRead={handleMarkAllAsRead}
-            onUserClick={onUserClick}
-            commentGroups={commentGroups}
-            handleMarkAsRead={handleMarkAsRead}
-          />
-        );
-
-      case 'bookmarks':
-        return (
-          <BookmarksTabContent 
-            theme={theme}
-            bookmarks={bookmarks}
-            loading={loading}
-            hasMore={hasMore}
-            loadingRef={loadingRef}
-            onDeleteBookmark={handleDeleteBookmark}
-            navigate={navigate}
-          />
-        );
-
-      case 'feed':
-        console.log('Rendering feed tab, items:', feedItems.length); // Debug
-        return (
-          <FeedTabContent 
-            theme={theme}
-            filters={filters}
-            setFilters={setFilters}
-            feedItems={feedItems}
-            loading={loadingStates.feed}
-            hasMore={hasMore}
-            loadingRef={loadingRef}
-            onUserClick={onUserClick}
-          />
-        );
-
-      case 'following':
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="opacity-75">
-                {following.length} followed user{following.length !== 1 ? 's' : ''}
-              </div>
-              <button
-                onClick={() => {
-                  const timestamp = Math.floor(Date.now() / 1000);
-                  const content = JSON.stringify(following, null, 2);
-                  const blob = new Blob([content], { type: 'application/json' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `hn.live-following-${timestamp}.json`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }}
-                className="opacity-75 hover:opacity-100"
-              >
-                [EXPORT]
-              </button>
-            </div>
-            <FollowingList />
-          </div>
-        );
-
-      case 'tags':
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="opacity-75">
-                {userTags.length} tagged user{userTags.length !== 1 ? 's' : ''}
-              </div>
-              <button
-                onClick={() => {
-                  const timestamp = Math.floor(Date.now() / 1000);
-                  const content = JSON.stringify(userTags, null, 2);
-                  const blob = new Blob([content], { type: 'application/json' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `hn.live-user-tags-${timestamp}.json`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }}
-                className="opacity-75 hover:opacity-100"
-              >
-                [EXPORT]
-              </button>
-            </div>
-            <TagsList />
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  const FollowingList = () => {
-    return (
-      <div className="space-y-4">
-        {following.length === 0 ? (
-          <div className="text-center py-8 opacity-75">
-            <div>No followed users yet. Click on usernames to follow users.</div>
-            <div className="mt-2 text-sm">
-              Following users lets you see their stories and comments in your personalized feed.
-            </div>
-          </div>
-        ) : (
-          following.map(follow => (
-            <div 
-              key={follow.userId}
-              className={`p-4 rounded ${
-                theme === 'green'
-                  ? 'bg-green-500/5'
-                  : theme === 'og'
-                  ? 'bg-[#ff6600]/5'
-                  : 'bg-[#828282]/5'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => onUserClick(follow.userId)}
-                  className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} hover:opacity-75`}
-                >
-                  {follow.userId}
-                </button>
-                <button
-                  onClick={() => handleUnfollow(follow.userId)}
-                  className="opacity-75 hover:opacity-100"
-                >
-                  [unfollow]
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    );
-  };
-
-  const TagsList = () => {
-    return (
-      <div className="space-y-4">
-        {userTags.length === 0 ? (
-          <div className="text-center py-8 opacity-75">
-            <div>No tagged users yet. Click on usernames to add tags.</div>
-            <div className="mt-2 text-sm">
-              Tags are private to you and stored locally in your browser.
-            </div>
-          </div>
-        ) : (
-          userTags.map(tag => (
-            <div key={tag.userId} className="space-y-2">
-              <button
-                onClick={() => onUserClick(tag.userId)}
-                className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} hover:opacity-75`}
-              >
-                {tag.userId}
-              </button>
-              <div className="flex flex-wrap gap-2">
-                {tag.tags.map(t => (
-                  <span
-                    key={t}
-                    className={`
-                      inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm
-                      ${theme === 'green' 
-                        ? 'bg-green-500/10 border border-green-500/30' 
-                        : theme === 'og'
-                        ? 'bg-[#ff6600]/10 border border-[#ff6600]/30'
-                        : 'bg-[#828282]/10 border border-[#828282]/30'
-                      }
-                    `}
-                  >
-                    {t}
-                    <button
-                      onClick={() => handleRemoveTag(tag.userId, t)}
-                      className="opacity-75 hover:opacity-100 ml-1"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    );
-  };
-
-  // Load following and tags data
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const savedFollowing = JSON.parse(localStorage.getItem('hn-following') || '[]');
-      const savedTags = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
-      setFollowing(savedFollowing);
-      setUserTags(savedTags);
-    } catch (e) {
-      console.error('Error loading data:', e);
-      setError('Failed to load user data');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Load bookmarks
-  const fetchBookmarks = useCallback(async (pageNum = 0) => {
-    setTabLoading('bookmarks', true);
-    try {
-      if (activeTab !== 'bookmarks') return;
-      
-      setLoading(true);
-      setError(null);
-      
-      const ITEMS_PER_PAGE = 20;
-      const bookmarkEntries: BookmarkEntry[] = JSON.parse(
-        safeLocalStorage.get('hn-bookmarks')
-      );
-      const bookmarkCache: Record<number, any> = JSON.parse(localStorage.getItem('hn-bookmark-cache') || '{}');
-      
-      const start = pageNum * ITEMS_PER_PAGE;
-      const end = start + ITEMS_PER_PAGE;
-      const pageBookmarks = bookmarkEntries.slice(start, end);
-
-      setHasMore(end < bookmarkEntries.length);
-      
-      const itemsToFetch = pageBookmarks.filter(b => !bookmarkCache[b.id]);
-      if (itemsToFetch.length > 0) {
-        const newItems = await Promise.all(
-          itemsToFetch.map(async (bookmark: BookmarkEntry) => {
-            const response = await fetch(`https://hacker-news.firebaseio.com/v0/item/${bookmark.id}.json`);
-            if (!response.ok) {
-              throw new Error(`Failed to fetch bookmark ${bookmark.id}`);
-            }
-            return await response.json();
-          })
-        );
-        
-        newItems.forEach(item => {
-          if (item) bookmarkCache[item.id] = item;
-        });
-        localStorage.setItem('hn-bookmark-cache', JSON.stringify(bookmarkCache));
-      }
-      
-      const items = pageBookmarks.map(bookmark => bookmarkCache[bookmark.id]);
-      setBookmarks(prev => pageNum === 0 ? items.filter(Boolean) : [...prev, ...items.filter(Boolean)]);
-      setPage(pageNum);
-    } catch (error) {
-      console.error('Error fetching bookmarks:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load bookmarks');
-    } finally {
-      setTabLoading('bookmarks', false);
-    }
-  }, [activeTab]);
-
-  // Add infinite scroll for bookmarks
-  useEffect(() => {
-    if (!hasMore || loading || activeTab !== 'bookmarks') return;
-
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting) {
-          fetchBookmarks(page + 1);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (loadingRef.current) {
-      observer.observe(loadingRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasMore, loading, page, activeTab, fetchBookmarks]);
-
-  // Add AbortController for cleanup
+  // Add scroll position tracking ref at the top with other refs
+  const lastScrollPosition = useRef<number>(0);
   const abortControllerRef = useRef<AbortController>();
 
-  useEffect(() => {
-    return () => {
-      // Cleanup any pending requests when component unmounts
-      abortControllerRef.current?.abort();
-    };
-  }, []);
-
-  // Now we can use handleNetworkError in fetchFeedItems
+  // Modify the fetchFeedItems function where we update the state
   const fetchFeedItems = useCallback(async (pageNum: number) => {
     setTabLoading('feed', true);
     console.log('Fetching feed items, page:', pageNum);
     
-    // Get fresh following data
-    const currentFollowing = JSON.parse(localStorage.getItem('hn-following') || '[]');
-    console.log('Current following users:', currentFollowing); // Debug
-
-    if (!currentFollowing.length) {
-      console.log('No followed users found');
-      setFeedItems([]);
-      setHasMore(false);
-      setTabLoading('feed', false);
-      return;
+    // Store current scroll position before fetching if not the first page
+    if (pageNum > 0 && containerRef.current) {
+      lastScrollPosition.current = containerRef.current.scrollTop;
     }
 
+    // Create new AbortController for this request
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+    
     try {
-      const authorQuery = currentFollowing.map(f => `author_${f.userId}`).join(',');
-      console.log('Author query:', authorQuery); // Debug
-      
-      const timeFilter = getTimeFilter(filters.timeRange);
-      const pageParam = `&page=${pageNum}`;
-      
-      const [storiesRes, commentsRes] = await Promise.all([
-        fetch(`https://hn.algolia.com/api/v1/search_by_date?tags=story,(${authorQuery})${timeFilter}${pageParam}`, 
-          { signal: abortControllerRef.current?.signal }
-        ),
-        fetch(`https://hn.algolia.com/api/v1/search_by_date?tags=comment,(${authorQuery})${timeFilter}${pageParam}`, 
-          { signal: abortControllerRef.current?.signal }
-        )
-      ]);
+      const currentFollowing = JSON.parse(localStorage.getItem('hn-following') || '[]') as Following[];
+      console.log('Current following users:', currentFollowing);
 
-      if (!storiesRes.ok || !commentsRes.ok) {
-        throw new Error('Failed to fetch feed items');
+      if (!currentFollowing.length) {
+        console.log('No followed users found');
+        setFeedItems([]);
+        setHasMore(false);
+        setTabLoading('feed', false);
+        return;
       }
 
-      const [storiesData, commentsData] = await Promise.all([
-        storiesRes.json(),
-        commentsRes.json()
-      ]) as [AlgoliaResponse, AlgoliaResponse];
+      const authorQuery = currentFollowing.map(f => `author_${f.userId}`).join(',');
+      let storiesData: AlgoliaResponse = { hits: [], nbPages: 0, page: 0, hitsPerPage: 20 };
+      let commentsData: AlgoliaResponse = { hits: [], nbPages: 0, page: 0, hitsPerPage: 20 };
+      
+      // Separate API calls based on filter type
+      if (filters.type === 'stories' || filters.type === 'all') {
+        const storiesRes = await fetch(
+          `https://hn.algolia.com/api/v1/search_by_date?tags=story,(${authorQuery})${getTimeFilter(filters.timeRange)}&page=${pageNum}`,
+          { signal: abortControllerRef.current.signal }
+        );
+        if (!storiesRes.ok) throw new Error('Failed to fetch stories');
+        storiesData = await storiesRes.json();
+      }
+
+      if (filters.type === 'comments' || filters.type === 'all') {
+        const commentsRes = await fetch(
+          `https://hn.algolia.com/api/v1/search_by_date?tags=comment,(${authorQuery})${getTimeFilter(filters.timeRange)}&page=${pageNum}`,
+          { signal: abortControllerRef.current.signal }
+        );
+        if (!commentsRes.ok) throw new Error('Failed to fetch comments');
+        commentsData = await commentsRes.json();
+      }
 
       // Only update state if the request wasn't aborted
-      if (!abortControllerRef.current?.signal.aborted) {
-        const maxPages = Math.max(storiesData.nbPages, commentsData.nbPages);
-        setHasMore(pageNum < maxPages - 1);
-
+      if (!abortControllerRef.current.signal.aborted) {
+        // Process and combine the items
         const newItems: FeedItem[] = [
           ...storiesData.hits.map((item: AlgoliaHit) => ({
             id: item.objectID,
@@ -634,7 +338,7 @@ export function UserDashboardPage({
             url: item.url,
             by: item.author,
             time: item.created_at_i,
-            score: item.points,
+            score: item.points || 0,
             text: item.story_text
           })),
           ...commentsData.hits.map((item: AlgoliaHit) => ({
@@ -648,13 +352,40 @@ export function UserDashboardPage({
           }))
         ];
 
-        setFeedItems(prev => pageNum === 0 ? newItems : [...prev, ...newItems]);
+        // Sort items
+        if (filters.sortBy === 'date') {
+          newItems.sort((a, b) => b.time - a.time);
+        } else if (filters.sortBy === 'points') {
+          newItems.sort((a, b) => {
+            const pointsA = a.type === 'story' ? a.score || 0 : 0;
+            const pointsB = b.type === 'story' ? b.score || 0 : 0;
+            return pointsB - pointsA;
+          });
+        }
+
+        // Update state and restore scroll position
+        setFeedItems(prev => {
+          const updatedItems = pageNum === 0 ? newItems : [...prev, ...newItems];
+          
+          // Restore scroll position after state update, but only for pagination
+          if (pageNum > 0) {
+            requestAnimationFrame(() => {
+              if (containerRef.current) {
+                containerRef.current.scrollTop = lastScrollPosition.current;
+              }
+            });
+          }
+          
+          return updatedItems;
+        });
+
+        setHasMore(pageNum < Math.max(storiesData.nbPages, commentsData.nbPages) - 1);
         setPage(pageNum);
       }
     } catch (error) {
-      console.error('Error fetching feed:', error);
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
+          console.log('Request aborted');
           return;
         }
         handleNetworkError(error, 'Failed to load feed items');
@@ -662,9 +393,33 @@ export function UserDashboardPage({
     } finally {
       setTabLoading('feed', false);
     }
-  }, [following, filters, activeTab, handleNetworkError]);
+  }, [filters, handleNetworkError]);
 
-  // Load profile data
+  // Add time filter helper
+  const getTimeFilter = (range: string): string => {
+    const now = Math.floor(Date.now() / 1000);
+    switch (range) {
+      case '24h': return `&numericFilters=created_at_i>${now - 86400}`;
+      case '7d': return `&numericFilters=created_at_i>${now - 604800}`;
+      case '30d': return `&numericFilters=created_at_i>${now - 2592000}`;
+      default: return '';
+    }
+  };
+
+  // Add auto-refresh effect after existing effects
+  useEffect(() => {
+    if (!isRunning || activeTab !== 'feed') return;
+    
+    const interval = setInterval(() => {
+      if (activeTab === 'feed') {
+        fetchFeedItems(0);
+      }
+    }, 60000); // Refresh every minute
+
+    return () => clearInterval(interval);
+  }, [isRunning, activeTab, fetchFeedItems]);
+
+  // Update the fetchProfileData function with proper types
   const fetchProfileData = useCallback(async () => {
     setTabLoading('profile', true);
     if (!username || activeTab !== 'profile') return;
@@ -690,7 +445,7 @@ export function UserDashboardPage({
         .map((hit: AlgoliaHit) => hit.objectID);
 
       // Get tracker data to find ALL replies
-      const trackerData = getLocalStorageData('hn-comment-tracker', { 
+      const trackerData = getLocalStorageData<TrackerData>('hn-comment-tracker', { 
         lastChecked: 0,
         comments: [],
         lastSeenReplies: {}
@@ -702,7 +457,7 @@ export function UserDashboardPage({
         .reduce<string[]>((ids, comment) => [...ids, ...comment.replyIds], []);
 
       // Fetch ALL replies
-      let repliesData = { hits: [] };
+      let repliesData: { hits: AlgoliaReply[] } = { hits: [] };
       if (replyIds.length > 0) {
         const repliesResponse = await fetch(
           `https://hn.algolia.com/api/v1/search_by_date?tags=comment&numericFilters=created_at_i>0&filters=${
@@ -712,11 +467,6 @@ export function UserDashboardPage({
 
         if (repliesResponse.ok) {
           repliesData = await repliesResponse.json();
-          // Transform the replies to include parent_id
-          repliesData.hits = repliesData.hits.map(reply => ({
-            ...reply,
-            parent_id: reply.parent_id || reply.story_id // Algolia might use a different field name
-          }));
         }
       }
 
@@ -724,24 +474,24 @@ export function UserDashboardPage({
       const newReplies = JSON.parse(localStorage.getItem('hn-new-replies') || '{}') as Record<string, NewReply[]>;
 
       // Create a map of parent IDs to replies
-      const replyMap = repliesData.hits.reduce((map, reply) => {
-        const parentId = reply.parent_id || reply.parent || reply.story_id;
+      const replyMap: Record<string, AlgoliaReply[]> = repliesData.hits.reduce((map, reply) => {
+        const parentId = reply.parent_id || reply.parent || reply.story_id || '';
         if (!map[parentId]) {
           map[parentId] = [];
         }
         map[parentId].push(reply);
         return map;
-      }, {});
+      }, {} as Record<string, AlgoliaReply[]>);
 
       // Then use the map when processing comments
       const processedComments = data.hits.map((comment: AlgoliaHit) => {
         const commentReplies = (replyMap[comment.objectID] || [])
-          .map(reply => ({
+          .map((reply: AlgoliaReply) => ({
             id: reply.objectID,
             text: reply.comment_text || '',
             author: reply.author,
             created_at: safeDate(reply.created_at_i),
-            seen: !newReplies[comment.objectID]?.find(r => r.id === reply.objectID)?.seen,
+            seen: !newReplies[comment.objectID]?.find((r: NewReply) => r.id === reply.objectID)?.seen,
             parent_id: comment.objectID,
             story_id: reply.story_id,
             story_title: reply.story_title
@@ -760,18 +510,23 @@ export function UserDashboardPage({
           parent_id: comment.parent_id,
           replies: commentReplies,
           hasUnread: commentReplies.some(reply => 
-            newReplies[comment.objectID]?.find(r => r.id === reply.id && !r.seen)
+            newReplies[comment.objectID]?.find((r: NewReply) => r.id === reply.id && !r.seen)
           ),
           isUserComment: true
         };
       });
 
-      setComments(processedComments);
+      // Filter out comments without replies
+      const commentsWithReplies = processedComments.filter(comment => 
+        comment.replies && comment.replies.length > 0
+      );
+
+      setComments(commentsWithReplies);
 
       // Calculate total unread count from newReplies
       const totalUnread = Object.values(newReplies)
         .reduce((count, replies) => 
-          count + replies.filter(r => !r.seen).length, 
+          count + replies.filter((r: NewReply) => !r.seen).length, 
         0);
       setUnreadCount(totalUnread);
 
@@ -790,36 +545,32 @@ export function UserDashboardPage({
     }
   }, [activeTab, username, fetchProfileData]);
 
-  // Helper function for time filter
-  const getTimeFilter = (range: string) => {
-    const now = Math.floor(Date.now() / 1000);
-    switch (range) {
-      case '24h': return `&numericFilters=created_at_i>${now - 86400}`;
-      case '7d': return `&numericFilters=created_at_i>${now - 604800}`;
-      case '30d': return `&numericFilters=created_at_i>${now - 2592000}`;
-      default: return '';
-    }
-  };
-
-  // Add this effect after the existing effects
+  // Update the infinite scroll effect
   useEffect(() => {
-    if (!hasMore || loading || activeTab !== 'feed') return;
+    if (!hasMore || loadingStates.feed || activeTab !== 'feed') return;
 
     const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting) {
+      (entries) => {
+        // Check if the loading element is visible and we're not already loading
+        if (entries[0].isIntersecting && !loadingStates.feed) {
+          console.log('Loading more items, current page:', page); // Debug
           fetchFeedItems(page + 1);
         }
       },
       { threshold: 0.1 }
     );
 
-    if (loadingRef.current) {
-      observer.observe(loadingRef.current);
+    const loadingElement = loadingRef.current;
+    if (loadingElement) {
+      observer.observe(loadingElement);
     }
 
-    return () => observer.disconnect();
-  }, [hasMore, loading, page, activeTab, fetchFeedItems]);
+    return () => {
+      if (loadingElement) {
+        observer.disconnect();
+      }
+    };
+  }, [hasMore, loadingStates.feed, page, activeTab, fetchFeedItems]);
 
   // Add this effect to fetch initial feed items when tab changes
   useEffect(() => {
@@ -926,50 +677,73 @@ export function UserDashboardPage({
     };
   }, [username, activeTab]);
 
-  // Update the tab change effect
-  useEffect(() => {
-    // Only abort previous requests when switching away from feed tab
-    if (activeTab !== 'feed') {
-      abortControllerRef.current?.abort();
+  // Move fetchBookmarks before the useEffect that uses it
+  const fetchBookmarks = useCallback(async () => {
+    setTabLoading('bookmarks', true);
+    
+    try {
+      // Get core bookmark data
+      const bookmarkEntries: BookmarkEntry[] = JSON.parse(localStorage.getItem('hn-bookmarks') || '[]');
+      
+      // Sort by timestamp (newest first)
+      bookmarkEntries.sort((a, b) => b.timestamp - a.timestamp);
+
+      // Get or initialize cache
+      let bookmarkCache: Record<string, Bookmark> = JSON.parse(localStorage.getItem('hn-bookmark-cache') || '{}');
+
+      // Fetch items not in cache
+      const itemsToFetch = bookmarkEntries.filter(b => !bookmarkCache[b.id]);
+      
+      if (itemsToFetch.length > 0) {
+        const newItems = await Promise.all(
+          itemsToFetch.map(async (bookmark) => {
+            const response = await fetch(`https://hacker-news.firebaseio.com/v0/item/${bookmark.id}.json`);
+            const item = await response.json();
+            return {
+              ...item,
+              type: bookmark.type,
+              storyId: bookmark.storyId
+            };
+          })
+        );
+
+        // Update cache with new items
+        newItems.forEach(item => {
+          bookmarkCache[item.id] = item;
+        });
+        
+        // Save updated cache
+        localStorage.setItem('hn-bookmark-cache', JSON.stringify(bookmarkCache));
+      }
+
+      // Process bookmarks with cache data
+      const processedBookmarks = bookmarkEntries.map(entry => ({
+        ...bookmarkCache[entry.id],
+        timestamp: entry.timestamp
+      }));
+
+      setBookmarks(processedBookmarks);
+      setHasMore(false); // For now, no pagination in bookmarks
+    } catch (error) {
+      handleNetworkError(error, 'Failed to load bookmarks');
+    } finally {
+      setTabLoading('bookmarks', false);
     }
+  }, [handleNetworkError]);
 
-    setError(null);
-    setLoading(true);
-
-    const loadTabData = async () => {
-      try {
-        switch (activeTab) {
-          case 'feed':
-            setFeedItems([]);
-            setPage(0);
-            await fetchFeedItems(0);
-            break;
-          
-          case 'bookmarks':
-            setBookmarks([]);
-            setHasMore(false);
-            await fetchBookmarks();
-            break;
-          
-          case 'profile':
-            setComments([]);
-            if (username) {
-              await fetchProfileData();
-            }
-            break;
-          
-          case 'following':
-          case 'tags':
-            setLoading(false);
-            break;
-        }
-      } catch (error) {
-        console.error('Error loading tab data:', error);
-        if (!(error instanceof Error && error.name === 'AbortError')) {
-          setError(error instanceof Error ? error.message : 'Failed to load data');
-        }
-      } finally {
-        setLoading(false);
+  // Update the useEffect that handles tab changes
+  useEffect(() => {
+    const loadTabData = () => {
+      if (activeTab === 'feed') {
+        fetchFeedItems(0);
+      } else if (activeTab === 'bookmarks') {
+        fetchBookmarks();
+      } else if (activeTab === 'profile' && username) {
+        fetchProfileData();
+      } else if (activeTab === 'tags') {
+        // Update tags from localStorage
+        const savedTags = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
+        setUserTags(savedTags);
       }
     };
 
@@ -1048,6 +822,219 @@ export function UserDashboardPage({
       window.dispatchEvent(new CustomEvent('unreadCountChange', {
         detail: { unreadCount: totalUnreadCount }
       }));
+    }
+  };
+
+  // Add these functions before renderTabContent
+  const handleExportFollowing = () => {
+    try {
+      const timestamp = Math.floor(Date.now() / 1000);
+      const content = JSON.stringify(following, null, 2);
+      const blob = new Blob([content], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hn.live-following-${timestamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      handleNetworkError(error, 'Failed to export following data');
+    }
+  };
+
+  const handleExportTags = () => {
+    try {
+      const timestamp = Math.floor(Date.now() / 1000);
+      const content = JSON.stringify(userTags, null, 2);
+      const blob = new Blob([content], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hn.live-tags-${timestamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      handleNetworkError(error, 'Failed to export tags data');
+    }
+  };
+
+  // Add this function before the return statement
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'feed':
+        return (
+          <FeedTabContent
+            theme={theme}
+            filters={filters}
+            setFilters={setFilters}
+            feedItems={feedItems}
+            loading={loadingStates.feed}
+            hasMore={hasMore}
+            loadingRef={loadingRef}
+            onUserClick={onUserClick}
+          />
+        );
+
+      case 'bookmarks':
+        return (
+          <BookmarksTabContent
+            theme={theme}
+            bookmarks={bookmarks}
+            loading={loadingStates.bookmarks}
+            hasMore={hasMore}
+            loadingRef={loadingRef}
+            onDeleteBookmark={handleDeleteBookmark}
+            navigate={navigate}
+          />
+        );
+
+      case 'profile':
+        return (
+          <ProfileTabContent
+            theme={theme}
+            hnUsername={username || null}
+            onShowSettings={onShowSettings}
+            onUpdateHnUsername={onUpdateHnUsername}
+            comments={comments}
+            loading={loadingStates.profile}
+            unreadCount={unreadCount}
+            onMarkAllAsRead={handleMarkAllAsRead}
+            onUserClick={onUserClick}
+            commentGroups={commentGroups}
+            handleMarkAsRead={handleMarkAsRead}
+          />
+        );
+
+      case 'following':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="opacity-75">
+                {following.length} followed user{following.length !== 1 ? 's' : ''}
+              </div>
+              {following.length > 0 && (
+                <button
+                  onClick={handleExportFollowing}
+                  className="opacity-75 hover:opacity-100"
+                >
+                  [EXPORT]
+                </button>
+              )}
+            </div>
+
+            {following.map(follow => (
+              <div 
+                key={follow.userId}
+                className={`p-4 rounded ${
+                  theme === 'green' 
+                    ? 'bg-green-500/5'
+                    : theme === 'og'
+                    ? 'bg-[#f6f6ef]'
+                    : 'bg-[#828282]/5'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => onUserClick(follow.userId)}
+                    className={`${
+                      theme === 'green'
+                        ? 'text-green-500'
+                        : 'text-[#ff6600]'
+                    } hover:opacity-75`}
+                  >
+                    {follow.userId}
+                  </button>
+                  <button
+                    onClick={() => handleUnfollow(follow.userId)}
+                    className="opacity-75 hover:opacity-100"
+                  >
+                    [unfollow]
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {following.length === 0 && (
+              <div className="text-center py-8 opacity-75">
+                <div>No followed users yet. Click on usernames to follow users.</div>
+                <div className="mt-2 text-sm">
+                  Following users lets you see their stories and comments in your personalized feed.
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'tags':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="opacity-75">
+                {userTags.length} tagged user{userTags.length !== 1 ? 's' : ''}
+              </div>
+              {userTags.length > 0 && (
+                <button
+                  onClick={handleExportTags}
+                  className="opacity-75 hover:opacity-100"
+                >
+                  [EXPORT]
+                </button>
+              )}
+            </div>
+
+            {userTags.map(tag => (
+              <div key={tag.userId} className="space-y-2">
+                <button
+                  onClick={() => onUserClick(tag.userId)}
+                  className={`${
+                    theme === 'green'
+                      ? 'text-green-500'
+                      : 'text-[#ff6600]'
+                  } hover:opacity-75`}
+                >
+                  {tag.userId}
+                </button>
+                <div className="flex flex-wrap gap-2">
+                  {tag.tags.map(tagName => (
+                    <span
+                      key={tagName}
+                      className="
+                        inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm
+                        bg-[#828282]/10 border border-[#828282]/30
+                      "
+                    >
+                      {tagName}
+                      <button
+                        onClick={() => handleRemoveTag(tag.userId, tagName)}
+                        className="opacity-75 hover:opacity-100 ml-1"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {userTags.length === 0 && (
+              <div className="text-center py-8 opacity-75">
+                <div>No tagged users yet. Click on usernames to add tags.</div>
+                <div className="mt-2 text-sm">
+                  Tagging users helps you organize and remember users.
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
     }
   };
 
@@ -1160,4 +1147,4 @@ export function UserDashboardPage({
       </div>
     </ErrorBoundary>
   );
-} 
+}

@@ -94,9 +94,16 @@ export function ProfileTabContent({
           <div>
             <div className="flex items-center gap-2">
               <span className="opacity-75">Connected as </span>
-              <span className={theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'}>
+              <button 
+                onClick={() => onUserClick(hnUsername)}
+                className={`${
+                  theme === 'green' 
+                    ? 'text-green-500' 
+                    : 'text-[#ff6600]'
+                } hover:underline`}
+              >
                 {hnUsername}
-              </span>
+              </button>
               <span className="text-xs opacity-75">(Beta)</span>
             </div>
             <div className="text-xs opacity-75 mt-1">
@@ -145,7 +152,7 @@ export function ProfileTabContent({
       {commentGroups.length === 0 ? (
         <div className="text-center py-8 opacity-75">
           {comments.length > 0 ? 
-            "No replies found for your last 10 comments" :
+            "No replies found for your last 100 comments" :
             "No recent comments found"
           }
         </div>
@@ -185,9 +192,11 @@ export function ProfileTabContent({
                         </button>
                         {' replied '}
                         <a
-                          href={`https://news.ycombinator.com/item?id=${reply.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          href={`/item/${reply.parent_id}/comment/${reply.id}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigate(`/item/${reply.parent_id}/comment/${reply.id}`);
+                          }}
                           className="hover:underline break-words"
                         >
                           {formatDate(reply.created_at)}
@@ -217,9 +226,11 @@ export function ProfileTabContent({
                   theme === 'green' ? 'text-green-400/70' : 'text-[#828282]/70'
                 }`}>
                   <a
-                    href={`https://news.ycombinator.com/item?id=${group.originalComment.objectID}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={`/item/${group.originalComment.story_id}/comment/${group.originalComment.objectID}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate(`/item/${group.originalComment.story_id}/comment/${group.originalComment.objectID}`);
+                    }}
                     className="hover:underline"
                   >
                     {formatDate(group.originalComment.created_at)}
