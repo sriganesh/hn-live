@@ -191,7 +191,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         onUpdateHnUsername(usernameInput);
         setUsernameInput('');
         onClose();  // Close settings modal first
-        navigate('/profile');  // Navigate to profile every time username is set
+        navigate('/dashboard');  // Navigate to dashboard instead
       }
     } catch (error) {
       setValidationError('Error validating username');
