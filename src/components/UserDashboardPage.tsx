@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSwipeable } from 'react-swipeable';
 import { Following } from '../types/Following';
 import { UserTag } from '../types/UserTag';
@@ -8,7 +8,6 @@ import { FeedTabContent } from './tabs/FeedTabContent';
 import { ProfileTabContent } from './tabs/ProfileTabContent';
 import { BookmarksTabContent } from './tabs/BookmarksTabContent';
 import { BookmarkEntry } from '../types/bookmarks';
-import { Comment } from '../types/comments';
 import { 
   DashboardComment, 
   AlgoliaResponse, 
@@ -70,13 +69,6 @@ const safeLocalStorage = {
   }
 };
 
-// Add loading indicator component
-const LoadingIndicator = ({ message }: { message: string }) => (
-  <div className="text-center py-8 opacity-75">
-    <div className="animate-pulse">{message}</div>
-  </div>
-);
-
 // Add a helper function to safely handle dates
 const safeDate = (timestamp: number | string | undefined): string => {
   try {
@@ -130,7 +122,11 @@ export function UserDashboardPage({
   username
 }: UserDashboardPageProps) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<Tab>('profile');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    const params = new URLSearchParams(location.search);
+    return (params.get('tab') as Tab) || 'profile';
+  });
   const containerRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef<HTMLDivElement>(null);
   const [following, setFollowing] = useState<Following[]>(() => {
@@ -1093,6 +1089,15 @@ export function UserDashboardPage({
     return () => window.removeEventListener('tags-updated', handleTagsUpdate);
   }, []);
 
+  // Add function to handle tab changes
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+    // Update URL without reloading
+    const params = new URLSearchParams(location.search);
+    params.set('tab', tab);
+    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+  };
+
   return (
     <ErrorBoundary>
       <div {...swipeHandlers} className={`
@@ -1142,7 +1147,7 @@ export function UserDashboardPage({
               {TAB_ORDER.map(tab => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => handleTabChange(tab)}
                   className={`whitespace-nowrap hover:opacity-100 ${
                     activeTab === tab 
                       ? theme === 'green' 

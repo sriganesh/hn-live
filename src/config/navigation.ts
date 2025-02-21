@@ -32,24 +32,6 @@ export const navigationItems: NavigationItem[] = [
   {
     label: 'JOBS',
     path: '/jobs'
-  },
-  // Separator can be handled by a special path
-  { 
-    label: '---',  // Separator
-    path: 'separator'
-  },
-  {
-    label: 'BOOKMARKS',
-    path: '/bookmarks'
-  },
-  {
-    label: 'MY FEED',
-    path: '/feed'
-  },
-  {
-    label: 'DASHBOARD',
-    path: '/dashboard',
-    external: false
   }
 ];
 
@@ -80,16 +62,12 @@ export const MOBILE_MENU_ITEMS: NavigationItem[] = [
     path: '/jobs'
   },
   {
-    label: 'Bookmarks',
-    path: '/bookmarks'
-  },
-  {
-    label: 'My Feed',
-    path: '/feed'
+    label: 'Dashboard',
+    path: '/dashboard'
   },
   {
     id: 'profile',
     label: (username: string | null) => username ? username : 'HN Profile',
-    path: '/profile'
+    path: '/dashboard?tab=profile'
   }
 ]; 

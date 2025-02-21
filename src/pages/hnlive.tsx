@@ -1501,10 +1501,10 @@ export default function HNLiveTerminal() {
               {/* Profile button with badge - now available to all users */}
               <div className="relative">
                 <button
-                  onClick={() => navigate('/profile')}
-                  className={`${themeColors} hover:opacity-75`}
+                  onClick={() => navigate('/dashboard')}
+                  className={themeColors}
                 >
-                  [{hnUsername || 'HN PROFILE'}]
+                  [DASHBOARD]
                 </button>
                 {unreadReplies > 0 && (
                   <span className={`
