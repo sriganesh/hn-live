@@ -1081,6 +1081,18 @@ export function UserDashboardPage({
     return () => window.removeEventListener('bookmarks-synced', handleBookmarkSync);
   }, [activeTab, fetchBookmarks]);
 
+  // Add effect to handle tag updates
+  useEffect(() => {
+    const handleTagsUpdate = () => {
+      // Update tags from localStorage
+      const savedTags = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
+      setUserTags(savedTags);
+    };
+
+    window.addEventListener('tags-updated', handleTagsUpdate);
+    return () => window.removeEventListener('tags-updated', handleTagsUpdate);
+  }, []);
+
   return (
     <ErrorBoundary>
       <div {...swipeHandlers} className={`
