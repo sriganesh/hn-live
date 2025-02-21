@@ -60,14 +60,5 @@ export const MOBILE_MENU_ITEMS: NavigationItem[] = [
   {
     label: 'Jobs',
     path: '/jobs'
-  },
-  {
-    label: 'Dashboard',
-    path: '/dashboard'
-  },
-  {
-    id: 'profile',
-    label: (username: string | null) => username ? username : 'HN Profile',
-    path: '/dashboard?tab=profile'
   }
 ]; 
