@@ -1,4 +1,6 @@
 import { useNavigate, NavigateFunction } from 'react-router-dom';
+import { BookmarkManager } from '../BookmarkManager';
+import { AUTH_TOKEN_KEY, API_BASE_URL } from '../../types/auth';
 
 interface BookmarksTabContentProps {
   theme: 'green' | 'og' | 'dog';
@@ -19,28 +21,43 @@ export function BookmarksTabContent({
   onDeleteBookmark,
   navigate
 }: BookmarksTabContentProps) {
+  // Add cloud sync delete handler
+  const handleDeleteBookmark = async (bookmarkId: number) => {
+    try {
+      // First delete locally
+      onDeleteBookmark(bookmarkId);
+
+      // Then delete from cloud if user is logged in
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+      if (token) {
+        const deleteResponse = await fetch(`${API_BASE_URL}/api/bookmarks/item/${bookmarkId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        });
+
+        if (!deleteResponse.ok && deleteResponse.status !== 404) {
+          console.error('Failed to delete bookmark from cloud');
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting bookmark:', error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="opacity-75">
           {bookmarks.length} bookmarked item{bookmarks.length !== 1 ? 's' : ''}
         </div>
-        <button
-          onClick={() => {
-            const timestamp = Math.floor(Date.now() / 1000);
-            const content = JSON.stringify(bookmarks, null, 2);
-            const blob = new Blob([content], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `hn.live-bookmarks-${timestamp}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-          }}
-          className="opacity-75 hover:opacity-100"
-        >
-          [EXPORT]
-        </button>
+        <BookmarkManager theme={theme} />
+      </div>
+
+      <div className="text-sm opacity-75 space-y-1 text-center">
+        <div>Bookmarks are stored locally. Use [EXPORT] to save them.</div>
+        <div>Create an HN Live account in Settings for cloud sync.</div>
       </div>
 
       {bookmarks.length === 0 ? (
@@ -51,25 +68,60 @@ export function BookmarksTabContent({
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          {bookmarks.map(item => (
-            <div key={item.id} className="leading-relaxed">
+        <div className="space-y-4 max-w-full">
+          {bookmarks.map((item, index) => (
+            <div 
+              key={`${item.id}-${index}`} 
+              className="leading-relaxed break-words overflow-hidden"
+            >
               {item.type === 'comment' ? (
-                <CommentBookmark item={item} theme={theme} navigate={navigate} onDelete={onDeleteBookmark} />
+                <CommentBookmark 
+                  key={`comment-${item.id}`} 
+                  item={item} 
+                  theme={theme} 
+                  navigate={navigate} 
+                  onDelete={handleDeleteBookmark} 
+                />
               ) : (
-                <StoryBookmark item={item} theme={theme} navigate={navigate} onDelete={onDeleteBookmark} />
+                <StoryBookmark 
+                  key={`story-${item.id}`} 
+                  item={item} 
+                  theme={theme} 
+                  navigate={navigate} 
+                  onDelete={handleDeleteBookmark} 
+                />
               )}
             </div>
           ))}
-
-          {/* Loading Indicator */}
-          {(hasMore || loading) && (
-            <div ref={loadingRef} className="py-4 text-center opacity-75">
-              {loading ? 'Loading more bookmarks...' : 'Scroll for more'}
-            </div>
-          )}
         </div>
       )}
+    </div>
+  );
+}
+
+function StoryBookmark({ item, theme, navigate, onDelete }: {
+  item: any;
+  theme: string;
+  navigate: NavigateFunction;
+  onDelete: (id: number) => void;
+}) {
+  return (
+    <div>
+      {formatTimeAgo(item.time)} | <a
+        href={`/item/${item.id}`}
+        onClick={(e) => {
+          e.preventDefault();
+          navigate(`/item/${item.id}`);
+        }}
+        className="hover:opacity-75"
+      >
+        {item.title}
+      </a> <button
+        onClick={() => onDelete(item.id)}
+        className="opacity-50 hover:opacity-100"
+      >
+        [remove]
+      </button>
     </div>
   );
 }
@@ -81,10 +133,8 @@ function CommentBookmark({ item, theme, navigate, onDelete }: {
   onDelete: (id: number) => void;
 }) {
   return (
-    <>
-      <span className="opacity-50">{formatTimeAgo(item.time)}</span>
-      {' | '}
-      <a
+    <div>
+      {formatTimeAgo(item.time)} | <a
         href={`/item/${item.storyId}/comment/${item.id}`}
         onClick={(e) => {
           e.preventDefault();
@@ -93,9 +143,7 @@ function CommentBookmark({ item, theme, navigate, onDelete }: {
         className="hover:opacity-75"
       >
         {item.text}
-      </a>
-      {' | re: '}
-      <a
+      </a> | re: <a
         href={`/item/${item.storyId}`}
         onClick={(e) => {
           e.preventDefault();
@@ -104,46 +152,13 @@ function CommentBookmark({ item, theme, navigate, onDelete }: {
         className="hover:opacity-75"
       >
         {item.story?.title}
-      </a>
-      {' '}
-      <button
+      </a> <button
         onClick={() => onDelete(item.id)}
         className="opacity-50 hover:opacity-100"
       >
         [remove]
       </button>
-    </>
-  );
-}
-
-function StoryBookmark({ item, theme, navigate, onDelete }: {
-  item: any;
-  theme: string;
-  navigate: NavigateFunction;
-  onDelete: (id: number) => void;
-}) {
-  return (
-    <>
-      <span className="opacity-50">{formatTimeAgo(item.time)}</span>
-      {' | '}
-      <a
-        href={`/item/${item.id}`}
-        onClick={(e) => {
-          e.preventDefault();
-          navigate(`/item/${item.id}`);
-        }}
-        className="hover:opacity-75"
-      >
-        {item.title}
-      </a>
-      {' '}
-      <button
-        onClick={() => onDelete(item.id)}
-        className="opacity-50 hover:opacity-100"
-      >
-        [remove]
-      </button>
-    </>
+    </div>
   );
 }
 
@@ -157,4 +172,4 @@ function formatTimeAgo(timestamp: number): string {
   if (hours > 0) return `${hours}h`;
   if (minutes > 0) return `${minutes}m`;
   return '0m';
-} 
+}

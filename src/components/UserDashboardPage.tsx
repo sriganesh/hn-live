@@ -679,8 +679,6 @@ export function UserDashboardPage({
 
   // Move fetchBookmarks before the useEffect that uses it
   const fetchBookmarks = useCallback(async () => {
-    setTabLoading('bookmarks', true);
-    
     try {
       // Get core bookmark data
       const bookmarkEntries: BookmarkEntry[] = JSON.parse(localStorage.getItem('hn-bookmarks') || '[]');
@@ -689,7 +687,7 @@ export function UserDashboardPage({
       bookmarkEntries.sort((a, b) => b.timestamp - a.timestamp);
 
       // Get or initialize cache
-      let bookmarkCache: Record<string, Bookmark> = JSON.parse(localStorage.getItem('hn-bookmark-cache') || '{}');
+      let bookmarkCache = JSON.parse(localStorage.getItem('hn-bookmark-cache') || '{}');
 
       // Fetch items not in cache
       const itemsToFetch = bookmarkEntries.filter(b => !bookmarkCache[b.id]);
@@ -709,25 +707,37 @@ export function UserDashboardPage({
 
         // Update cache with new items
         newItems.forEach(item => {
-          bookmarkCache[item.id] = item;
+          if (item) {
+            bookmarkCache[item.id] = item;
+          }
         });
         
         // Save updated cache
         localStorage.setItem('hn-bookmark-cache', JSON.stringify(bookmarkCache));
       }
 
-      // Process bookmarks with cache data
-      const processedBookmarks = bookmarkEntries.map(entry => ({
-        ...bookmarkCache[entry.id],
-        timestamp: entry.timestamp
-      }));
+      // For comments, fetch their parent stories if not in cache
+      const itemsWithStories = await Promise.all(
+        bookmarkEntries.map(async (entry) => {
+          const item = bookmarkCache[entry.id];
+          if (item && entry.type === 'comment' && entry.storyId) {
+            if (!bookmarkCache[entry.storyId]) {
+              const storyResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${entry.storyId}.json`);
+              const story = await storyResponse.json();
+              bookmarkCache[entry.storyId] = story;
+              localStorage.setItem('hn-bookmark-cache', JSON.stringify(bookmarkCache));
+              return { ...item, story };
+            }
+            return { ...item, story: bookmarkCache[entry.storyId] };
+          }
+          return item;
+        })
+      );
 
-      setBookmarks(processedBookmarks);
+      setBookmarks(itemsWithStories.filter(Boolean));
       setHasMore(false); // For now, no pagination in bookmarks
     } catch (error) {
       handleNetworkError(error, 'Failed to load bookmarks');
-    } finally {
-      setTabLoading('bookmarks', false);
     }
   }, [handleNetworkError]);
 
@@ -1037,6 +1047,39 @@ export function UserDashboardPage({
         return null;
     }
   };
+
+  // Add effect to handle bookmark sync events
+  useEffect(() => {
+    const handleBookmarkSync = () => {
+      if (activeTab === 'bookmarks') {
+        // Store current scroll position
+        const currentScrollTop = containerRef.current?.scrollTop || 0;
+        
+        // Reset states and fetch fresh data
+        setLoadingStates(prev => ({ ...prev, bookmarks: true }));
+        setPage(0);
+        setHasMore(true);
+        setBookmarks([]);
+        
+        // Refetch bookmarks
+        fetchBookmarks().finally(() => {
+          setLoadingStates(prev => ({ ...prev, bookmarks: false }));
+          
+          // Restore scroll position
+          if (currentScrollTop > 0) {
+            requestAnimationFrame(() => {
+              if (containerRef.current) {
+                containerRef.current.scrollTop = currentScrollTop;
+              }
+            });
+          }
+        });
+      }
+    };
+
+    window.addEventListener('bookmarks-synced', handleBookmarkSync);
+    return () => window.removeEventListener('bookmarks-synced', handleBookmarkSync);
+  }, [activeTab, fetchBookmarks]);
 
   return (
     <ErrorBoundary>
