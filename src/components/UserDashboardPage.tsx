@@ -1133,12 +1133,21 @@ export function UserDashboardPage({
                 </span>
               </div>
               
-              <button 
-                onClick={() => navigate(-1)}
-                className="opacity-75 hover:opacity-100"
-              >
-                [ESC]
-              </button>
+              {/* Add Settings button for desktop only */}
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={onShowSettings}
+                  className="hidden sm:block opacity-75 hover:opacity-100"
+                >
+                  [SETTINGS]
+                </button>
+                <button 
+                  onClick={() => navigate(-1)}
+                  className="opacity-75 hover:opacity-100"
+                >
+                  [ESC]
+                </button>
+              </div>
             </div>
           </div>
 
