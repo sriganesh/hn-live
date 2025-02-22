@@ -351,6 +351,12 @@ export function AskPage({
                   [GREP]
                 </button>
               )}
+              <button 
+                onClick={() => navigate('/dashboard')}
+                className={themeColors}
+              >
+                [DASHBOARD]
+              </button>
               <button
                 onClick={onShowSettings}
                 className={themeColors}

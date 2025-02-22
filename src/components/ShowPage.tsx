@@ -363,6 +363,12 @@ export function ShowPage({
                   [GREP]
                 </button>
               )}
+              <button 
+                onClick={() => navigate('/dashboard')}
+                className={themeColors}
+              >
+                [DASHBOARD]
+              </button>
               <button
                 onClick={onShowSettings}
                 className={themeColors}

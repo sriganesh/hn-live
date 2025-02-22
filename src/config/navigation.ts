@@ -26,12 +26,16 @@ export const navigationItems: NavigationItem[] = [
     path: '/best'
   },
   {
-    label: 'BEST COMMENTS',
-    path: '/best-comments'
-  },
-  {
     label: 'JOBS',
     path: '/jobs'
+  },
+  { 
+    label: '---',  // Separator
+    path: 'separator'
+  },
+  {
+    label: 'BEST COMMENTS',
+    path: '/best-comments'
   }
 ];
 
