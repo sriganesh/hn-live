@@ -16,13 +16,10 @@ import { MobileBottomBar } from '../components/MobileBottomBar';
 import UserPage from '../components/UserPage';
 import { UserModal } from '../components/UserModal';
 import { AboutOverlay } from '../content/about';
-import { BookmarksPage } from '../components/BookmarksPage';
 import { navigationItems } from '../config/navigation';
 import { ReplayView } from '../components/ReplayView';
-import { ProfilePage } from '../components/ProfilePage';
 import { UpdateNotifier } from '../components/UpdateNotifier';
 import { LinksView } from '../components/LinksView';
-import { UserFeedPage } from '../components/UserFeedPage';
 import { useAuth } from '../contexts/AuthContext';
 import { useSwipeable } from 'react-swipeable';
 import { TermsPage } from './Terms';
@@ -1951,19 +1948,6 @@ export default function HNLiveTerminal() {
           fontSize={options.fontSize}
         />
 
-        {/* Add the BookmarksPage component to the render */}
-        {location.pathname === '/bookmarks' && (
-          <BookmarksPage 
-            theme={options.theme}
-            fontSize={options.fontSize}
-            font={options.font}
-            onShowSearch={() => setShowSearch(true)}
-            onCloseSearch={() => setShowSearch(false)}
-            onShowSettings={() => setShowSettings(true)}
-            isRunning={isRunning}
-          />
-        )}
-
         {/* Add the ReplayView component to the render */}
         {location.pathname.startsWith('/replay/') && (
           <ReplayView
@@ -1976,38 +1960,12 @@ export default function HNLiveTerminal() {
           />
         )}
 
-        {location.pathname === '/profile' && (
-          <ProfilePage 
-            theme={options.theme}
-            fontSize={options.fontSize}
-            font={options.font}
-            onShowSettings={() => setShowSettings(true)}
-            isSettingsOpen={showSettings}
-            isRunning={isRunning}
-            onUserClick={handleUserClick}
-            onUpdateHnUsername={handleUpdateHnUsername}
-          />
-        )}
-
         {/* Add LinksView to the render section, after ReplayView */}
         {location.pathname.startsWith('/links/') && (
           <LinksView
             theme={options.theme}
             fontSize={options.fontSize}
             font={options.font}
-            isRunning={isRunning}
-          />
-        )}
-
-        {/* Add UserFeedPage component to the render */}
-        {location.pathname === '/feed' && (
-          <UserFeedPage 
-            theme={options.theme}
-            fontSize={options.fontSize}
-            font={options.font}
-            onShowSearch={() => setShowSearch(true)}
-            onCloseSearch={() => setShowSearch(false)}
-            onShowSettings={() => setShowSettings(true)}
             isRunning={isRunning}
           />
         )}
