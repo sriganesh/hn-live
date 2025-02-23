@@ -17,15 +17,14 @@ export interface DashboardComment {
 
 export interface AlgoliaHit {
   objectID: string;
-  title?: string;
   comment_text?: string;
-  story_title?: string;
   author: string;
   created_at_i: number;
+  story_id?: string;
+  story_title?: string;
   url?: string;
-  parent_id?: string;
   points?: number;
-  story_text?: string;
+  parent_id?: string;
 }
 
 export interface AlgoliaResponse {

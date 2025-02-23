@@ -55,9 +55,8 @@ export function BookmarksTabContent({
         <BookmarkManager theme={theme} />
       </div>
 
-      <div className="text-sm opacity-75 space-y-1 text-center">
-        <div>Bookmarks are stored locally. Use [EXPORT] to save them.</div>
-        <div>Create an HN Live account in Settings for cloud sync.</div>
+      <div className="text-sm opacity-75">
+        Note: Bookmarks are stored locally. Use [EXPORT] to save them, or create an HN Live account for automatic cloud sync.
       </div>
 
       {bookmarks.length === 0 ? (

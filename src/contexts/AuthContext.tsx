@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AuthContextType, User, AuthState, AuthResponse, AUTH_TOKEN_KEY, AUTH_USER_KEY, API_BASE_URL } from '../types/auth';
+import { syncFollowing } from '../services/following';
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -35,6 +36,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthState(prev => ({ ...prev, isLoading: false }));
     }
   }, []);
+
+  useEffect(() => {
+    if (authState.isAuthenticated) {
+      // Sync following when user logs in
+      syncFollowing().catch(console.error);
+    }
+  }, [authState.isAuthenticated]);
 
   const requestAuth = async (email: string) => {
     try {

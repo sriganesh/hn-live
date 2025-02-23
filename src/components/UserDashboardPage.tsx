@@ -15,12 +15,14 @@ import {
   FeedFilters,
   NewReply,
   MessageHandlerData,
-  TrackerData,
   FeedItem,
   Bookmark,
   CommentGroup
 } from '../types/dashboardTypes';
 import { ErrorBoundary } from './ErrorBoundary';
+import { syncFollowing } from '../services/following';
+import { useAuth } from '../contexts/AuthContext';
+import { API_BASE_URL } from '../types/auth';
 
 type FontOption = 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
 type Tab = 'profile' | 'bookmarks' | 'feed' | 'following' | 'tags';
@@ -107,6 +109,7 @@ interface AlgoliaReply {
   parent_id?: string;
   story_id?: string;
   parent?: string;
+  story_title?: string;
 }
 
 export function UserDashboardPage({ 
@@ -123,6 +126,7 @@ export function UserDashboardPage({
 }: UserDashboardPageProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>(() => {
     const params = new URLSearchParams(location.search);
     return (params.get('tab') as Tab) || 'profile';
@@ -132,8 +136,9 @@ export function UserDashboardPage({
   const [following, setFollowing] = useState<Following[]>(() => {
     try {
       const savedFollowing = localStorage.getItem('hn-following');
-      console.log('Initial following data:', savedFollowing); // Debug
-      return savedFollowing ? JSON.parse(savedFollowing) : [];
+      // Sort by timestamp, most recent first
+      const followingData = savedFollowing ? JSON.parse(savedFollowing) : [];
+      return followingData.sort((a, b) => b.timestamp - a.timestamp);
     } catch (error) {
       console.error('Error loading following data:', error);
       return [];
@@ -170,6 +175,9 @@ export function UserDashboardPage({
     following: false,
     tags: false
   });
+
+  // Add state for sync status
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success'>('idle');
 
   const TAB_ORDER: Tab[] = ['profile', 'bookmarks', 'feed', 'following', 'tags'];
 
@@ -229,14 +237,33 @@ export function UserDashboardPage({
     }
   };
 
-  const handleUnfollow = (userId: string) => {
-    const updatedFollowing = following.filter(f => f.userId !== userId);
-    localStorage.setItem('hn-following', JSON.stringify(updatedFollowing));
-    setFollowing(updatedFollowing);
-    
-    if (updatedFollowing.length === 0) {
-      setFeedItems([]);
-      setHasMore(false);
+  const handleUnfollow = async (userId: string) => {
+    try {
+      // Update local storage first
+      const updatedFollowing = following.filter(f => f.userId !== userId);
+      localStorage.setItem('hn-following', JSON.stringify(updatedFollowing));
+      setFollowing(updatedFollowing);
+      
+      // If authenticated, remove from cloud
+      if (isAuthenticated) {
+        const token = localStorage.getItem('hnlive_token');
+        if (token) {
+          await fetch(`${API_BASE_URL}/api/following/${userId}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+        }
+      }
+
+      // Update feed if no following left
+      if (updatedFollowing.length === 0) {
+        setFeedItems([]);
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error unfollowing user:', error);
     }
   };
 
@@ -513,7 +540,7 @@ export function UserDashboardPage({
       });
 
       // Filter out comments without replies
-      const commentsWithReplies = processedComments.filter(comment => 
+      const commentsWithReplies = processedComments.filter((comment: DashboardComment) => 
         comment.replies && comment.replies.length > 0
       );
 
@@ -924,15 +951,40 @@ export function UserDashboardPage({
               <div className="opacity-75">
                 {following.length} followed user{following.length !== 1 ? 's' : ''}
               </div>
-              {following.length > 0 && (
-                <button
-                  onClick={handleExportFollowing}
-                  className="opacity-75 hover:opacity-100"
-                >
-                  [EXPORT]
-                </button>
-              )}
+              <div className="flex items-center gap-4">
+                {following.length > 0 && (
+                  <button
+                    onClick={handleExportFollowing}
+                    className="opacity-75 hover:opacity-100"
+                  >
+                    [EXPORT]
+                  </button>
+                )}
+                {isAuthenticated && (
+                  <button
+                    onClick={handleSync}
+                    className="opacity-75 hover:opacity-100"
+                  >
+                    {syncStatus === 'syncing' ? '[SYNCING...]' :
+                     syncStatus === 'success' ? '[SYNCED!]' :
+                     '[SYNC]'}
+                  </button>
+                )}
+              </div>
             </div>
+
+            <div className="text-sm opacity-75">
+              Note: Following data is stored locally. Use [EXPORT] to save them, or create an HN Live account for automatic cloud sync.
+            </div>
+
+            {following.length === 0 && (
+              <div className="text-center py-8 opacity-75">
+                <div>No followed users yet. Click on usernames to follow users.</div>
+                <div className="mt-2 text-sm">
+                  Following users lets you see their stories and comments in your personalized feed.
+                </div>
+              </div>
+            )}
 
             {following.map(follow => (
               <div 
@@ -965,15 +1017,6 @@ export function UserDashboardPage({
                 </div>
               </div>
             ))}
-
-            {following.length === 0 && (
-              <div className="text-center py-8 opacity-75">
-                <div>No followed users yet. Click on usernames to follow users.</div>
-                <div className="mt-2 text-sm">
-                  Following users lets you see their stories and comments in your personalized feed.
-                </div>
-              </div>
-            )}
           </div>
         );
 
@@ -994,46 +1037,52 @@ export function UserDashboardPage({
               )}
             </div>
 
-            {userTags.map(tag => (
-              <div key={tag.userId} className="space-y-2">
-                <button
-                  onClick={() => onUserClick(tag.userId)}
-                  className={`${
-                    theme === 'green'
-                      ? 'text-green-500'
-                      : 'text-[#ff6600]'
-                  } hover:opacity-75`}
-                >
-                  {tag.userId}
-                </button>
-                <div className="flex flex-wrap gap-2">
-                  {tag.tags.map(tagName => (
-                    <span
-                      key={tagName}
-                      className="
-                        inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm
-                        bg-[#828282]/10 border border-[#828282]/30
-                      "
-                    >
-                      {tagName}
-                      <button
-                        onClick={() => handleRemoveTag(tag.userId, tagName)}
-                        className="opacity-75 hover:opacity-100 ml-1"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
+            <div className="text-sm opacity-75">
+              Note: Tags are stored locally. Use [EXPORT] to save them.
+            </div>
 
-            {userTags.length === 0 && (
+            {userTags.length === 0 ? (
               <div className="text-center py-8 opacity-75">
                 <div>No tagged users yet. Click on usernames to add tags.</div>
                 <div className="mt-2 text-sm">
                   Tagging users helps you organize and remember users.
                 </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {userTags.map(tag => (
+                  <div key={tag.userId} className="space-y-2">
+                    <button
+                      onClick={() => onUserClick(tag.userId)}
+                      className={`${
+                        theme === 'green'
+                          ? 'text-green-500'
+                          : 'text-[#ff6600]'
+                      } hover:opacity-75`}
+                    >
+                      {tag.userId}
+                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      {tag.tags.map(tagName => (
+                        <span
+                          key={tagName}
+                          className="
+                            inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm
+                            bg-[#828282]/10 border border-[#828282]/30
+                          "
+                        >
+                          {tagName}
+                          <button
+                            onClick={() => handleRemoveTag(tag.userId, tagName)}
+                            className="opacity-75 hover:opacity-100 ml-1"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -1097,6 +1146,75 @@ export function UserDashboardPage({
     params.set('tab', tab);
     navigate(`${location.pathname}?${params.toString()}`, { replace: true });
   };
+
+  // Add a function to fetch following data
+  const fetchFollowing = useCallback(() => {
+    try {
+      const savedFollowing = localStorage.getItem('hn-following');
+      const followingData = savedFollowing ? JSON.parse(savedFollowing) : [];
+      // Sort by timestamp, most recent first
+      const sortedFollowing = followingData.sort((a: Following, b: Following) => 
+        b.timestamp - a.timestamp
+      );
+      setFollowing(sortedFollowing);
+    } catch (error) {
+      console.error('Error loading following data:', error);
+    }
+  }, []);
+
+  // Update handleSync function
+  const handleSync = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      setSyncStatus('syncing');
+      await syncFollowing();
+      // Dispatch sync event
+      window.dispatchEvent(new Event('following-synced'));
+      // Refresh following data after sync
+      fetchFollowing();
+      // Show success status
+      setSyncStatus('success');
+      // Reset status after delay
+      setTimeout(() => setSyncStatus('idle'), 2000);
+    } catch (error) {
+      console.error('Error syncing following:', error);
+      setSyncStatus('idle');
+    }
+  };
+
+  // Add event listener for sync events
+  useEffect(() => {
+    const handleFollowingSync = () => {
+      if (activeTab === 'following') {
+        // Store current scroll position
+        const currentScrollTop = containerRef.current?.scrollTop || 0;
+        
+        // Refresh data
+        fetchFollowing();
+        
+        // Restore scroll position
+        if (currentScrollTop > 0) {
+          requestAnimationFrame(() => {
+            if (containerRef.current) {
+              containerRef.current.scrollTop = currentScrollTop;
+            }
+          });
+        }
+      }
+    };
+
+    window.addEventListener('following-synced', handleFollowingSync);
+    return () => window.removeEventListener('following-synced', handleFollowingSync);
+  }, [activeTab, fetchFollowing]);
+
+  // Add effect to refresh following list when tab changes
+  useEffect(() => {
+    if (activeTab === 'following') {
+      // Fetch latest following data when switching to following tab
+      fetchFollowing();
+    }
+  }, [activeTab, fetchFollowing]);
 
   return (
     <ErrorBoundary>
