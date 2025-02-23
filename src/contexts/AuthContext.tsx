@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AuthContextType, User, AuthState, AuthResponse, AUTH_TOKEN_KEY, AUTH_USER_KEY, API_BASE_URL } from '../types/auth';
 import { syncFollowing } from '../services/following';
+import { syncBookmarks } from '../services/bookmarks';
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -39,8 +40,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (authState.isAuthenticated) {
-      // Sync following when user logs in
+      // Sync following and bookmarks when user logs in
       syncFollowing().catch(console.error);
+      syncBookmarks().catch(console.error);
     }
   }, [authState.isAuthenticated]);
 
