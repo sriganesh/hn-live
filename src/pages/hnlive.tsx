@@ -16,19 +16,17 @@ import { MobileBottomBar } from '../components/MobileBottomBar';
 import UserPage from '../components/UserPage';
 import { UserModal } from '../components/UserModal';
 import { AboutOverlay } from '../content/about';
-import { BookmarksPage } from '../components/BookmarksPage';
 import { navigationItems } from '../config/navigation';
 import { ReplayView } from '../components/ReplayView';
-import { ProfilePage } from '../components/ProfilePage';
 import { UpdateNotifier } from '../components/UpdateNotifier';
 import { LinksView } from '../components/LinksView';
-import { UserFeedPage } from '../components/UserFeedPage';
 import { useAuth } from '../contexts/AuthContext';
 import { useSwipeable } from 'react-swipeable';
 import { TermsPage } from './Terms';
 import { PrivacyPage } from './Privacy';
 import HistoricalFrontPage from '../components/HistoricalFrontPage';
 import { ActivePage } from '../components/ActivePage';
+import { UserDashboardPage } from '../components/UserDashboardPage';
 
 interface HNItem {
   id: number;
@@ -1500,10 +1498,10 @@ export default function HNLiveTerminal() {
               {/* Profile button with badge - now available to all users */}
               <div className="relative">
                 <button
-                  onClick={() => navigate('/profile')}
-                  className={`${themeColors} hover:opacity-75`}
+                  onClick={() => navigate('/dashboard')}
+                  className={themeColors}
                 >
-                  [{hnUsername || 'HN PROFILE'}]
+                  [DASHBOARD]
                 </button>
                 {unreadReplies > 0 && (
                   <span className={`
@@ -1950,19 +1948,6 @@ export default function HNLiveTerminal() {
           fontSize={options.fontSize}
         />
 
-        {/* Add the BookmarksPage component to the render */}
-        {location.pathname === '/bookmarks' && (
-          <BookmarksPage 
-            theme={options.theme}
-            fontSize={options.fontSize}
-            font={options.font}
-            onShowSearch={() => setShowSearch(true)}
-            onCloseSearch={() => setShowSearch(false)}
-            onShowSettings={() => setShowSettings(true)}
-            isRunning={isRunning}
-          />
-        )}
-
         {/* Add the ReplayView component to the render */}
         {location.pathname.startsWith('/replay/') && (
           <ReplayView
@@ -1975,38 +1960,12 @@ export default function HNLiveTerminal() {
           />
         )}
 
-        {location.pathname === '/profile' && (
-          <ProfilePage 
-            theme={options.theme}
-            fontSize={options.fontSize}
-            font={options.font}
-            onShowSettings={() => setShowSettings(true)}
-            isSettingsOpen={showSettings}
-            isRunning={isRunning}
-            onUserClick={handleUserClick}
-            onUpdateHnUsername={handleUpdateHnUsername}
-          />
-        )}
-
         {/* Add LinksView to the render section, after ReplayView */}
         {location.pathname.startsWith('/links/') && (
           <LinksView
             theme={options.theme}
             fontSize={options.fontSize}
             font={options.font}
-            isRunning={isRunning}
-          />
-        )}
-
-        {/* Add UserFeedPage component to the render */}
-        {location.pathname === '/feed' && (
-          <UserFeedPage 
-            theme={options.theme}
-            fontSize={options.fontSize}
-            font={options.font}
-            onShowSearch={() => setShowSearch(true)}
-            onCloseSearch={() => setShowSearch(false)}
-            onShowSettings={() => setShowSettings(true)}
             isRunning={isRunning}
           />
         )}
@@ -2063,6 +2022,22 @@ export default function HNLiveTerminal() {
             isRunning={isRunning}
             username={hnUsername}
             unreadCount={unreadReplies}
+          />
+        )}
+
+        {/* Add UserDashboardPage component to the render */}
+        {location.pathname === '/dashboard' && (
+          <UserDashboardPage 
+            theme={options.theme}
+            fontSize={options.fontSize}
+            font={options.font}
+            onShowSearch={() => setShowSearch(true)}
+            onCloseSearch={() => setShowSearch(false)}
+            onShowSettings={() => setShowSettings(true)}
+            isRunning={isRunning}
+            onUserClick={(username) => setViewingUser(username)}
+            onUpdateHnUsername={handleUpdateHnUsername}
+            username={hnUsername}
           />
         )}
       </div>

@@ -115,6 +115,9 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
       localStorage.setItem('hn-user-tags', JSON.stringify(tags));
       setUserTags(prev => [...prev, newTag]);
       setNewTag('');
+
+      // Dispatch event to notify other components
+      window.dispatchEvent(new CustomEvent('tags-updated'));
     } catch (e) {
       console.error('Error adding tag:', e);
     }
@@ -134,6 +137,9 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
       
       localStorage.setItem('hn-user-tags', JSON.stringify(tags));
       setUserTags(prev => prev.filter(t => t !== tagToRemove));
+
+      // Dispatch event to notify other components
+      window.dispatchEvent(new CustomEvent('tags-updated'));
     }
   };
 

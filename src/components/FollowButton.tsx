@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Following } from '../types/Following';
+import { useAuth } from '../contexts/AuthContext';
+import { API_BASE_URL } from '../types/auth';
 
 interface FollowButtonProps {
   userId: string;
@@ -8,6 +10,8 @@ interface FollowButtonProps {
 
 export function FollowButton({ userId, theme }: FollowButtonProps) {
   const [isFollowing, setIsFollowing] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const token = localStorage.getItem('hnlive_token');
 
   useEffect(() => {
     try {
@@ -18,15 +22,27 @@ export function FollowButton({ userId, theme }: FollowButtonProps) {
     }
   }, [userId]);
 
-  const toggleFollow = () => {
+  const toggleFollow = async () => {
     try {
       const following: Following[] = JSON.parse(localStorage.getItem('hn-following') || '[]');
       
       if (isFollowing) {
+        // Remove from local storage
         const updatedFollowing = following.filter(f => f.userId !== userId);
         localStorage.setItem('hn-following', JSON.stringify(updatedFollowing));
         setIsFollowing(false);
+
+        // If authenticated, remove from cloud
+        if (isAuthenticated && token) {
+          await fetch(`${API_BASE_URL}/api/following/${userId}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+        }
       } else {
+        // Add to local storage
         const newFollowing = [
           ...following,
           {
@@ -36,6 +52,18 @@ export function FollowButton({ userId, theme }: FollowButtonProps) {
         ];
         localStorage.setItem('hn-following', JSON.stringify(newFollowing));
         setIsFollowing(true);
+
+        // If authenticated, add to cloud
+        if (isAuthenticated && token) {
+          await fetch(`${API_BASE_URL}/api/following`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ userId })
+          });
+        }
       }
     } catch (e) {
       console.error('Error updating following:', e);

@@ -4,9 +4,6 @@ import HNLiveTerminal from "./pages/hnlive";
 import { register as registerServiceWorker } from './registerServiceWorker';
 import { useEffect } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
-import { TermsPage } from './pages/Terms';
-import { PrivacyPage } from './pages/Privacy';
-import HistoricalFrontPage from './components/HistoricalFrontPage';
 
 // Add type definitions at the top
 interface NewReply {
@@ -125,14 +122,12 @@ export function App() {
               <Route path="jobs" element={null} />
               <Route path="best" element={null} />
               <Route path="user/:userId" element={null} />
-              <Route path="bookmarks" element={null} />
               <Route path="replay/:itemId" element={null} />
-              <Route path="profile" element={null} />
               <Route path="links/:itemId" element={null} />
-              <Route path="feed" element={null} />
               <Route path="terms" element={null} />
               <Route path="privacy" element={null} />
               <Route path="best-comments" element={null} />
+              <Route path="dashboard" element={null} />
             </Route>
           </Routes>
         </AuthProvider>
