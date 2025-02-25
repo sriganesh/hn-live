@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getHistory, clearHistory, removeHistoryEntry, HistoryEntry } from '../../services/history';
+import { getHistory, clearHistory, removeHistoryEntry, HistoryEntry, exportHistory } from '../../services/history';
 
 interface HistoryTabContentProps {
   theme: 'green' | 'og' | 'dog';
@@ -36,6 +36,10 @@ export function HistoryTabContent({ theme, navigate }: HistoryTabContentProps) {
     setHistory(prev => prev.filter(entry => entry.id !== id));
   };
 
+  const handleExportHistory = () => {
+    exportHistory();
+  };
+
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
     return date.toLocaleString();
@@ -52,12 +56,20 @@ export function HistoryTabContent({ theme, navigate }: HistoryTabContentProps) {
           {history.length} {history.length === 1 ? 'item' : 'items'} in history
         </div>
         {history.length > 0 && (
-          <button
-            onClick={handleClearHistory}
-            className="opacity-75 hover:opacity-100"
-          >
-            [CLEAR ALL]
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleExportHistory}
+              className="opacity-75 hover:opacity-100"
+            >
+              [EXPORT]
+            </button>
+            <button
+              onClick={handleClearHistory}
+              className="opacity-75 hover:opacity-100"
+            >
+              [CLEAR ALL]
+            </button>
+          </div>
         )}
       </div>
 

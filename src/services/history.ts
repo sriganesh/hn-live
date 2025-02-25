@@ -106,4 +106,27 @@ export function removeHistoryEntry(storyId: number): void {
   } catch (error) {
     console.error('Error removing history entry:', error);
   }
+}
+
+/**
+ * Export history data as a JSON file
+ */
+export function exportHistory(): void {
+  try {
+    const history = JSON.parse(localStorage.getItem('hn-live-history') || '[]');
+    const timestamp = Math.floor(Date.now() / 1000);
+    const content = JSON.stringify(history, null, 2);
+    const blob = new Blob([content], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hn-live-history-${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error exporting history:', error);
+  }
 } 
