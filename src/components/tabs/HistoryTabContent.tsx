@@ -11,8 +11,19 @@ export function HistoryTabContent({ theme, navigate }: HistoryTabContentProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setHistory(getHistory());
-    setLoading(false);
+    const fetchHistory = async () => {
+      setLoading(true);
+      try {
+        const historyData = await getHistory();
+        setHistory(historyData);
+      } catch (error) {
+        console.error('Error fetching history:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHistory();
   }, []);
 
   const handleClearHistory = () => {
@@ -76,12 +87,12 @@ export function HistoryTabContent({ theme, navigate }: HistoryTabContentProps) {
                     className="cursor-pointer hover:opacity-75"
                     onClick={() => navigate(`/item/${entry.id}`)}
                   >
-                    <span className={`font-bold ${
+                    <span className={`${
                       theme === 'green'
                         ? 'text-green-400'
                         : theme === 'og'
-                        ? 'text-[#000000]'
-                        : 'text-white'
+                        ? 'text-[#828282]'
+                        : 'text-[#828282]'
                     }`}>
                       {entry.title || `Story #${entry.id}`}
                     </span>
