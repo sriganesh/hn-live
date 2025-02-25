@@ -7,6 +7,7 @@ import { MobileBottomBar } from './MobileBottomBar';
 import { FeedTabContent } from './tabs/FeedTabContent';
 import { ProfileTabContent } from './tabs/ProfileTabContent';
 import { BookmarksTabContent } from './tabs/BookmarksTabContent';
+import { HistoryTabContent } from './tabs/HistoryTabContent';
 import { BookmarkEntry } from '../types/bookmarks';
 import { 
   DashboardComment, 
@@ -25,7 +26,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { API_BASE_URL } from '../types/auth';
 
 type FontOption = 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
-type Tab = 'profile' | 'bookmarks' | 'feed' | 'following' | 'tags';
+type Tab = 'profile' | 'bookmarks' | 'feed' | 'following' | 'tags' | 'history';
 
 interface UserDashboardPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -179,7 +180,7 @@ export function UserDashboardPage({
   // Add state for sync status
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success'>('idle');
 
-  const TAB_ORDER: Tab[] = ['profile', 'bookmarks', 'feed', 'following', 'tags'];
+  const TAB_ORDER: Tab[] = ['profile', 'bookmarks', 'feed', 'following', 'tags', 'history'];
 
   const swipeHandlers = useSwipeable({
     onSwipedLeft: () => {
@@ -777,6 +778,9 @@ export function UserDashboardPage({
         // Update tags from localStorage
         const savedTags = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
         setUserTags(savedTags);
+      } else if (activeTab === 'history') {
+        // Fetch history data
+        // Implementation needed
       }
     };
 
@@ -1086,6 +1090,14 @@ export function UserDashboardPage({
               </div>
             )}
           </div>
+        );
+
+      case 'history':
+        return (
+          <HistoryTabContent
+            theme={theme}
+            navigate={navigate}
+          />
         );
 
       default:

@@ -1,6 +1,7 @@
 import { useNavigate, NavigateFunction } from 'react-router-dom';
 import { BookmarkManager } from '../BookmarkManager';
 import { AUTH_TOKEN_KEY, API_BASE_URL } from '../../types/auth';
+import { addToHistory } from '../../services/history';
 
 interface BookmarksTabContentProps {
   theme: 'green' | 'og' | 'dog';
@@ -104,14 +105,21 @@ function StoryBookmark({ item, theme, navigate, onDelete }: {
   navigate: NavigateFunction;
   onDelete: (id: number) => void;
 }) {
+  const handleStoryClick = () => {
+    // Add to history
+    addToHistory(item.id, {
+      title: item.title,
+      by: item.by,
+      url: item.url
+    });
+    navigate(`/item/${item.id}`);
+  };
+
   return (
     <div>
       {formatTimeAgo(item.time)} | <a
         href={`/item/${item.id}`}
-        onClick={(e) => {
-          e.preventDefault();
-          navigate(`/item/${item.id}`);
-        }}
+        onClick={handleStoryClick}
         className="hover:opacity-75"
       >
         {item.title}
@@ -131,23 +139,39 @@ function CommentBookmark({ item, theme, navigate, onDelete }: {
   navigate: NavigateFunction;
   onDelete: (id: number) => void;
 }) {
+  const handleCommentClick = () => {
+    // Add to history for the parent story
+    if (item.storyId) {
+      addToHistory(item.storyId, {
+        title: item.story?.title,
+        by: item.story?.by
+      });
+    }
+    navigate(`/item/${item.storyId}/comment/${item.id}`);
+  };
+
+  const handleStoryLinkClick = () => {
+    // Add to history for the parent story
+    if (item.storyId) {
+      addToHistory(item.storyId, {
+        title: item.story?.title,
+        by: item.story?.by
+      });
+    }
+    navigate(`/item/${item.storyId}`);
+  };
+
   return (
     <div>
       {formatTimeAgo(item.time)} | <a
         href={`/item/${item.storyId}/comment/${item.id}`}
-        onClick={(e) => {
-          e.preventDefault();
-          navigate(`/item/${item.storyId}/comment/${item.id}`);
-        }}
+        onClick={handleCommentClick}
         className="hover:opacity-75"
       >
         {item.text}
       </a> | re: <a
         href={`/item/${item.storyId}`}
-        onClick={(e) => {
-          e.preventDefault();
-          navigate(`/item/${item.storyId}`);
-        }}
+        onClick={handleStoryLinkClick}
         className="hover:opacity-75"
       >
         {item.story?.title}

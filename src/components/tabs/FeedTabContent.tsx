@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { addToHistory } from '../../services/history';
 
 interface FeedFilters {
   type: 'all' | 'stories' | 'comments';
@@ -170,6 +171,10 @@ export function FeedTabContent({
 
 // Helper Components
 function CommentContent({ item, theme, navigate }: { item: any; theme: string; navigate: any }) {
+  const handleNavigate = () => {
+    navigate(`/item/${item.parent}`);
+  };
+
   return (
     <div>
       <div 
@@ -185,10 +190,7 @@ function CommentContent({ item, theme, navigate }: { item: any; theme: string; n
         <span className="opacity-75">on: </span>
         <a
           href={`/item/${item.parent}`}
-          onClick={(e) => {
-            e.preventDefault();
-            navigate(`/item/${item.parent}`);
-          }}
+          onClick={handleNavigate}
           className="hover:opacity-75 break-words"
         >
           {item.title}
@@ -199,27 +201,35 @@ function CommentContent({ item, theme, navigate }: { item: any; theme: string; n
 }
 
 function StoryContent({ item, theme, navigate }: { item: any; theme: string; navigate: any }) {
+  const handleClick = () => {
+    addToHistory(item.id, {
+      title: item.title,
+      by: item.by,
+      url: item.url
+    });
+    navigate(`/item/${item.id}`);
+  };
+
   return (
-    <div className="break-words">
-      <a
-        href={item.url || `/item/${item.id}`}
-        onClick={(e) => {
-          if (!item.url) {
-            e.preventDefault();
-            navigate(`/item/${item.id}`);
-          }
-        }}
-        className="hover:opacity-75 break-all inline-block max-w-full"
-        target={item.url ? "_blank" : undefined}
-        rel={item.url ? "noopener noreferrer" : undefined}
+    <div className="space-y-1">
+      <div 
+        className="cursor-pointer hover:opacity-75"
+        onClick={handleClick}
       >
-        {item.title}
-      </a>
-      {item.url && (
-        <span className="ml-2 opacity-50 text-sm break-all">
-          ({new URL(item.url).hostname})
-        </span>
-      )}
+        <a
+          href={item.url || `/item/${item.id}`}
+          className="hover:opacity-75 break-all inline-block max-w-full"
+          target={item.url ? "_blank" : undefined}
+          rel={item.url ? "noopener noreferrer" : undefined}
+        >
+          {item.title}
+        </a>
+        {item.url && (
+          <span className="ml-2 opacity-50 text-sm break-all">
+            ({new URL(item.url).hostname})
+          </span>
+        )}
+      </div>
     </div>
   );
 }

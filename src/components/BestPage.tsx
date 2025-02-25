@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTopUsers } from '../hooks/useTopUsers';
 import { MobileBottomBar } from './MobileBottomBar';
+import { addToHistory } from '../services/history';
 
 interface BestPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -466,7 +467,14 @@ export function BestPage({
                             {formatTimeAgo(story.time)}
                           </a> • {' '}
                           <button
-                            onClick={() => navigate(`/item/${story.id}`)}
+                            onClick={() => {
+                              // Add to history
+                              addToHistory(story.id, {
+                                title: story.title,
+                                by: story.by
+                              });
+                              navigate(`/item/${story.id}`);
+                            }}
                             className="hover:underline"
                           >
                             {story.descendants || 0} comments
@@ -563,7 +571,14 @@ export function BestPage({
                           </span>
                           <span className="opacity-75">•</span>
                           <button
-                            onClick={() => navigate(`/item/${story.id}`)}
+                            onClick={() => {
+                              // Add to history
+                              addToHistory(story.id, {
+                                title: story.title,
+                                by: story.by
+                              });
+                              navigate(`/item/${story.id}`);
+                            }}
                             className="opacity-75 hover:opacity-100 hover:underline"
                           >
                             {story.descendants 

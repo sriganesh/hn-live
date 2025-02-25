@@ -5,6 +5,7 @@ import { useTopUsers } from '../hooks/useTopUsers';
 import { UserModal } from './UserModal';
 import { BookmarkButton } from './BookmarkButton';
 import { CopyButton } from './CopyButton';
+import { addToHistory } from '../services/history';
 
 type FontOption = 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
 
@@ -1095,6 +1096,17 @@ export function StoryView({
       story_id: itemId
     });
   }, [itemId]);
+
+  // Add a useEffect to record history when a story is loaded
+  useEffect(() => {
+    if (story) {
+      addToHistory(story.id, {
+        title: story.title,
+        by: story.by,
+        url: story.url
+      });
+    }
+  }, [story?.id, story?.title, story?.by, story?.url]);
 
   const themeColors = theme === 'green'
     ? 'text-green-400 bg-black'
