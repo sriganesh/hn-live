@@ -1663,7 +1663,7 @@ export function StoryView({
 
                 {story.text && (
                   <div 
-                    className="prose max-w-none my-4 break-words whitespace-pre-wrap overflow-x-auto px-2 max-w-full"
+                    className="prose max-w-none my-4 break-words whitespace-pre-wrap overflow-x-auto max-w-full"
                     dangerouslySetInnerHTML={{ __html: addTargetBlankToLinks(story.text) }}
                   />
                 )}
