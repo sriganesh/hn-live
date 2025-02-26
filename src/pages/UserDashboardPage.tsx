@@ -171,7 +171,7 @@ export function UserDashboardPage() {
   useEffect(() => {
     // Get font size and font family from localStorage or use defaults
     const fontSize = localStorage.getItem('hn-live-font-size') || 'base';
-    const fontFamily = localStorage.getItem('hn-live-font') || 'system';
+    const fontFamily = localStorage.getItem('hn-live-font') || 'mono';
     
     // Apply font size
     const fontSizeClasses = ['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl'];
@@ -227,7 +227,7 @@ export function UserDashboardPage() {
     if (fontFamily && ['mono', 'jetbrains', 'fira', 'source', 'sans', 'serif', 'system'].includes(fontFamily)) {
       return fontFamily as 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
     }
-    return 'system';
+    return 'mono';
   };
 
   // Render tab content based on active tab
