@@ -25,6 +25,38 @@ export function BookmarkManager({ theme }: BookmarkManagerProps) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState(false);
 
+  // Get theme-specific styles
+  const getThemeStyles = () => {
+    switch (theme) {
+      case 'green':
+        return {
+          text: 'text-green-400',
+          accent: 'text-green-500',
+          buttonText: 'opacity-75 hover:opacity-100 text-green-400 hover:text-green-300'
+        };
+      case 'og':
+        return {
+          text: 'text-[#111]',
+          accent: 'text-[#111]',
+          buttonText: 'opacity-75 hover:opacity-100 text-[#111]'
+        };
+      case 'dog':
+        return {
+          text: 'text-[#c9d1d9]',
+          accent: 'text-[#c9d1d9]',
+          buttonText: 'opacity-75 hover:opacity-100 text-[#c9d1d9] hover:text-white'
+        };
+      default:
+        return {
+          text: 'text-green-400',
+          accent: 'text-green-500',
+          buttonText: 'opacity-75 hover:opacity-100 text-green-400 hover:text-green-300'
+        };
+    }
+  };
+
+  const themeStyles = getThemeStyles();
+
   const exportBookmarks = () => {
     // Just get the raw bookmarks data from localStorage
     const bookmarks: BookmarkEntry[] = JSON.parse(localStorage.getItem('hn-bookmarks') || '[]');
@@ -63,7 +95,7 @@ export function BookmarkManager({ theme }: BookmarkManagerProps) {
     <div className="flex items-center gap-2">
       <button
         onClick={exportBookmarks}
-        className="opacity-75 hover:opacity-100 transition-opacity"
+        className={themeStyles.buttonText}
       >
         [EXPORT]
       </button>
@@ -71,7 +103,7 @@ export function BookmarkManager({ theme }: BookmarkManagerProps) {
         <button
           onClick={handleSync}
           disabled={isSyncing}
-          className={`opacity-75 hover:opacity-100 transition-opacity ${isSyncing ? 'cursor-not-allowed' : ''}`}
+          className={`${themeStyles.buttonText} ${isSyncing ? 'cursor-not-allowed' : ''}`}
         >
           [{isSyncing ? '...' : syncSuccess ? 'SYNCED!' : 'SYNC'}]
         </button>

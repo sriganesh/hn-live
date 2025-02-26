@@ -4,6 +4,7 @@ import HNLiveTerminal from "./pages/hnlive";
 import { register as registerServiceWorker } from './registerServiceWorker';
 import { useEffect } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
+import { UserDashboardPage } from './pages/UserDashboardPage';
 
 // Add type definitions at the top
 interface NewReply {
@@ -11,7 +12,23 @@ interface NewReply {
   seen: boolean;
 }
 
+// Helper function to get theme from localStorage
+const getThemeFromStorage = (): 'green' | 'og' | 'dog' => {
+  try {
+    return localStorage.getItem('hn-live-theme') as 'green' | 'og' | 'dog' || 'og';
+  } catch (e) {
+    console.warn('Could not access localStorage');
+    return 'og';
+  }
+};
+
 export function App() {
+  // Set theme on document element
+  useEffect(() => {
+    const theme = getThemeFromStorage();
+    document.documentElement.setAttribute('data-theme', theme);
+  }, []);
+
   useEffect(() => {
     registerServiceWorker();
 
@@ -129,6 +146,7 @@ export function App() {
               <Route path="best-comments" element={null} />
               <Route path="dashboard" element={null} />
             </Route>
+            <Route path="/new-dashboard" element={<UserDashboardPage />} />
           </Routes>
         </AuthProvider>
       </Router>

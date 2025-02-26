@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { startTracking } from '../registerServiceWorker';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useSettings } from '../hooks/useSettings';
 
 type FontOption = 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
 
@@ -19,13 +20,25 @@ interface SettingsModalProps {
     font: FontOption;
     useAlgoliaApi: boolean;
   };
-  onUpdateOptions: (options: any) => void;
+  onUpdateOptions: (options: SettingsOptions) => void;
   colorizeUsernames: boolean;
   onColorizeUsernamesChange: (value: boolean) => void;
   isMobile?: boolean;
   hnUsername: string | null;
   onUpdateHnUsername: (username: string | null) => void;
 }
+
+// Define a type for the options to avoid using 'any'
+type SettingsOptions = {
+  theme: 'green' | 'og' | 'dog';
+  autoscroll: boolean;
+  directLinks: boolean;
+  fontSize: 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl';
+  classicLayout: boolean;
+  showCommentParents: boolean;
+  font: FontOption;
+  useAlgoliaApi: boolean;
+};
 
 const fontSizeOptions = {
   'xs': 'Extra Small',
@@ -59,6 +72,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated, requestAuth, verifyAuth, logout, isAuthenticating } = useAuth();
+  const { exportSettings } = useSettings();
+
+  // Add state to track local changes before applying them
+  const [localOptions, setLocalOptions] = useState(options);
+
+  // Update local options when props change
+  useEffect(() => {
+    setLocalOptions(options);
+  }, [options]);
 
   // Add ESC key handler
   useEffect(() => {
@@ -88,7 +110,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     feedView: true,
     storyView: true,
     account: true,
-    cloud: true
+    cloud: true,
+    settings: true
   });
 
   // Add state for HN username input
@@ -105,6 +128,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   // Add state for email validation
   const [debouncedEmailError, setDebouncedEmailError] = useState<string | null>(null);
   const emailValidationTimeout = useRef<NodeJS.Timeout>();
+
+  // Add state for file input
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importError, setImportError] = useState<string | null>(null);
 
   // Debounced email validation
   const validateEmail = (email: string) => {
@@ -131,7 +158,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   // Toggle handler for sections
-  const toggleSection = (section: 'terminal' | 'feedView' | 'storyView' | 'account' | 'cloud') => {
+  const toggleSection = (section: 'terminal' | 'feedView' | 'storyView' | 'account' | 'cloud' | 'settings') => {
     setCollapsedSections(prev => ({
       ...prev,
       [section]: !prev[section]
@@ -141,10 +168,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   // Handle the setting change
   const handleCommentParentsChange = () => {
     const newOptions = {
-      ...options,
-      showCommentParents: !options.showCommentParents
+      ...localOptions,
+      showCommentParents: !localOptions.showCommentParents
     };
+    setLocalOptions(newOptions);
     onUpdateOptions(newOptions);
+    localStorage.setItem('hn-live-show-comment-parents', newOptions.showCommentParents.toString());
 
     // Show appropriate notification based on device
     if (isMobile) {
@@ -159,10 +188,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   // Create a handler for direct links change
   const handleDirectLinksChange = () => {
     const newOptions = {
-      ...options,
-      directLinks: !options.directLinks
+      ...localOptions,
+      directLinks: !localOptions.directLinks
     };
+    setLocalOptions(newOptions);
     onUpdateOptions(newOptions);
+    localStorage.setItem('hn-live-direct-links', newOptions.directLinks.toString());
 
     // Show appropriate notification based on device
     if (isMobile) {
@@ -172,6 +203,57 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       setShowDirectLinksReload(true);
       setTimeout(() => setShowDirectLinksReload(false), 1000);
     }
+  };
+
+  // Handle autoscroll change
+  const handleAutoscrollChange = () => {
+    const newOptions = {
+      ...localOptions,
+      autoscroll: !localOptions.autoscroll
+    };
+    setLocalOptions(newOptions);
+    onUpdateOptions(newOptions);
+    localStorage.setItem('hn-live-autoscroll', newOptions.autoscroll.toString());
+  };
+
+  // Handle classic layout change
+  const handleClassicLayoutChange = () => {
+    const newOptions = {
+      ...localOptions,
+      classicLayout: !localOptions.classicLayout
+    };
+    setLocalOptions(newOptions);
+    onUpdateOptions(newOptions);
+    localStorage.setItem('hn-live-classic-layout', newOptions.classicLayout.toString());
+  };
+
+  // Handle Algolia API change
+  const handleAlgoliaApiChange = () => {
+    const newOptions = {
+      ...localOptions,
+      useAlgoliaApi: !localOptions.useAlgoliaApi
+    };
+    setLocalOptions(newOptions);
+    onUpdateOptions(newOptions);
+    localStorage.setItem('hn-live-use-algolia-api', newOptions.useAlgoliaApi.toString());
+  };
+
+  // Handle colorize usernames change
+  const handleColorizeUsernamesChange = () => {
+    const newValue = !colorizeUsernames;
+    onColorizeUsernamesChange(newValue);
+    localStorage.setItem('hn-live-colorize-usernames', JSON.stringify(newValue));
+  };
+
+  // Handle theme change
+  const handleThemeChange = (newTheme: 'green' | 'og' | 'dog') => {
+    const newOptions = {
+      ...localOptions,
+      theme: newTheme
+    };
+    setLocalOptions(newOptions);
+    onUpdateOptions(newOptions);
+    localStorage.setItem('hn-live-theme', newTheme);
   };
 
   // Update the validateAndSaveUsername function
@@ -186,14 +268,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       if (!userData) {
         setValidationError('User not found');
       } else {
+        // Update localStorage
         localStorage.setItem('hn-username', usernameInput);
+        // Start tracking for replies
         startTracking(usernameInput);
+        // Update the username in the parent component
         onUpdateHnUsername(usernameInput);
+        // Reset the input
         setUsernameInput('');
-        onClose();  // Close settings modal first
-        navigate('/dashboard');  // Navigate to dashboard instead
+        // Close the modal
+        onClose();
+        // No need to navigate away from the dashboard
       }
     } catch (error) {
+      console.error('Error validating username:', error);
       setValidationError('Error validating username');
     } finally {
       setIsValidating(false);
@@ -250,6 +338,100 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   };
 
+  // Add handlers for export and import
+  const handleExportSettings = () => {
+    // Export all relevant settings, not just from useSettings
+    const settingsToExport = {
+      theme: localOptions.theme,
+      hnUsername: hnUsername,
+      showReadComments: localOptions.showCommentParents,
+      fontSize: localOptions.fontSize,
+      font: localOptions.font,
+      directLinks: localOptions.directLinks,
+      autoscroll: localOptions.autoscroll,
+      classicLayout: localOptions.classicLayout,
+      useAlgoliaApi: localOptions.useAlgoliaApi,
+      colorizeUsernames: colorizeUsernames
+    };
+    
+    // Create and download the settings file
+    const timestamp = Math.floor(Date.now() / 1000);
+    const content = JSON.stringify(settingsToExport, null, 2);
+    const blob = new Blob([content], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hn.live-settings-${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        setImportError(null);
+        
+        // Read the file content
+        const content = await file.text();
+        const importedSettings = JSON.parse(content);
+        
+        // Validate imported settings
+        if (typeof importedSettings !== 'object' || importedSettings === null) {
+          throw new Error('Invalid settings format');
+        }
+        
+        // Update options with imported settings
+        const newOptions = { ...localOptions };
+        
+        // Apply theme if present
+        if (importedSettings.theme) {
+          newOptions.theme = importedSettings.theme;
+        }
+        
+        // Apply other settings if present
+        if (importedSettings.fontSize) newOptions.fontSize = importedSettings.fontSize;
+        if (importedSettings.font) newOptions.font = importedSettings.font;
+        if (importedSettings.directLinks !== undefined) newOptions.directLinks = importedSettings.directLinks;
+        if (importedSettings.autoscroll !== undefined) newOptions.autoscroll = importedSettings.autoscroll;
+        if (importedSettings.classicLayout !== undefined) newOptions.classicLayout = importedSettings.classicLayout;
+        if (importedSettings.useAlgoliaApi !== undefined) newOptions.useAlgoliaApi = importedSettings.useAlgoliaApi;
+        if (importedSettings.showReadComments !== undefined) newOptions.showCommentParents = importedSettings.showReadComments;
+        
+        // Update options
+        setLocalOptions(newOptions);
+        onUpdateOptions(newOptions);
+        
+        // Update username if present
+        if (importedSettings.hnUsername !== undefined) {
+          onUpdateHnUsername(importedSettings.hnUsername);
+        }
+        
+        // Update colorizeUsernames if present
+        if (importedSettings.colorizeUsernames !== undefined) {
+          onColorizeUsernamesChange(importedSettings.colorizeUsernames);
+        }
+        
+        // Close the modal and reload the page to apply the imported settings
+        onClose();
+        window.location.reload();
+      } catch (error) {
+        console.error('Failed to import settings:', error);
+        setImportError('Failed to import settings: Invalid format');
+      }
+      
+      // Reset the input so the same file can be selected again
+      e.target.value = '';
+    }
+  };
+
   if (!isOpen) return null;
 
   const themeColors = theme === 'green'
@@ -266,7 +448,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       />
       
       <div className="relative z-[101] flex items-center justify-center h-full p-4">
-        <div className={`w-full max-w-lg ${themeColors} border p-4 shadow-lg font-mono max-h-[85vh] overflow-y-auto mb-20 sm:mb-0`}>
+        <div className={`w-full max-w-lg ${themeColors} border p-4 shadow-lg font-mono max-h-[85vh] overflow-y-auto mb-20 sm:mb-0 settings-modal-content text-base`}>
           {/* Terminal-style header */}
           <div className="flex items-center justify-between mb-6 border-b border-current pb-2">
             <div className="flex items-center gap-2">
@@ -289,22 +471,22 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               <div className="text-sm font-bold uppercase tracking-wider mb-2">THEME</div>
               <div className="flex flex-wrap gap-4">
                 <button
-                  onClick={() => onUpdateOptions({ ...options, theme: 'og' })}
+                  onClick={() => handleThemeChange('og')}
                   className={`hover:opacity-75 transition-opacity`}
                 >
-                  [{options.theme === 'og' ? 'x' : ' '}] Classic
+                  [{localOptions.theme === 'og' ? 'x' : ' '}] Classic
                 </button>
                 <button
-                  onClick={() => onUpdateOptions({ ...options, theme: 'dog' })}
+                  onClick={() => handleThemeChange('dog')}
                   className={`hover:opacity-75 transition-opacity`}
                 >
-                  [{options.theme === 'dog' ? 'x' : ' '}] Dark
+                  [{localOptions.theme === 'dog' ? 'x' : ' '}] Dark
                 </button>
                 <button
-                  onClick={() => onUpdateOptions({ ...options, theme: 'green' })}
+                  onClick={() => handleThemeChange('green')}
                   className={`hover:opacity-75 transition-opacity`}
                 >
-                  [{options.theme === 'green' ? 'x' : ' '}] Terminal
+                  [{localOptions.theme === 'green' ? 'x' : ' '}] Terminal
                 </button>
               </div>
             </div>
@@ -317,7 +499,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 {/* Font Size Slider */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Size: {fontSizeOptions[options.fontSize]}</span>
+                    <span className="text-sm">Size: {fontSizeOptions[localOptions.fontSize]}</span>
                   </div>
                   <div className="relative">
                     <input
@@ -325,10 +507,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       min="0"
                       max="5"
                       step="1"
-                      value={Object.keys(fontSizeOptions).indexOf(options.fontSize)}
+                      value={Object.keys(fontSizeOptions).indexOf(localOptions.fontSize)}
                       onChange={(e) => {
                         const newSize = Object.keys(fontSizeOptions)[parseInt(e.target.value)] as keyof typeof fontSizeOptions;
-                        onUpdateOptions({ ...options, fontSize: newSize });
+                        // Update localStorage directly to ensure it's saved
+                        localStorage.setItem('hn-live-font-size', newSize);
+                        // Update local options
+                        setLocalOptions({...localOptions, fontSize: newSize});
+                        // Update parent options
+                        onUpdateOptions({ ...localOptions, fontSize: newSize });
                       }}
                       className={`
                         w-full h-2 rounded-lg appearance-none cursor-pointer
@@ -365,6 +552,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                           : '[&::-moz-range-thumb]:bg-[#828282] [&::-moz-range-thumb]:hover:bg-[#828282]/80'
                         }
                       `}
+                      style={{ WebkitAppearance: 'none', appearance: 'none' }}
                     />
                     
                     <div className="flex justify-between text-xs mt-2 opacity-75">
@@ -374,7 +562,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                           className={`w-6 text-center ${
                             index === 0 ? 'text-left' : 
                             index === Object.keys(fontSizeOptions).length - 1 ? 'text-right' : ''
-                          }`}
+                          } cursor-pointer`}
+                          onClick={() => {
+                            // Update localStorage directly to ensure it's saved
+                            localStorage.setItem('hn-live-font-size', size);
+                            // Update local options
+                            setLocalOptions({...localOptions, fontSize: size as keyof typeof fontSizeOptions});
+                            // Update parent options
+                            onUpdateOptions({ ...localOptions, fontSize: size as keyof typeof fontSizeOptions });
+                          }}
                         >
                           {sizeLabels[size as keyof typeof sizeLabels]}
                         </span>
@@ -386,11 +582,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 {/* Font Family Selection */}
                 <div className="relative">
                   <select
-                    value={options.font}
-                    onChange={(e) => onUpdateOptions({
-                      ...options,
-                      font: e.target.value
-                    })}
+                    value={localOptions.font}
+                    onChange={(e) => {
+                      const newFont = e.target.value as FontOption;
+                      localStorage.setItem('hn-live-font', newFont);
+                      setLocalOptions({...localOptions, font: newFont});
+                      onUpdateOptions({...localOptions, font: newFont});
+                    }}
                     className={`
                       w-full px-3 py-2 pr-8 rounded
                       ${theme === 'green' 
@@ -438,17 +636,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               </button>
               <div className={`space-y-2 transition-all duration-200 ${collapsedSections.terminal ? 'hidden' : ''}`}>
                 <button
-                  onClick={() => onUpdateOptions({ ...options, autoscroll: !options.autoscroll })}
+                  onClick={handleAutoscrollChange}
                   className={`hover:opacity-75 transition-opacity block`}
                 >
-                  [{options.autoscroll ? 'x' : ' '}] Auto-scroll feed
+                  [{localOptions.autoscroll ? 'x' : ' '}] Auto-scroll feed
                 </button>
                 <button
                   onClick={handleDirectLinksChange}
                   className={`hover:opacity-75 transition-opacity block w-full text-left`}
                 >
                   <div className="flex items-center gap-2">
-                    <span>[{options.directLinks ? 'x' : ' '}] Direct HN links</span>
+                    <span>[{localOptions.directLinks ? 'x' : ' '}] Direct HN links</span>
                     {!isMobile && showDirectLinksReload && (
                       <span className="text-sm opacity-75">
                         [page reload may be required]
@@ -461,7 +659,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   className={`hover:opacity-75 transition-opacity block w-full text-left`}
                 >
                   <div className="flex items-center gap-2">
-                    <span>[{options.showCommentParents ? 'x' : ' '}] Show story context</span>
+                    <span>[{localOptions.showCommentParents ? 'x' : ' '}] Show story context</span>
                     {!isMobile && showStoryContextReload && (
                       <span className="text-sm opacity-75">
                         [page reload required]
@@ -490,19 +688,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               </button>
               <div className={`space-y-2 transition-all duration-200 ${collapsedSections.feedView ? 'hidden' : ''}`}>
                 <button
-                  onClick={() => onColorizeUsernamesChange(!colorizeUsernames)}
+                  onClick={handleColorizeUsernamesChange}
                   className={`hover:opacity-75 transition-opacity block`}
                 >
                   [{colorizeUsernames ? 'x' : ' '}] Colorize usernames
                 </button>
                 <button
-                  onClick={() => onUpdateOptions({
-                    ...options,
-                    classicLayout: !options.classicLayout
-                  })}
+                  onClick={handleClassicLayoutChange}
                   className={`hover:opacity-75 transition-opacity block`}
                 >
-                  [{options.classicLayout ? 'x' : ' '}] Standard HN layout
+                  [{localOptions.classicLayout ? 'x' : ' '}] Standard HN layout
                 </button>
               </div>
             </div>
@@ -525,11 +720,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               </button>
               <div className={`space-y-2 transition-all duration-200 ${collapsedSections.storyView ? 'hidden' : ''}`}>
                 <button
-                  onClick={() => onUpdateOptions({ ...options, useAlgoliaApi: !options.useAlgoliaApi })}
+                  onClick={handleAlgoliaApiChange}
                   className={`hover:opacity-75 transition-opacity block text-left whitespace-normal leading-tight`}
                 >
                   <div className="flex">
-                    <span className="mr-2">[{options.useAlgoliaApi ? 'x' : ' '}]</span>
+                    <span className="mr-2">[{localOptions.useAlgoliaApi ? 'x' : ' '}]</span>
                     <span>Use Algolia API for stories (faster)</span>
                   </div>
                 </button>
@@ -809,6 +1004,67 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       </button>
                     </div>
                   </div>
+                )}
+              </div>
+            </div>
+
+            {/* Settings Backup section */}
+            <div className="space-y-2">
+              <button 
+                onClick={() => toggleSection('settings')}
+                className="w-full flex items-center justify-between text-sm font-bold uppercase tracking-wider mb-2"
+              >
+                <span>SETTINGS BACKUP</span>
+                <svg 
+                  className={`w-4 h-4 transform transition-transform ${collapsedSections.settings ? '' : 'rotate-180'}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className={`space-y-4 transition-all duration-200 ${collapsedSections.settings ? 'hidden' : ''}`}>
+                <div className="text-sm opacity-75">Export your settings to a file or import from a previously exported file.</div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleExportSettings}
+                    className={`
+                      px-2 py-1 rounded transition-opacity
+                      ${theme === 'green'
+                        ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                        : theme === 'og'
+                        ? 'bg-[#ff6600]/20 text-[#ff6600] hover:bg-[#ff6600]/30'
+                        : 'bg-[#828282]/20 hover:bg-[#828282]/30'
+                      }
+                    `}
+                  >
+                    [EXPORT SETTINGS]
+                  </button>
+                  <button
+                    onClick={handleImportClick}
+                    className={`
+                      px-2 py-1 rounded transition-opacity
+                      ${theme === 'green'
+                        ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                        : theme === 'og'
+                        ? 'bg-[#ff6600]/20 text-[#ff6600] hover:bg-[#ff6600]/30'
+                        : 'bg-[#828282]/20 hover:bg-[#828282]/30'
+                      }
+                    `}
+                  >
+                    [IMPORT SETTINGS]
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </div>
+                {importError && (
+                  <div className="text-sm text-red-500">{importError}</div>
                 )}
               </div>
             </div>

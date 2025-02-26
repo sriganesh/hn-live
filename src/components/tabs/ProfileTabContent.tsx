@@ -1,30 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
-import { DashboardComment, CommentGroup } from '../../types/dashboardTypes';
-
-interface Comment {
-  id: string;
-  comment_text: string;
-  author: string;
-  created_at: string;
-  story_id: string;
-  story_title: string;
-  story_url?: string;
-  objectID: string;
-}
+import { useProfile } from '../../hooks/useProfile';
 
 interface ProfileTabContentProps {
   theme: 'green' | 'og' | 'dog';
   hnUsername: string | null;
   onShowSettings: () => void;
   onUpdateHnUsername: (username: string | null) => void;
-  comments: DashboardComment[];
-  loading: boolean;
-  unreadCount: number;
-  onMarkAllAsRead: () => void;
   onUserClick: (username: string) => void;
-  commentGroups: CommentGroup[];
-  handleMarkAsRead: (commentId: string) => void;
 }
 
 // Add a helper function to safely format dates
@@ -53,15 +36,17 @@ export function ProfileTabContent({
   hnUsername,
   onShowSettings,
   onUpdateHnUsername,
-  comments,
-  loading,
-  unreadCount,
-  onMarkAllAsRead,
-  onUserClick,
-  commentGroups,
-  handleMarkAsRead
+  onUserClick
 }: ProfileTabContentProps) {
   const navigate = useNavigate();
+  const { 
+    loading, 
+    error, 
+    unreadCount, 
+    commentGroups, 
+    markAllAsRead, 
+    markAsRead 
+  } = useProfile(hnUsername || undefined);
 
   if (!hnUsername) {
     return (
@@ -84,6 +69,10 @@ export function ProfileTabContent({
 
   if (loading) {
     return <div className="text-center py-8">Loading comments...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 py-2">Error: {error}</div>;
   }
 
   return (
@@ -138,7 +127,7 @@ export function ProfileTabContent({
         </div>
         {unreadCount > 0 && (
           <button 
-            onClick={onMarkAllAsRead}
+            onClick={markAllAsRead}
             className={`text-xs opacity-75 hover:opacity-100 ${
               theme === 'green' ? 'text-green-400' : 'text-[#828282]'
             }`}
@@ -151,10 +140,7 @@ export function ProfileTabContent({
       {/* Comments List */}
       {commentGroups.length === 0 ? (
         <div className="text-center py-8 opacity-75">
-          {comments.length > 0 ? 
-            "No replies found for your last 100 comments" :
-            "No recent comments found"
-          }
+          No replies found for your recent comments
         </div>
       ) : (
         <div className="space-y-8">
@@ -180,22 +166,22 @@ export function ProfileTabContent({
                   {group.replies.map(reply => (
                     <div key={reply.id} className="mb-6 border-l-2 border-current/10 pl-4">
                       <div className="text-xs opacity-70 mb-2">
-                        <button
-                          onClick={() => onUserClick(reply.author)}
-                          className={`hover:underline break-words ${
-                            theme === 'green' 
-                              ? 'text-green-500' 
-                              : 'text-[#ff6600]'
-                          }`}
-                        >
-                          {reply.author}
-                        </button>
-                        {' replied '}
                         <a
-                          href={`/item/${reply.parent_id}/comment/${reply.id}`}
+                          href={`#user-${reply.author}`}
                           onClick={(e) => {
                             e.preventDefault();
-                            navigate(`/item/${reply.parent_id}/comment/${reply.id}`);
+                            onUserClick(reply.author);
+                          }}
+                          className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} hover:underline`}
+                        >
+                          {reply.author}
+                        </a>
+                        {' replied '}
+                        <a
+                          href={`/item/${reply.parent_id ?? group.originalComment.id}/comment/${reply.id}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigate(`/item/${reply.parent_id ?? group.originalComment.id}/comment/${reply.id}`);
                           }}
                           className="hover:underline break-words"
                         >
@@ -242,7 +228,7 @@ export function ProfileTabContent({
               {group.hasUnread && (
                 <div className="mt-2 text-right">
                   <button 
-                    onClick={() => handleMarkAsRead(group.originalComment.id)}
+                    onClick={() => markAsRead(group.originalComment.id)}
                     className={`text-xs opacity-75 hover:opacity-100 ${
                       theme === 'green' ? 'text-green-400' : 'text-[#828282]'
                     }`}

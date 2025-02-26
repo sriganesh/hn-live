@@ -1298,6 +1298,13 @@ export default function HNLiveTerminal() {
                 >
                   [?]
                 </button>
+                <a 
+                  href="/new-dashboard"
+                  className={`${themeColors} mr-2`}
+                  title="Try the new dashboard"
+                >
+                  [NEW]
+                </a>
               </div>
 
               {/* Right side controls */}
@@ -1389,6 +1396,13 @@ export default function HNLiveTerminal() {
               >
                 [?]
               </button>
+              <a 
+                href="/new-dashboard"
+                className={`${headerColor} opacity-75 hover:opacity-100 transition-opacity`}
+                title="Try the new dashboard"
+              >
+                [NEW DASHBOARD]
+              </a>
               {headerText && (
                 headerLink ? (
                   <a 

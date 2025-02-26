@@ -1,5 +1,8 @@
 import { Following } from '../types/Following';
-import { API_BASE_URL, AUTH_TOKEN_KEY } from '../types/auth';
+import { AUTH_TOKEN_KEY } from '../types/auth';
+
+// Auth API base URL
+const AUTH_API_URL = 'https://auth.hn.live';
 
 export async function syncFollowing() {
   const token = localStorage.getItem(AUTH_TOKEN_KEY);
@@ -10,7 +13,7 @@ export async function syncFollowing() {
     const localFollowing: Following[] = JSON.parse(localStorage.getItem('hn-following') || '[]');
 
     // Get cloud following list
-    const response = await fetch(`${API_BASE_URL}/api/following`, {
+    const response = await fetch(`${AUTH_API_URL}/api/following`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -50,7 +53,7 @@ export async function syncFollowing() {
     localStorage.setItem('hn-following', JSON.stringify(finalFollowing));
 
     // Sync to cloud
-    await fetch(`${API_BASE_URL}/api/following/sync`, {
+    await fetch(`${AUTH_API_URL}/api/following/sync`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

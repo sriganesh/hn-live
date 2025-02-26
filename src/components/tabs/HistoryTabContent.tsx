@@ -1,52 +1,46 @@
-import { useState, useEffect } from 'react';
-import { getHistory, clearHistory, removeHistoryEntry, HistoryEntry, exportHistory } from '../../services/history';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useHistory } from '../../hooks/useHistory';
+import { NavigateFunction } from 'react-router-dom';
 
-interface HistoryTabContentProps {
+export interface HistoryTabContentProps {
   theme: 'green' | 'og' | 'dog';
-  navigate: (path: string) => void;
+  navigate: NavigateFunction;
+  onUserClick?: (username: string) => void;
 }
 
-export function HistoryTabContent({ theme, navigate }: HistoryTabContentProps) {
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchHistory = async () => {
-      setLoading(true);
-      try {
-        const historyData = await getHistory();
-        setHistory(historyData);
-      } catch (error) {
-        console.error('Error fetching history:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHistory();
-  }, []);
-
-  const handleClearHistory = () => {
-    clearHistory();
-    setHistory([]);
-  };
-
-  const handleRemoveEntry = (id: number) => {
-    removeHistoryEntry(id);
-    setHistory(prev => prev.filter(entry => entry.id !== id));
-  };
-
-  const handleExportHistory = () => {
-    exportHistory();
-  };
+export function HistoryTabContent({ 
+  theme,
+  navigate,
+  onUserClick
+}: HistoryTabContentProps) {
+  const { 
+    history, 
+    loading, 
+    error, 
+    clearHistory, 
+    removeEntry, 
+    exportHistory 
+  } = useHistory();
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
     return date.toLocaleString();
   };
 
+  const handleUsernameClick = (username: string | undefined, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onUserClick && username) {
+      onUserClick(username);
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-8 opacity-75">Loading history...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 py-2">Error: {error}</div>;
   }
 
   return (
@@ -58,13 +52,13 @@ export function HistoryTabContent({ theme, navigate }: HistoryTabContentProps) {
         {history.length > 0 && (
           <div className="flex items-center gap-4">
             <button
-              onClick={handleExportHistory}
+              onClick={exportHistory}
               className="opacity-75 hover:opacity-100"
             >
               [EXPORT]
             </button>
             <button
-              onClick={handleClearHistory}
+              onClick={clearHistory}
               className="opacity-75 hover:opacity-100"
             >
               [CLEAR ALL]
@@ -111,14 +105,20 @@ export function HistoryTabContent({ theme, navigate }: HistoryTabContentProps) {
                   </div>
                   <div className="text-sm opacity-75 flex items-center gap-2">
                     {entry.by && (
-                      <span>by {entry.by}</span>
+                      <a
+                        href={`#user-${entry.by}`}
+                        onClick={(e) => handleUsernameClick(entry.by, e)}
+                        className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} hover:underline`}
+                      >
+                        {entry.by}
+                      </a>
                     )}
                     <span>•</span>
                     <span>{formatDate(entry.timestamp)}</span>
                   </div>
                 </div>
                 <button
-                  onClick={() => handleRemoveEntry(entry.id)}
+                  onClick={() => removeEntry(entry.id)}
                   className="opacity-50 hover:opacity-100"
                 >
                   [remove]

@@ -101,6 +101,9 @@ export interface DashboardReply {
   author: string;
   created_at: string;
   seen: boolean;
+  parent_id?: string;
+  story_id?: string;
+  story_title?: string;
 }
 
 // Add type for grouped comments

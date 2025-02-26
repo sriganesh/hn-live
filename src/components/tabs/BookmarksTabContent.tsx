@@ -1,66 +1,105 @@
+import React from 'react';
 import { useNavigate, NavigateFunction } from 'react-router-dom';
 import { BookmarkManager } from '../BookmarkManager';
-import { AUTH_TOKEN_KEY, API_BASE_URL } from '../../types/auth';
 import { addToHistory } from '../../services/history';
+import { useBookmarks } from '../../hooks/useBookmarks';
 
-interface BookmarksTabContentProps {
+export interface BookmarksTabContentProps {
   theme: 'green' | 'og' | 'dog';
-  bookmarks: any[];
-  loading: boolean;
-  hasMore: boolean;
-  loadingRef: React.RefObject<HTMLDivElement>;
   onDeleteBookmark: (id: number) => void;
   navigate: NavigateFunction;
+  onUserClick?: (username: string) => void;
 }
 
 export function BookmarksTabContent({
   theme,
-  bookmarks,
-  loading,
-  hasMore,
-  loadingRef,
   onDeleteBookmark,
-  navigate
+  navigate,
+  onUserClick
 }: BookmarksTabContentProps) {
-  // Add cloud sync delete handler
-  const handleDeleteBookmark = async (bookmarkId: number) => {
-    try {
-      // First delete locally
-      onDeleteBookmark(bookmarkId);
+  const { 
+    bookmarks, 
+    loading, 
+    error, 
+    hasMore, 
+    deleteBookmark 
+  } = useBookmarks();
 
-      // Then delete from cloud if user is logged in
-      const token = localStorage.getItem(AUTH_TOKEN_KEY);
-      if (token) {
-        const deleteResponse = await fetch(`${API_BASE_URL}/api/bookmarks/item/${bookmarkId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          }
-        });
+  // Create a ref for infinite scrolling if needed in the future
+  const loadingRef = React.useRef<HTMLDivElement>(null);
 
-        if (!deleteResponse.ok && deleteResponse.status !== 404) {
-          console.error('Failed to delete bookmark from cloud');
-        }
-      }
-    } catch (error) {
-      console.error('Error deleting bookmark:', error);
+  // Get theme-specific styles
+  const getThemeStyles = () => {
+    switch (theme) {
+      case 'green':
+        return {
+          text: 'text-green-400',
+          accent: 'text-green-500',
+          link: 'text-green-500 hover:text-green-400',
+          itemBg: 'bg-green-500/5',
+          error: 'text-red-500'
+        };
+      case 'og':
+        return {
+          text: 'text-[#111]',
+          accent: 'text-[#111]',
+          link: 'text-[#111] hover:text-[#111]/80 font-medium',
+          itemBg: 'bg-[#f6f6ef]',
+          error: 'text-red-500'
+        };
+      case 'dog':
+        return {
+          text: 'text-[#c9d1d9]',
+          accent: 'text-[#c9d1d9]',
+          link: 'text-[#c9d1d9] hover:text-white font-medium',
+          itemBg: 'bg-[#828282]/5',
+          error: 'text-red-500'
+        };
+      default:
+        return {
+          text: 'text-green-400',
+          accent: 'text-green-500',
+          link: 'text-green-500 hover:text-green-400',
+          itemBg: 'bg-green-500/5',
+          error: 'text-red-500'
+        };
+    }
+  };
+
+  const themeStyles = getThemeStyles();
+
+  // Add a username click handler
+  const handleUsernameClick = (username: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onUserClick) {
+      onUserClick(username);
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="opacity-75">
+        <div className={`${themeStyles.text}`}>
           {bookmarks.length} bookmarked item{bookmarks.length !== 1 ? 's' : ''}
         </div>
         <BookmarkManager theme={theme} />
       </div>
 
-      <div className="text-sm opacity-75">
+      <div className={`text-sm ${themeStyles.text}`}>
         Note: Bookmarks are stored locally. Use [EXPORT] to save them, or create an HN Live account for automatic cloud sync.
       </div>
 
-      {bookmarks.length === 0 ? (
+      {error && (
+        <div className={`${themeStyles.error} py-2`}>
+          Error: {error}
+        </div>
+      )}
+
+      {loading && bookmarks.length === 0 ? (
+        <div className="text-center py-8 opacity-75">
+          Loading bookmarks...
+        </div>
+      ) : bookmarks.length === 0 ? (
         <div className="text-center py-8 opacity-75">
           <div>No bookmarked items yet.</div>
           <div className="mt-2 text-sm">
@@ -72,36 +111,46 @@ export function BookmarksTabContent({
           {bookmarks.map((item, index) => (
             <div 
               key={`${item.id}-${index}`} 
-              className="leading-relaxed break-words overflow-hidden"
+              className={`p-4 rounded ${themeStyles.itemBg} leading-relaxed break-words overflow-hidden`}
             >
               {item.type === 'comment' ? (
                 <CommentBookmark 
                   key={`comment-${item.id}`} 
                   item={item} 
                   theme={theme} 
+                  themeStyles={themeStyles}
                   navigate={navigate} 
-                  onDelete={handleDeleteBookmark} 
+                  onDelete={deleteBookmark} 
                 />
               ) : (
                 <StoryBookmark 
                   key={`story-${item.id}`} 
                   item={item} 
-                  theme={theme} 
+                  theme={theme}
+                  themeStyles={themeStyles}
                   navigate={navigate} 
-                  onDelete={handleDeleteBookmark} 
+                  onDelete={deleteBookmark} 
                 />
               )}
             </div>
           ))}
         </div>
       )}
+
+      {/* Loading indicator for future pagination */}
+      <div ref={loadingRef} className="py-4 text-center">
+        {loading && bookmarks.length > 0 ? (
+          <div className="opacity-75">Loading more...</div>
+        ) : null}
+      </div>
     </div>
   );
 }
 
-function StoryBookmark({ item, theme, navigate, onDelete }: {
+function StoryBookmark({ item, theme, themeStyles, navigate, onDelete }: {
   item: any;
   theme: string;
+  themeStyles: any;
   navigate: NavigateFunction;
   onDelete: (id: number) => void;
 }) {
@@ -117,15 +166,18 @@ function StoryBookmark({ item, theme, navigate, onDelete }: {
 
   return (
     <div>
-      {formatTimeAgo(item.time)} | <a
+      <span className="opacity-75">{formatTimeAgo(item.time)}</span> | <a
         href={`/item/${item.id}`}
-        onClick={handleStoryClick}
-        className="hover:opacity-75"
+        onClick={(e) => {
+          e.preventDefault();
+          handleStoryClick();
+        }}
+        className={themeStyles.link}
       >
         {item.title}
       </a> <button
         onClick={() => onDelete(item.id)}
-        className="opacity-50 hover:opacity-100"
+        className="opacity-50 hover:opacity-100 ml-2"
       >
         [remove]
       </button>
@@ -133,13 +185,15 @@ function StoryBookmark({ item, theme, navigate, onDelete }: {
   );
 }
 
-function CommentBookmark({ item, theme, navigate, onDelete }: { 
+function CommentBookmark({ item, theme, themeStyles, navigate, onDelete }: { 
   item: any; 
-  theme: string; 
+  theme: string;
+  themeStyles: any;
   navigate: NavigateFunction;
   onDelete: (id: number) => void;
 }) {
-  const handleCommentClick = () => {
+  const handleCommentClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     // Add to history for the parent story
     if (item.storyId) {
       addToHistory(item.storyId, {
@@ -150,7 +204,8 @@ function CommentBookmark({ item, theme, navigate, onDelete }: {
     navigate(`/item/${item.storyId}/comment/${item.id}`);
   };
 
-  const handleStoryLinkClick = () => {
+  const handleStoryLinkClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     // Add to history for the parent story
     if (item.storyId) {
       addToHistory(item.storyId, {
@@ -163,21 +218,21 @@ function CommentBookmark({ item, theme, navigate, onDelete }: {
 
   return (
     <div>
-      {formatTimeAgo(item.time)} | <a
+      <span className="opacity-75">{formatTimeAgo(item.time)}</span> | <a
         href={`/item/${item.storyId}/comment/${item.id}`}
         onClick={handleCommentClick}
-        className="hover:opacity-75"
+        className={themeStyles.link}
       >
         {item.text}
-      </a> | re: <a
+      </a> | <span className="opacity-75">re:</span> <a
         href={`/item/${item.storyId}`}
         onClick={handleStoryLinkClick}
-        className="hover:opacity-75"
+        className={themeStyles.link}
       >
         {item.story?.title}
       </a> <button
         onClick={() => onDelete(item.id)}
-        className="opacity-50 hover:opacity-100"
+        className="opacity-50 hover:opacity-100 ml-2"
       >
         [remove]
       </button>

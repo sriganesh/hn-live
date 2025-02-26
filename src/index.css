@@ -176,3 +176,33 @@ html, body {
   border-radius: 4px;
   background: rgb(255 102 0 / 0.2); /* ff6600/20 */
 }
+
+/* Add this rule to prevent the settings modal from inheriting font size changes */
+.settings-modal-content {
+  font-size: 1rem !important; /* Base font size */
+}
+
+.settings-modal-content * {
+  font-size: inherit;
+}
+
+/* Except for specific elements that should have their own sizes */
+.settings-modal-content .text-xs {
+  font-size: 0.75rem !important;
+}
+
+.settings-modal-content .text-sm {
+  font-size: 0.875rem !important;
+}
+
+.settings-modal-content .text-lg {
+  font-size: 1.125rem !important;
+}
+
+.settings-modal-content .text-xl {
+  font-size: 1.25rem !important;
+}
+
+.settings-modal-content .text-2xl {
+  font-size: 1.5rem !important;
+}
