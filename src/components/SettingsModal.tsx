@@ -253,7 +253,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     };
     setLocalOptions(newOptions);
     onUpdateOptions(newOptions);
+    
+    // Update localStorage directly to ensure it's available to all components
     localStorage.setItem('hn-live-theme', newTheme);
+    
+    // Update document element's data-theme attribute
+    document.documentElement.setAttribute('data-theme', newTheme);
   };
 
   // Update the validateAndSaveUsername function

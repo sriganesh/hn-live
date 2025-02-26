@@ -7,8 +7,18 @@ export interface UserSettings {
   showReadComments: boolean;
 }
 
+// Get theme from localStorage or use default
+const getThemeFromStorage = (): 'green' | 'og' | 'dog' => {
+  try {
+    const theme = localStorage.getItem('hn-live-theme');
+    return (theme === 'green' || theme === 'og' || theme === 'dog') ? theme : 'green';
+  } catch (e) {
+    return 'green';
+  }
+};
+
 const DEFAULT_SETTINGS: UserSettings = {
-  theme: 'green',
+  theme: getThemeFromStorage(),
   hnUsername: null,
   showReadComments: false
 };
@@ -17,9 +27,20 @@ export function useSettings() {
   const [settings, setSettings] = useState<UserSettings>(() => {
     try {
       const savedSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      return savedSettings 
-        ? { ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) } 
-        : DEFAULT_SETTINGS;
+      // Always use the theme from localStorage if available
+      const theme = getThemeFromStorage();
+      
+      if (savedSettings) {
+        const parsedSettings = JSON.parse(savedSettings);
+        return { 
+          ...DEFAULT_SETTINGS, 
+          ...parsedSettings,
+          // Override with the theme from localStorage
+          theme 
+        };
+      }
+      
+      return { ...DEFAULT_SETTINGS, theme };
     } catch (error) {
       console.error('Error loading settings:', error);
       return DEFAULT_SETTINGS;
@@ -32,6 +53,12 @@ export function useSettings() {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+      
+      // Also update the theme in localStorage for compatibility with the main site
+      if (settings.theme) {
+        localStorage.setItem('hn-live-theme', settings.theme);
+      }
+      
       setError(null);
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -45,6 +72,15 @@ export function useSettings() {
     value: UserSettings[K]
   ) => {
     setSettings(prev => ({ ...prev, [key]: value }));
+    
+    // Special handling for theme to ensure it's also saved to hn-live-theme
+    if (key === 'theme' && typeof value === 'string') {
+      try {
+        localStorage.setItem('hn-live-theme', value);
+      } catch (error) {
+        console.error('Error saving theme to localStorage:', error);
+      }
+    }
   }, []);
 
   // Update multiple settings at once

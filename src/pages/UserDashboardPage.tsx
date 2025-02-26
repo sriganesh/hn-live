@@ -138,6 +138,7 @@ export function UserDashboardPage() {
 
   // Set theme on document element when component mounts
   useEffect(() => {
+    // Ensure the document element's data-theme attribute matches the settings theme
     document.documentElement.setAttribute('data-theme', settings.theme);
     
     // Apply theme-specific classes to body
