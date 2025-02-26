@@ -27,6 +27,7 @@ import { PrivacyPage } from './Privacy';
 import HistoricalFrontPage from '../components/HistoricalFrontPage';
 import { ActivePage } from '../components/ActivePage';
 import { UserDashboardPage } from '../components/UserDashboardPage';
+import { addToHistory } from '../services/history';
 
 interface HNItem {
   id: number;
@@ -785,6 +786,15 @@ export default function HNLiveTerminal() {
 
   // Update the story click handler
   const handleStoryClick = (item: HNItem) => {
+    // Add to history if it's a story
+    if (item.type === 'story') {
+      addToHistory(item.id, {
+        title: item.title,
+        by: item.by,
+        url: item.url
+      });
+    }
+
     if (options.directLinks) {
       // If direct links enabled, always use external links
       window.open(item.formatted?.links.main, '_blank');

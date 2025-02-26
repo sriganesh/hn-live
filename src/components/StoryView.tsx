@@ -5,6 +5,7 @@ import { useTopUsers } from '../hooks/useTopUsers';
 import { UserModal } from './UserModal';
 import { BookmarkButton } from './BookmarkButton';
 import { CopyButton } from './CopyButton';
+import { addToHistory } from '../services/history';
 
 type FontOption = 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
 
@@ -1096,6 +1097,17 @@ export function StoryView({
     });
   }, [itemId]);
 
+  // Add a useEffect to record history when a story is loaded
+  useEffect(() => {
+    if (story) {
+      addToHistory(story.id, {
+        title: story.title,
+        by: story.by,
+        url: story.url
+      });
+    }
+  }, [story?.id, story?.title, story?.by, story?.url]);
+
   const themeColors = theme === 'green'
     ? 'text-green-400 bg-black'
     : theme === 'og'
@@ -1651,7 +1663,7 @@ export function StoryView({
 
                 {story.text && (
                   <div 
-                    className="prose max-w-none my-4 break-words whitespace-pre-wrap overflow-x-auto px-2 max-w-full"
+                    className="prose max-w-none my-4 break-words whitespace-pre-wrap overflow-x-auto max-w-full"
                     dangerouslySetInnerHTML={{ __html: addTargetBlankToLinks(story.text) }}
                   />
                 )}
