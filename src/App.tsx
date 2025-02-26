@@ -5,6 +5,7 @@ import { register as registerServiceWorker } from './registerServiceWorker';
 import { useEffect } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { UserDashboardPage } from './pages/UserDashboardPage';
+import { Link } from 'react-router-dom';
 
 // Add type definitions at the top
 interface NewReply {

@@ -1396,12 +1396,28 @@ export default function HNLiveTerminal() {
               >
                 [?]
               </button>
+              {/* NEW DASHBOARD link with notification badge */}
               <a 
                 href="/new-dashboard"
-                className={`${headerColor} opacity-75 hover:opacity-100 transition-opacity`}
+                className={`${headerColor} opacity-75 hover:opacity-100 transition-opacity relative`}
                 title="Try the new dashboard"
               >
                 [NEW DASHBOARD]
+                {unreadReplies > 0 && (
+                  <span className={`
+                    absolute -top-1 -right-1 
+                    min-w-[18px] h-[18px] 
+                    rounded-full 
+                    flex items-center justify-center
+                    text-xs
+                    ${theme === 'green' 
+                      ? 'bg-green-500 text-black' 
+                      : 'bg-[#ff6600] text-white'
+                    }
+                  `}>
+                    {unreadReplies}
+                  </span>
+                )}
               </a>
               {headerText && (
                 headerLink ? (

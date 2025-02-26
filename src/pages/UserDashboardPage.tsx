@@ -363,12 +363,34 @@ export function UserDashboardPage() {
 
   const themeStyles = getThemeStyles();
 
+  // Update document title when unread count changes
+  useEffect(() => {
+    if (unreadCount > 0) {
+      document.title = `(${unreadCount}) HN Live Dashboard`;
+    } else {
+      document.title = 'HN Live Dashboard';
+    }
+    
+    return () => {
+      document.title = 'HN Live';
+    };
+  }, [unreadCount]);
+
   return (
     <div className={`min-h-screen ${themeStyles.background} ${themeStyles.text}`}>
       <div className="max-w-4xl mx-auto p-4">
         <div className="mb-6 flex justify-between items-center">
           <h1 className={`text-2xl font-bold ${themeStyles.accent}`}>
             HN Live Dashboard
+            {unreadCount > 0 && (
+              <span className={`ml-2 px-2 py-0.5 text-sm rounded-full ${
+                settings.theme === 'green' 
+                  ? 'bg-green-500 text-black' 
+                  : 'bg-[#ff6600] text-white'
+              }`}>
+                {unreadCount}
+              </span>
+            )}
           </h1>
           <button 
             onClick={() => setShowSettings(true)}
