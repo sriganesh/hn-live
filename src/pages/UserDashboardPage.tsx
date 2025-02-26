@@ -6,9 +6,10 @@ import { BookmarksTabContent } from '../components/tabs/BookmarksTabContent';
 import { HistoryTabContent } from '../components/tabs/HistoryTabContent';
 import { ProfileTabContent } from '../components/tabs/ProfileTabContent';
 import { FollowingTabContent } from '../components/tabs/FollowingTabContent';
+import { TagsTabContent } from '../components/tabs/TagsTabContent';
 import SettingsModal from '../components/SettingsModal';
 
-type TabType = 'feed' | 'bookmarks' | 'history' | 'profile' | 'following';
+type TabType = 'feed' | 'bookmarks' | 'history' | 'profile' | 'following' | 'tags';
 
 export function UserDashboardPage() {
   const navigate = useNavigate();
@@ -206,6 +207,57 @@ export function UserDashboardPage() {
     navigate(`/user/${username}`);
   };
 
+  // Get the current username from localStorage
+  const getCurrentUsername = () => {
+    return localStorage.getItem('hn-username') || settings.hnUsername;
+  };
+
+  // Get the current font size from localStorage
+  const getCurrentFontSize = (): 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' => {
+    const fontSize = localStorage.getItem('hn-live-font-size');
+    if (fontSize && ['xs', 'sm', 'base', 'lg', 'xl', '2xl'].includes(fontSize)) {
+      return fontSize as 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl';
+    }
+    return 'base';
+  };
+
+  // Get the current font family from localStorage
+  const getCurrentFontFamily = (): 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system' => {
+    const fontFamily = localStorage.getItem('hn-live-font');
+    if (fontFamily && ['mono', 'jetbrains', 'fira', 'source', 'sans', 'serif', 'system'].includes(fontFamily)) {
+      return fontFamily as 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
+    }
+    return 'system';
+  };
+
+  // Render tab content based on active tab
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'feed':
+        return <FeedTabContent theme={settings.theme} onUserClick={handleUserClick} />;
+      case 'bookmarks':
+        return <BookmarksTabContent theme={settings.theme} onDeleteBookmark={() => {}} navigate={navigate} onUserClick={handleUserClick} />;
+      case 'history':
+        return <HistoryTabContent theme={settings.theme} navigate={navigate} onUserClick={handleUserClick} />;
+      case 'profile':
+        return (
+          <ProfileTabContent
+            theme={settings.theme}
+            hnUsername={getCurrentUsername()}
+            onShowSettings={() => setShowSettings(true)}
+            onUpdateHnUsername={handleUpdateHnUsername}
+            onUserClick={handleUserClick}
+          />
+        );
+      case 'following':
+        return <FollowingTabContent theme={settings.theme} onUserClick={handleUserClick} />;
+      case 'tags':
+        return <TagsTabContent theme={settings.theme} onUserClick={handleUserClick} />;
+      default:
+        return <div>Invalid tab</div>;
+    }
+  };
+
   // Handle settings modal options update
   const handleUpdateOptions = (newOptions: {
     theme: 'green' | 'og' | 'dog';
@@ -260,55 +312,6 @@ export function UserDashboardPage() {
       
       // Save to localStorage
       localStorage.setItem('hn-live-font', newOptions.font);
-    }
-  };
-
-  // Get the current username from localStorage
-  const getCurrentUsername = () => {
-    return localStorage.getItem('hn-username') || settings.hnUsername;
-  };
-
-  // Get the current font size from localStorage
-  const getCurrentFontSize = (): 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' => {
-    const fontSize = localStorage.getItem('hn-live-font-size');
-    if (fontSize && ['xs', 'sm', 'base', 'lg', 'xl', '2xl'].includes(fontSize)) {
-      return fontSize as 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl';
-    }
-    return 'base';
-  };
-
-  // Get the current font family from localStorage
-  const getCurrentFontFamily = (): 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system' => {
-    const fontFamily = localStorage.getItem('hn-live-font');
-    if (fontFamily && ['mono', 'jetbrains', 'fira', 'source', 'sans', 'serif', 'system'].includes(fontFamily)) {
-      return fontFamily as 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
-    }
-    return 'system';
-  };
-
-  // Render tab content based on active tab
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'feed':
-        return <FeedTabContent theme={settings.theme} onUserClick={handleUserClick} />;
-      case 'bookmarks':
-        return <BookmarksTabContent theme={settings.theme} onDeleteBookmark={() => {}} navigate={navigate} onUserClick={handleUserClick} />;
-      case 'history':
-        return <HistoryTabContent theme={settings.theme} navigate={navigate} onUserClick={handleUserClick} />;
-      case 'profile':
-        return (
-          <ProfileTabContent
-            theme={settings.theme}
-            hnUsername={getCurrentUsername()}
-            onShowSettings={() => setShowSettings(true)}
-            onUpdateHnUsername={handleUpdateHnUsername}
-            onUserClick={handleUserClick}
-          />
-        );
-      case 'following':
-        return <FollowingTabContent theme={settings.theme} onUserClick={handleUserClick} />;
-      default:
-        return <div>Invalid tab</div>;
     }
   };
 
@@ -393,12 +396,20 @@ export function UserDashboardPage() {
               </span>
             )}
           </h1>
-          <button 
-            onClick={() => setShowSettings(true)}
-            className={themeStyles.tabInactive}
-          >
-            [SETTINGS]
-          </button>
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={() => setShowSettings(true)}
+              className={themeStyles.tabInactive}
+            >
+              [SETTINGS]
+            </button>
+            <button 
+              onClick={() => navigate('/')}
+              className={themeStyles.tabInactive}
+            >
+              [ESC]
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -440,6 +451,14 @@ export function UserDashboardPage() {
             label="Following"
             active={activeTab === 'following'}
             onClick={() => handleTabChange('following')}
+            activeClass={themeStyles.tabActive}
+            inactiveClass={themeStyles.tabInactive}
+            highlightClass={themeStyles.tabHighlight}
+          />
+          <TabButton
+            label="Tags"
+            active={activeTab === 'tags'}
+            onClick={() => handleTabChange('tags')}
             activeClass={themeStyles.tabActive}
             inactiveClass={themeStyles.tabInactive}
             highlightClass={themeStyles.tabHighlight}
