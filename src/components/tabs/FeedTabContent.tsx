@@ -148,7 +148,9 @@ export function FeedTabContent({
           </div>
         </div>
       ) : feedItems.length === 0 ? (
-        <div className="text-center py-8 opacity-75">
+        <div className={`text-center py-8 opacity-75 ${
+          theme === 'green' ? 'text-green-400' : 'text-[#828282]'
+        }`}>
           {loading ? "Loading feed..." : "No items found for the selected filters"}
         </div>
       ) : (
@@ -164,14 +166,14 @@ export function FeedTabContent({
                 >
                   {item.by}
                 </a>
-                <span className="opacity-75">·</span>
+                <span className={`${theme === 'green' ? 'opacity-75' : 'text-[#828282]'}`}>·</span>
                 <a
                   href={`/item/${item.id}`}
                   onClick={(e) => {
                     e.preventDefault();
                     navigate(item.type === 'comment' ? `/item/${item.parent}/comment/${item.id}` : `/item/${item.id}`);
                   }}
-                  className="opacity-75 hover:opacity-100"
+                  className={`${theme === 'green' ? 'opacity-75 hover:opacity-100' : 'text-[#828282] hover:text-[#828282]/80'}`}
                 >
                   {formatTimeAgo(item.time)}
                 </a>
@@ -215,12 +217,16 @@ function CommentContent({ item, theme, navigate }: { item: FeedItem; theme: stri
   return (
     <div>
       <div 
-        className="prose prose-sm max-w-none break-words
+        className={`prose prose-sm max-w-none break-words
           [&>*]:max-w-full [&>*]:break-words
           [&_a]:inline-block [&_a]:max-w-full [&_a]:overflow-hidden [&_a]:text-ellipsis
           [&_p]:max-w-full [&_p]:break-words
           [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:whitespace-pre-wrap
-          [&_code]:max-w-full [&_code]:break-words"
+          [&_code]:max-w-full [&_code]:break-words ${
+            theme === 'green' 
+              ? 'text-green-400' 
+              : 'text-[#828282]'
+          }`}
         dangerouslySetInnerHTML={{ __html: item.text || '' }}
       />
       <div className="text-sm mt-2">
@@ -228,7 +234,11 @@ function CommentContent({ item, theme, navigate }: { item: FeedItem; theme: stri
         <a
           href={`/item/${item.parent}`}
           onClick={handleNavigate}
-          className="hover:opacity-75 break-words"
+          className={`hover:opacity-75 break-words ${
+            theme === 'green'
+              ? 'text-green-400'
+              : 'text-[#828282]'
+          }`}
         >
           {item.title}
         </a>
@@ -256,7 +266,11 @@ function StoryContent({ item, theme, navigate }: { item: FeedItem; theme: string
       >
         <a
           href={item.url || `/item/${item.id}`}
-          className="hover:opacity-75 break-all inline-block max-w-full"
+          className={`hover:opacity-75 break-all inline-block max-w-full ${
+            theme === 'green'
+              ? 'text-green-400'
+              : 'text-[#828282]'
+          }`}
           target={item.url ? "_blank" : undefined}
           rel={item.url ? "noopener noreferrer" : undefined}
           onClick={handleClick}

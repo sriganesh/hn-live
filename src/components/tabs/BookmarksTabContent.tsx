@@ -79,13 +79,13 @@ export function BookmarksTabContent({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className={`${themeStyles.text}`}>
+        <div className={`${theme === 'green' ? themeStyles.text : 'text-[#828282]'}`}>
           {bookmarks.length} bookmarked item{bookmarks.length !== 1 ? 's' : ''}
         </div>
         <BookmarkManager theme={theme} />
       </div>
 
-      <div className={`text-sm ${themeStyles.text}`}>
+      <div className={`text-sm ${theme === 'green' ? themeStyles.text : 'text-[#828282]'}`}>
         Note: Bookmarks are stored locally. Use [EXPORT] to save them, or create an HN Live account for automatic cloud sync.
       </div>
 
@@ -96,11 +96,11 @@ export function BookmarksTabContent({
       )}
 
       {loading && bookmarks.length === 0 ? (
-        <div className="text-center py-8 opacity-75">
+        <div className={`text-center py-8 opacity-75 ${theme === 'green' ? '' : 'text-[#828282]'}`}>
           Loading bookmarks...
         </div>
       ) : bookmarks.length === 0 ? (
-        <div className="text-center py-8 opacity-75">
+        <div className={`text-center py-8 opacity-75 ${theme === 'green' ? '' : 'text-[#828282]'}`}>
           <div>No bookmarked items yet.</div>
           <div className="mt-2 text-sm">
             Bookmarks are private to you and stored locally in your browser.
@@ -172,7 +172,7 @@ function StoryBookmark({ item, theme, themeStyles, navigate, onDelete }: {
           e.preventDefault();
           handleStoryClick();
         }}
-        className={themeStyles.link}
+        className={`${theme === 'green' ? themeStyles.link : 'text-[#828282] hover:text-[#828282]/80'}`}
       >
         {item.title}
       </a> <button
@@ -221,13 +221,13 @@ function CommentBookmark({ item, theme, themeStyles, navigate, onDelete }: {
       <span className="opacity-75">{formatTimeAgo(item.time)}</span> | <a
         href={`/item/${item.storyId}/comment/${item.id}`}
         onClick={handleCommentClick}
-        className={themeStyles.link}
+        className={`${theme === 'green' ? themeStyles.link : 'text-[#828282] hover:text-[#828282]/80'}`}
       >
         {item.text}
       </a> | <span className="opacity-75">re:</span> <a
         href={`/item/${item.storyId}`}
         onClick={handleStoryLinkClick}
-        className={themeStyles.link}
+        className={`${theme === 'green' ? themeStyles.link : 'text-[#828282] hover:text-[#828282]/80'}`}
       >
         {item.story?.title}
       </a> <button

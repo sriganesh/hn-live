@@ -38,13 +38,13 @@ export function BookmarkManager({ theme }: BookmarkManagerProps) {
         return {
           text: 'text-[#111]',
           accent: 'text-[#111]',
-          buttonText: 'opacity-75 hover:opacity-100 text-[#111]'
+          buttonText: 'opacity-75 hover:opacity-100 text-[#828282]'
         };
       case 'dog':
         return {
           text: 'text-[#c9d1d9]',
           accent: 'text-[#c9d1d9]',
-          buttonText: 'opacity-75 hover:opacity-100 text-[#c9d1d9] hover:text-white'
+          buttonText: 'opacity-75 hover:opacity-100 text-[#828282] hover:text-[#828282]/80'
         };
       default:
         return {

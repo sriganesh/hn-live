@@ -68,7 +68,7 @@ export function ProfileTabContent({
   }
 
   if (loading) {
-    return <div className="text-center py-8">Loading comments...</div>;
+    return <div className={`text-center py-8 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>Loading comments...</div>;
   }
 
   if (error) {
@@ -109,7 +109,7 @@ export function ProfileTabContent({
                 onUpdateHnUsername(null);
                 onShowSettings();
               }}
-              className="text-sm opacity-75 hover:opacity-100"
+              className={`text-sm opacity-75 hover:opacity-100 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}
             >
               [disconnect]
             </button>
@@ -120,7 +120,7 @@ export function ProfileTabContent({
       {/* Comments Section */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold inline-block">
+          <h2 className={`text-lg font-semibold inline-block ${theme === 'green' ? '' : 'text-[#828282]'}`}>
             Recent Comments and Replies
           </h2>
           <span className="text-xs opacity-75 ml-2">(Beta)</span>
@@ -139,7 +139,7 @@ export function ProfileTabContent({
 
       {/* Comments List */}
       {commentGroups.length === 0 ? (
-        <div className="text-center py-8 opacity-75">
+        <div className={`text-center py-8 opacity-75 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
           No replies found for your recent comments
         </div>
       ) : (
@@ -189,7 +189,9 @@ export function ProfileTabContent({
                         </a>
                       </div>
                       <div 
-                        className="prose prose-sm max-w-none break-words"
+                        className={`prose prose-sm max-w-none break-words ${
+                          theme === 'green' ? '' : 'text-[#828282]'
+                        }`}
                         dangerouslySetInnerHTML={{ __html: reply.text }}
                       />
                     </div>
@@ -205,7 +207,9 @@ export function ProfileTabContent({
               {/* Original Comment - Now shown last */}
               <div className="bg-current/5 p-4 rounded">
                 <div 
-                  className="prose prose-sm max-w-none mb-2 break-words"
+                  className={`prose prose-sm max-w-none mb-2 break-words ${
+                    theme === 'green' ? '' : 'text-[#828282]'
+                  }`}
                   dangerouslySetInnerHTML={{ __html: group.originalComment.comment_text }}
                 />
                 <div className={`text-xs ${

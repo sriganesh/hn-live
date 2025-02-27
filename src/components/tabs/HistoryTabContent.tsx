@@ -36,7 +36,7 @@ export function HistoryTabContent({
   };
 
   if (loading) {
-    return <div className="text-center py-8 opacity-75">Loading history...</div>;
+    return <div className={`text-center py-8 opacity-75 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>Loading history...</div>;
   }
 
   if (error) {
@@ -46,20 +46,20 @@ export function HistoryTabContent({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="opacity-75">
+        <div className={`opacity-75 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
           {history.length} {history.length === 1 ? 'item' : 'items'} in history
         </div>
         {history.length > 0 && (
           <div className="flex items-center gap-4">
             <button
               onClick={exportHistory}
-              className="opacity-75 hover:opacity-100"
+              className={`opacity-75 hover:opacity-100 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}
             >
               [EXPORT]
             </button>
             <button
               onClick={clearHistory}
-              className="opacity-75 hover:opacity-100"
+              className={`opacity-75 hover:opacity-100 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}
             >
               [CLEAR ALL]
             </button>
@@ -68,7 +68,7 @@ export function HistoryTabContent({
       </div>
 
       {history.length === 0 ? (
-        <div className="text-center py-8 opacity-75">
+        <div className={`text-center py-8 opacity-75 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
           <div>No browsing history yet.</div>
           <div className="mt-2 text-sm">
             Stories you view will appear here.
@@ -103,7 +103,7 @@ export function HistoryTabContent({
                       {entry.title || `Story #${entry.id}`}
                     </span>
                   </div>
-                  <div className="text-sm opacity-75 flex items-center gap-2">
+                  <div className="text-sm flex items-center gap-2">
                     {entry.by && (
                       <a
                         href={`#user-${entry.by}`}
@@ -113,13 +113,13 @@ export function HistoryTabContent({
                         {entry.by}
                       </a>
                     )}
-                    <span>•</span>
-                    <span>{formatDate(entry.timestamp)}</span>
+                    <span className={`${theme === 'green' ? 'opacity-75' : 'text-[#828282]'}`}>•</span>
+                    <span className={`${theme === 'green' ? 'opacity-75' : 'text-[#828282]'}`}>{formatDate(entry.timestamp)}</span>
                   </div>
                 </div>
                 <button
                   onClick={() => removeEntry(entry.id)}
-                  className="opacity-50 hover:opacity-100"
+                  className={`${theme === 'green' ? 'opacity-50 hover:opacity-100' : 'text-[#828282] opacity-50 hover:opacity-100'}`}
                 >
                   [remove]
                 </button>

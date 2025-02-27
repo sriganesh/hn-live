@@ -10,7 +10,7 @@ export function TagsTabContent({ theme, onUserClick }: TagsTabContentProps) {
   const { userTags, loading, error, removeTag, exportTags } = useTags();
 
   if (loading) {
-    return <div className="text-center py-8 opacity-75">Loading tags...</div>;
+    return <div className={`text-center py-8 opacity-75 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>Loading tags...</div>;
   }
 
   if (error) {
@@ -20,25 +20,25 @@ export function TagsTabContent({ theme, onUserClick }: TagsTabContentProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="opacity-75">
+        <div className={`opacity-75 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
           {userTags.length} tagged user{userTags.length !== 1 ? 's' : ''}
         </div>
         {userTags.length > 0 && (
           <button
             onClick={exportTags}
-            className="opacity-75 hover:opacity-100"
+            className={`opacity-75 hover:opacity-100 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}
           >
             [EXPORT]
           </button>
         )}
       </div>
 
-      <div className="text-sm opacity-75">
+      <div className={`text-sm opacity-75 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
         Note: Tags are stored locally. Use [EXPORT] to save them.
       </div>
 
       {userTags.length === 0 ? (
-        <div className="text-center py-8 opacity-75">
+        <div className={`text-center py-8 opacity-75 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
           <div>No tagged users yet. Click on usernames to add tags.</div>
           <div className="mt-2 text-sm">
             Tagging users helps you organize and remember users.
@@ -62,10 +62,11 @@ export function TagsTabContent({ theme, onUserClick }: TagsTabContentProps) {
                 {tag.tags.map(tagName => (
                   <span
                     key={tagName}
-                    className="
+                    className={`
                       inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm
                       bg-[#828282]/10 border border-[#828282]/30
-                    "
+                      ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}
+                    `}
                   >
                     {tagName}
                     <button

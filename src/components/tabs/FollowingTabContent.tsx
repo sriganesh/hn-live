@@ -34,19 +34,19 @@ export function FollowingTabContent({
         };
       case 'og':
         return {
-          text: 'text-[#111]',
+          text: 'text-[#828282]',
           accent: 'text-[#111]',
           link: 'text-[#111] hover:text-[#111]/80 font-medium',
-          buttonText: 'opacity-75 hover:opacity-100 text-[#111]',
+          buttonText: 'opacity-75 hover:opacity-100 text-[#828282]',
           itemBg: 'bg-[#f6f6ef]',
           error: 'text-red-500'
         };
       case 'dog':
         return {
-          text: 'text-[#c9d1d9]',
+          text: 'text-[#828282]',
           accent: 'text-[#c9d1d9]',
           link: 'text-[#c9d1d9] hover:text-white font-medium',
-          buttonText: 'opacity-75 hover:opacity-100 text-[#c9d1d9] hover:text-white',
+          buttonText: 'opacity-75 hover:opacity-100 text-[#828282] hover:text-[#828282]/80',
           itemBg: 'bg-[#828282]/5',
           error: 'text-red-500'
         };
@@ -101,7 +101,7 @@ export function FollowingTabContent({
       </div>
 
       {following.length === 0 && (
-        <div className="text-center py-8 opacity-75">
+        <div className={`text-center py-8 opacity-75 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
           <div>No followed users yet. Click on usernames to follow users.</div>
           <div className="mt-2 text-sm">
             Following users lets you see their stories and comments in your personalized feed.

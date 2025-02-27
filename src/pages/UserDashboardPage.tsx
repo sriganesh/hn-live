@@ -8,12 +8,14 @@ import { ProfileTabContent } from '../components/tabs/ProfileTabContent';
 import { FollowingTabContent } from '../components/tabs/FollowingTabContent';
 import { TagsTabContent } from '../components/tabs/TagsTabContent';
 import SettingsModal from '../components/SettingsModal';
+import { useRunningStatus } from '../contexts/RunningStatusContext';
 
 type TabType = 'feed' | 'bookmarks' | 'history' | 'profile' | 'following' | 'tags';
 
 export function UserDashboardPage() {
   const navigate = useNavigate();
   const { settings, updateSetting } = useSettings();
+  const { isRunning } = useRunningStatus();
   const [activeTab, setActiveTab] = useState<TabType>('feed');
   const [showSettings, setShowSettings] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -384,10 +386,12 @@ export function UserDashboardPage() {
     <div className={`min-h-screen ${themeStyles.background} ${themeStyles.text}`}>
       <div className="max-w-4xl mx-auto p-4">
         <div className="mb-6 flex justify-between items-center">
-          <h1 className={`text-2xl font-bold ${themeStyles.accent}`}>
-            HN Live Dashboard
+          <h1 className={`text-2xl font-bold ${themeStyles.accent} flex items-center`}>
+            HN
+            <span className={`mx-1 animate-pulse ${!isRunning ? 'text-gray-500' : ''}`}>•</span>
+            Live Dashboard
             {unreadCount > 0 && (
-              <span className={`ml-2 px-2 py-0.5 text-sm rounded-full ${
+              <span className={`ml-2 w-6 h-6 text-sm rounded-full inline-flex items-center justify-center ${
                 settings.theme === 'green' 
                   ? 'bg-green-500 text-black' 
                   : 'bg-[#ff6600] text-white'

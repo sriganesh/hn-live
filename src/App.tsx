@@ -5,6 +5,7 @@ import { register as registerServiceWorker } from './registerServiceWorker';
 import { useEffect } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { UserDashboardPage } from './pages/UserDashboardPage';
+import { RunningStatusProvider } from './contexts/RunningStatusContext';
 import { Link } from 'react-router-dom';
 
 // Add type definitions at the top
@@ -128,27 +129,29 @@ export function App() {
     <HelmetProvider>
       <Router>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<HNLiveTerminal />}>
-              <Route path="front" element={null} />
-              <Route path="trending" element={null} />
-              <Route path="frontpage-history" element={null} />
-              <Route path="item/:itemId" element={null} />
-              <Route path="item/:itemId/comment/:commentId" element={null} />
-              <Route path="show" element={null} />
-              <Route path="ask" element={null} />
-              <Route path="jobs" element={null} />
-              <Route path="best" element={null} />
-              <Route path="user/:userId" element={null} />
-              <Route path="replay/:itemId" element={null} />
-              <Route path="links/:itemId" element={null} />
-              <Route path="terms" element={null} />
-              <Route path="privacy" element={null} />
-              <Route path="best-comments" element={null} />
-              <Route path="dashboard" element={null} />
-            </Route>
-            <Route path="/new-dashboard" element={<UserDashboardPage />} />
-          </Routes>
+          <RunningStatusProvider>
+            <Routes>
+              <Route path="/" element={<HNLiveTerminal />}>
+                <Route path="front" element={null} />
+                <Route path="trending" element={null} />
+                <Route path="frontpage-history" element={null} />
+                <Route path="item/:itemId" element={null} />
+                <Route path="item/:itemId/comment/:commentId" element={null} />
+                <Route path="show" element={null} />
+                <Route path="ask" element={null} />
+                <Route path="jobs" element={null} />
+                <Route path="best" element={null} />
+                <Route path="user/:userId" element={null} />
+                <Route path="replay/:itemId" element={null} />
+                <Route path="links/:itemId" element={null} />
+                <Route path="terms" element={null} />
+                <Route path="privacy" element={null} />
+                <Route path="best-comments" element={null} />
+                <Route path="dashboard" element={null} />
+              </Route>
+              <Route path="/new-dashboard" element={<UserDashboardPage />} />
+            </Routes>
+          </RunningStatusProvider>
         </AuthProvider>
       </Router>
     </HelmetProvider>

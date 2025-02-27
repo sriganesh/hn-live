@@ -28,6 +28,7 @@ import HistoricalFrontPage from '../components/HistoricalFrontPage';
 import { ActivePage } from '../components/ActivePage';
 import { UserDashboardPage } from '../components/UserDashboardPage';
 import { addToHistory } from '../services/history';
+import { useRunningStatus } from '../contexts/RunningStatusContext';
 
 interface HNItem {
   id: number;
@@ -176,7 +177,7 @@ export default function HNLiveTerminal() {
   
   const [items, setItems] = useState<HNItem[]>([]);
   const [options, setOptions] = useState(getStoredSettings());
-  const [isRunning, setIsRunning] = useState(true);
+  const { isRunning, setIsRunning } = useRunningStatus();
   
   const [filters, setFilters] = useState<SearchFilters>({
     text: ''
@@ -325,28 +326,26 @@ export default function HNLiveTerminal() {
 
   // Start/stop feed
   const toggleFeed = () => {
-    setIsRunning(prev => {
-      if (prev) {
-        // If we're stopping, just stop processing and network calls
-        isProcessingRef.current = false;
-        
-        // Abort any ongoing fetches
-        abortControllerRef.current?.abort();
-        
-        // Clear the polling interval
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = undefined;
-        }
-
-        // Clear any pending timeout
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-          timeoutRef.current = undefined;
-        }
+    if (isRunning) {
+      // If we're stopping, just stop processing and network calls
+      isProcessingRef.current = false;
+      
+      // Abort any ongoing fetches
+      abortControllerRef.current?.abort();
+      
+      // Clear the polling interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = undefined;
       }
-      return !prev;
-    });
+
+      // Clear any pending timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = undefined;
+      }
+    }
+    setIsRunning(!isRunning);
   };
 
   // Clear screen
