@@ -9,6 +9,8 @@ import { FollowingTabContent } from '../components/tabs/FollowingTabContent';
 import { TagsTabContent } from '../components/tabs/TagsTabContent';
 import SettingsModal from '../components/SettingsModal';
 import { useRunningStatus } from '../contexts/RunningStatusContext';
+import { MobileBottomBar } from '../components/MobileBottomBar';
+import SearchModal from '../components/SearchModal';
 
 type TabType = 'feed' | 'bookmarks' | 'history' | 'profile' | 'following' | 'tags';
 
@@ -18,6 +20,7 @@ export function UserDashboardPage() {
   const { isRunning } = useRunningStatus();
   const [activeTab, setActiveTab] = useState<TabType>('feed');
   const [showSettings, setShowSettings] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [colorizeUsernames, setColorizeUsernames] = useState(() => {
     const saved = localStorage.getItem('hn-live-colorize-usernames');
@@ -403,7 +406,7 @@ export function UserDashboardPage() {
           <div className="flex items-center space-x-4">
             <button 
               onClick={() => setShowSettings(true)}
-              className={themeStyles.tabInactive}
+              className={`hidden sm:inline-block ${themeStyles.tabInactive}`}
             >
               [SETTINGS]
             </button>
@@ -495,6 +498,26 @@ export function UserDashboardPage() {
         onColorizeUsernamesChange={setColorizeUsernames}
         hnUsername={getCurrentUsername()}
         onUpdateHnUsername={handleUpdateHnUsername}
+      />
+
+      {/* Search Modal */}
+      {showSearch && (
+        <SearchModal
+          isOpen={showSearch}
+          onClose={() => setShowSearch(false)}
+          theme={settings.theme}
+        />
+      )}
+
+      {/* Mobile Bottom Bar */}
+      <MobileBottomBar 
+        theme={settings.theme}
+        onShowSearch={() => setShowSearch(true)}
+        onCloseSearch={() => setShowSearch(false)}
+        onShowSettings={() => setShowSettings(true)}
+        isRunning={isRunning}
+        username={getCurrentUsername()}
+        unreadCount={unreadCount}
       />
     </div>
   );
