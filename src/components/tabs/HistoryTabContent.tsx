@@ -36,7 +36,7 @@ export function HistoryTabContent({
   };
 
   if (loading) {
-    return <div className={`text-center py-8 opacity-75 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>Loading history...</div>;
+    return <div className={`text-center py-8 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>Loading history...</div>;
   }
 
   if (error) {
@@ -49,29 +49,33 @@ export function HistoryTabContent({
         <div className={`opacity-75 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
           {history.length} {history.length === 1 ? 'item' : 'items'} in history
         </div>
-        {history.length > 0 && (
-          <div className="flex items-center gap-4">
-            <button
-              onClick={exportHistory}
-              className={`opacity-75 hover:opacity-100 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}
-            >
-              [EXPORT]
-            </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={exportHistory}
+            className={`opacity-75 hover:opacity-100 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}
+          >
+            [EXPORT]
+          </button>
+          {history.length > 0 && (
             <button
               onClick={clearHistory}
               className={`opacity-75 hover:opacity-100 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}
             >
               [CLEAR ALL]
             </button>
-          </div>
-        )}
+          )}
+        </div>
+      </div>
+
+      <div className={`text-sm ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
+        Note: History is stored locally. Use [EXPORT] to save your browsing history.
       </div>
 
       {history.length === 0 ? (
-        <div className={`text-center py-8 opacity-75 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
-          <div>No browsing history yet.</div>
-          <div className="mt-2 text-sm">
-            Stories you view will appear here.
+        <div className={`text-center py-8 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
+          <div>No browsing history yet</div>
+          <div className="mt-2 text-sm opacity-75">
+            Stories you view will appear here
           </div>
         </div>
       ) : (

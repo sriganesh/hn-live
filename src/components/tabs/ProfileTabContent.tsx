@@ -51,7 +51,7 @@ export function ProfileTabContent({
   if (!hnUsername) {
     return (
       <div className="text-center py-8">
-        <div className="mb-4">
+        <div className={`mb-4 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
           Connect your HN username to track replies locally in your browser
           <span className="block mt-1 text-sm opacity-75">
             (Beta feature - notifications may be delayed or intermittent)

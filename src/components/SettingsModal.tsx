@@ -349,7 +349,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     const settingsToExport = {
       theme: localOptions.theme,
       hnUsername: hnUsername,
-      showReadComments: localOptions.showCommentParents,
+      showCommentParents: localOptions.showCommentParents,
       fontSize: localOptions.fontSize,
       font: localOptions.font,
       directLinks: localOptions.directLinks,
@@ -408,7 +408,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         if (importedSettings.autoscroll !== undefined) newOptions.autoscroll = importedSettings.autoscroll;
         if (importedSettings.classicLayout !== undefined) newOptions.classicLayout = importedSettings.classicLayout;
         if (importedSettings.useAlgoliaApi !== undefined) newOptions.useAlgoliaApi = importedSettings.useAlgoliaApi;
-        if (importedSettings.showReadComments !== undefined) newOptions.showCommentParents = importedSettings.showReadComments;
+        if (importedSettings.showCommentParents !== undefined) newOptions.showCommentParents = importedSettings.showCommentParents;
         
         // Update options
         setLocalOptions(newOptions);

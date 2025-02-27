@@ -96,14 +96,14 @@ export function BookmarksTabContent({
       )}
 
       {loading && bookmarks.length === 0 ? (
-        <div className={`text-center py-8 opacity-75 ${theme === 'green' ? '' : 'text-[#828282]'}`}>
+        <div className={`text-center py-8 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
           Loading bookmarks...
         </div>
       ) : bookmarks.length === 0 ? (
-        <div className={`text-center py-8 opacity-75 ${theme === 'green' ? '' : 'text-[#828282]'}`}>
-          <div>No bookmarked items yet.</div>
-          <div className="mt-2 text-sm">
-            Bookmarks are private to you and stored locally in your browser.
+        <div className={`text-center py-8 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
+          <div>No bookmarked items yet</div>
+          <div className="mt-2 text-sm opacity-75">
+            Bookmarks are private to you and stored locally in your browser
           </div>
         </div>
       ) : (

@@ -131,9 +131,9 @@ export function FeedTabContent({
       )}
 
       {!hasFollowing ? (
-        <div className="text-center py-8 opacity-75">
+        <div className={`text-center py-8 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
           <div>No followed users yet</div>
-          <div className="mt-2 text-sm">
+          <div className="mt-2 text-sm opacity-75">
             Click on usernames to follow users and see their stories and comments here
           </div>
           <div className="mt-4">
@@ -148,7 +148,7 @@ export function FeedTabContent({
           </div>
         </div>
       ) : feedItems.length === 0 ? (
-        <div className={`text-center py-8 opacity-75 ${
+        <div className={`text-center py-8 ${
           theme === 'green' ? 'text-green-400' : 'text-[#828282]'
         }`}>
           {loading ? "Loading feed..." : "No items found for the selected filters"}
@@ -191,12 +191,12 @@ export function FeedTabContent({
           {/* Loading Indicator & Infinite Scroll */}
           <div ref={loadingRef} className="py-4 text-center">
             {loading ? (
-              <div className="opacity-75">Loading more...</div>
+              <div className={`${theme === 'green' ? 'text-green-400' : 'text-[#828282]'} opacity-75`}>Loading more...</div>
             ) : !hasMore && filters.timeRange !== 'all' ? (
-              <div className="opacity-75 space-y-2">
-                <div>No more items in this time range.</div>
-                <div className="text-sm">
-                  Try adjusting the time filter to see more content.
+              <div className={`${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
+                <div>No more items in this time range</div>
+                <div className="mt-2 text-sm opacity-75">
+                  Try adjusting the time filter to see more content
                 </div>
               </div>
             ) : null}

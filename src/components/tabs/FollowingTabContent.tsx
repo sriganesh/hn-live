@@ -101,10 +101,10 @@ export function FollowingTabContent({
       </div>
 
       {following.length === 0 && (
-        <div className={`text-center py-8 opacity-75 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
-          <div>No followed users yet. Click on usernames to follow users.</div>
-          <div className="mt-2 text-sm">
-            Following users lets you see their stories and comments in your personalized feed.
+        <div className={`text-center py-8 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
+          <div>No followed users yet</div>
+          <div className="mt-2 text-sm opacity-75">
+            Click on usernames to follow users and see their stories and comments here
           </div>
         </div>
       )}

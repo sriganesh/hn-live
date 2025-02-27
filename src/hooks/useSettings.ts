@@ -4,7 +4,7 @@ import { STORAGE_KEYS } from '../config/constants';
 export interface UserSettings {
   theme: 'green' | 'og' | 'dog';
   hnUsername: string | null;
-  showReadComments: boolean;
+  showCommentParents: boolean;
 }
 
 // Get theme from localStorage or use default
@@ -20,7 +20,7 @@ const getThemeFromStorage = (): 'green' | 'og' | 'dog' => {
 const DEFAULT_SETTINGS: UserSettings = {
   theme: getThemeFromStorage(),
   hnUsername: null,
-  showReadComments: false
+  showCommentParents: false
 };
 
 export function useSettings() {

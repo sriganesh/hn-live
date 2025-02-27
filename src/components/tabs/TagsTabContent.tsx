@@ -38,10 +38,10 @@ export function TagsTabContent({ theme, onUserClick }: TagsTabContentProps) {
       </div>
 
       {userTags.length === 0 ? (
-        <div className={`text-center py-8 opacity-75 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
-          <div>No tagged users yet. Click on usernames to add tags.</div>
-          <div className="mt-2 text-sm">
-            Tagging users helps you organize and remember users.
+        <div className={`text-center py-8 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}>
+          <div>No tagged users yet</div>
+          <div className="mt-2 text-sm opacity-75">
+            Click on usernames to add tags and organize users
           </div>
         </div>
       ) : (
