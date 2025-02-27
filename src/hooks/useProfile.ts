@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DashboardComment, CommentGroup, NewReply, MessageHandlerData } from '../types/dashboardTypes';
+import { STORAGE_KEYS } from '../config/constants';
 
 // Helper function for localStorage operations
 const getLocalStorageData = <T,>(key: string, defaultValue: T): T => {
@@ -119,7 +120,7 @@ export function useProfile(username: string | undefined) {
         .map((hit: AlgoliaHit) => hit.objectID);
 
       // Get tracker data to find ALL replies
-      const trackerData = getLocalStorageData<TrackerData>('hn-comment-tracker', { 
+      const trackerData = getLocalStorageData<TrackerData>(STORAGE_KEYS.COMMENT_TRACKER, { 
         lastChecked: 0,
         comments: [],
         lastSeenReplies: {}
@@ -145,7 +146,7 @@ export function useProfile(username: string | undefined) {
       }
 
       // Get the new replies data to check unread status
-      const newReplies = JSON.parse(localStorage.getItem('hn-new-replies') || '{}') as Record<string, NewReply[]>;
+      const newReplies = JSON.parse(localStorage.getItem(STORAGE_KEYS.NEW_REPLIES) || '{}') as Record<string, NewReply[]>;
 
       // Create a map of parent IDs to replies
       const replyMap: Record<string, AlgoliaReply[]> = repliesData.hits.reduce((map, reply) => {
@@ -215,8 +216,8 @@ export function useProfile(username: string | undefined) {
 
   // Mark all replies as read
   const markAllAsRead = useCallback(() => {
-    localStorage.setItem('hn-new-replies', '{}');
-    localStorage.setItem('hn-unread-count', '0');
+    localStorage.setItem(STORAGE_KEYS.NEW_REPLIES, '{}');
+    localStorage.setItem(STORAGE_KEYS.UNREAD_COUNT, '0');
     setUnreadCount(0);
     window.dispatchEvent(new CustomEvent('unreadCountChange', {
       detail: { unreadCount: 0 }
@@ -225,7 +226,7 @@ export function useProfile(username: string | undefined) {
 
   // Mark a specific comment's replies as read
   const markAsRead = useCallback((commentId: string) => {
-    const newReplies = JSON.parse(localStorage.getItem('hn-new-replies') || '{}') as Record<string, NewReply[]>;
+    const newReplies = JSON.parse(localStorage.getItem(STORAGE_KEYS.NEW_REPLIES) || '{}') as Record<string, NewReply[]>;
     if (newReplies[commentId]) {
       // Mark all replies for this comment as seen
       newReplies[commentId] = newReplies[commentId].map(reply => ({
@@ -240,8 +241,8 @@ export function useProfile(username: string | undefined) {
         0);
       
       // Update localStorage and state
-      localStorage.setItem('hn-new-replies', JSON.stringify(newReplies));
-      localStorage.setItem('hn-unread-count', totalUnreadCount.toString());
+      localStorage.setItem(STORAGE_KEYS.NEW_REPLIES, JSON.stringify(newReplies));
+      localStorage.setItem(STORAGE_KEYS.UNREAD_COUNT, totalUnreadCount.toString());
       setUnreadCount(totalUnreadCount);
       
       // Dispatch custom event for other components
@@ -298,7 +299,7 @@ export function useProfile(username: string | undefined) {
           setTrackerData(newTrackerData);
 
           if (!isFirstLoad) {
-            const existingNewReplies = getLocalStorageData('hn-new-replies', {}) as Record<string, NewReply[]>;
+            const existingNewReplies = getLocalStorageData(STORAGE_KEYS.NEW_REPLIES, {}) as Record<string, NewReply[]>;
             const mergedNewReplies = { ...existingNewReplies };
             
             Object.entries(newReplies).forEach(([commentId, replies]) => {
@@ -318,14 +319,14 @@ export function useProfile(username: string | undefined) {
               ];
             });
 
-            localStorage.setItem('hn-new-replies', JSON.stringify(mergedNewReplies));
+            localStorage.setItem(STORAGE_KEYS.NEW_REPLIES, JSON.stringify(mergedNewReplies));
             
             const totalUnreadCount = Object.values(mergedNewReplies)
               .reduce((count, replies) => 
                 count + replies.filter((r: NewReply) => !r.seen).length, 
               0);
             
-            localStorage.setItem('hn-unread-count', totalUnreadCount.toString());
+            localStorage.setItem(STORAGE_KEYS.UNREAD_COUNT, totalUnreadCount.toString());
             setUnreadCount(totalUnreadCount);
           }
         }

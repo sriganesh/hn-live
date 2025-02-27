@@ -11,6 +11,19 @@ import SettingsModal from '../components/SettingsModal';
 import { useRunningStatus } from '../contexts/RunningStatusContext';
 import { MobileBottomBar } from '../components/MobileBottomBar';
 import SearchModal from '../components/SearchModal';
+import { STORAGE_KEYS } from '../config/constants';
+import {
+  getBooleanValue,
+  getStringValue,
+  getJSONValue,
+  getUsername,
+  setUsername,
+  getTheme,
+  setTheme,
+  getColorizeUsernames,
+  getFontSize,
+  getFont
+} from '../utils/localStorage';
 
 type TabType = 'feed' | 'bookmarks' | 'history' | 'profile' | 'following' | 'tags';
 
@@ -23,25 +36,25 @@ export function UserDashboardPage() {
   const [showSearch, setShowSearch] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [colorizeUsernames, setColorizeUsernames] = useState(() => {
-    const saved = localStorage.getItem('hn-live-colorize-usernames');
+    const saved = localStorage.getItem(STORAGE_KEYS.COLORIZE_USERNAMES);
     return saved ? JSON.parse(saved) : false;
   });
 
   // Load settings from localStorage
   const [localSettings, setLocalSettings] = useState(() => {
     return {
-      autoscroll: localStorage.getItem('hn-live-autoscroll') === 'true',
-      directLinks: localStorage.getItem('hn-live-direct-links') === 'true',
-      showCommentParents: localStorage.getItem('hn-live-show-comment-parents') !== 'false', // Default to true
-      classicLayout: localStorage.getItem('hn-live-classic-layout') === 'true',
-      useAlgoliaApi: localStorage.getItem('hn-live-use-algolia-api') !== 'false', // Default to true
+      autoscroll: getBooleanValue(STORAGE_KEYS.AUTOSCROLL, false),
+      directLinks: getBooleanValue(STORAGE_KEYS.DIRECT_LINKS, false),
+      showCommentParents: getBooleanValue(STORAGE_KEYS.SHOW_COMMENT_PARENTS, true),
+      classicLayout: getBooleanValue(STORAGE_KEYS.CLASSIC_LAYOUT, false),
+      useAlgoliaApi: getBooleanValue(STORAGE_KEYS.USE_ALGOLIA_API, true),
     };
   });
 
   // Load unread count from localStorage on mount
   useEffect(() => {
     try {
-      const count = parseInt(localStorage.getItem('hn-unread-count') || '0', 10);
+      const count = parseInt(getStringValue(STORAGE_KEYS.UNREAD_COUNT, '0'), 10);
       setUnreadCount(isNaN(count) ? 0 : count);
     } catch (error) {
       console.error('Error loading unread count:', error);
@@ -70,18 +83,14 @@ export function UserDashboardPage() {
   const handleUpdateHnUsername = (username: string | null) => {
     updateSetting('hnUsername', username);
     // Also update localStorage directly to ensure it's available to all components
-    if (username) {
-      localStorage.setItem('hn-username', username);
-    } else {
-      localStorage.removeItem('hn-username');
-    }
+    setUsername(username);
   };
 
   // Handle theme change
   const handleThemeChange = (theme: 'green' | 'og' | 'dog') => {
     updateSetting('theme', theme);
     // Update document element's data-theme attribute
-    document.documentElement.setAttribute('data-theme', theme);
+    setTheme(theme);
   };
 
   // Listen for theme changes in localStorage
@@ -175,8 +184,8 @@ export function UserDashboardPage() {
   // Apply font size and font family when component mounts
   useEffect(() => {
     // Get font size and font family from localStorage or use defaults
-    const fontSize = localStorage.getItem('hn-live-font-size') || 'base';
-    const fontFamily = localStorage.getItem('hn-live-font') || 'mono';
+    const fontSize = localStorage.getItem(STORAGE_KEYS.FONT_SIZE) || 'base';
+    const fontFamily = localStorage.getItem(STORAGE_KEYS.FONT) || 'mono';
     
     // Apply font size
     const fontSizeClasses = ['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl'];
@@ -194,11 +203,11 @@ export function UserDashboardPage() {
     // Also update local settings to ensure they're in sync with localStorage
     setLocalSettings(prevSettings => ({
       ...prevSettings,
-      autoscroll: localStorage.getItem('hn-live-autoscroll') === 'true',
-      directLinks: localStorage.getItem('hn-live-direct-links') === 'true',
-      showCommentParents: localStorage.getItem('hn-live-show-comment-parents') !== 'false',
-      classicLayout: localStorage.getItem('hn-live-classic-layout') === 'true',
-      useAlgoliaApi: localStorage.getItem('hn-live-use-algolia-api') !== 'false'
+      autoscroll: localStorage.getItem(STORAGE_KEYS.AUTOSCROLL) === 'true',
+      directLinks: localStorage.getItem(STORAGE_KEYS.DIRECT_LINKS) === 'true',
+      showCommentParents: localStorage.getItem(STORAGE_KEYS.SHOW_COMMENT_PARENTS) !== 'false',
+      classicLayout: localStorage.getItem(STORAGE_KEYS.CLASSIC_LAYOUT) === 'true',
+      useAlgoliaApi: localStorage.getItem(STORAGE_KEYS.USE_ALGOLIA_API) !== 'false'
     }));
     
     return () => {
@@ -214,25 +223,17 @@ export function UserDashboardPage() {
 
   // Get the current username from localStorage
   const getCurrentUsername = () => {
-    return localStorage.getItem('hn-username') || settings.hnUsername;
+    return getUsername() || settings.hnUsername;
   };
 
   // Get the current font size from localStorage
   const getCurrentFontSize = (): 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' => {
-    const fontSize = localStorage.getItem('hn-live-font-size');
-    if (fontSize && ['xs', 'sm', 'base', 'lg', 'xl', '2xl'].includes(fontSize)) {
-      return fontSize as 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl';
-    }
-    return 'base';
+    return getFontSize();
   };
 
   // Get the current font family from localStorage
   const getCurrentFontFamily = (): 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system' => {
-    const fontFamily = localStorage.getItem('hn-live-font');
-    if (fontFamily && ['mono', 'jetbrains', 'fira', 'source', 'sans', 'serif', 'system'].includes(fontFamily)) {
-      return fontFamily as 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
-    }
-    return 'mono';
+    return getFont();
   };
 
   // Render tab content based on active tab
@@ -299,7 +300,7 @@ export function UserDashboardPage() {
       document.body.classList.add(`text-${newOptions.fontSize}`);
       
       // Save to localStorage
-      localStorage.setItem('hn-live-font-size', newOptions.fontSize);
+      localStorage.setItem(STORAGE_KEYS.FONT_SIZE, newOptions.fontSize);
     }
     
     // Apply font family changes directly to the document
@@ -316,7 +317,7 @@ export function UserDashboardPage() {
       document.body.classList.add(`font-${newOptions.font}`);
       
       // Save to localStorage
-      localStorage.setItem('hn-live-font', newOptions.font);
+      localStorage.setItem(STORAGE_KEYS.FONT, newOptions.font);
     }
   };
 

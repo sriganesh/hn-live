@@ -1,47 +1,53 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { STORAGE_KEYS } from '../config/constants';
+import { getBooleanValue, setBooleanValue } from '../utils/localStorage';
 
 interface RunningStatusContextType {
   isRunning: boolean;
   setIsRunning: (isRunning: boolean) => void;
+  toggleRunning: () => void;
 }
 
 const RunningStatusContext = createContext<RunningStatusContextType | undefined>(undefined);
 
 export const useRunningStatus = () => {
   const context = useContext(RunningStatusContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useRunningStatus must be used within a RunningStatusProvider');
   }
   return context;
 };
 
-interface RunningStatusProviderProps {
-  children: ReactNode;
-}
-
-export const RunningStatusProvider: React.FC<RunningStatusProviderProps> = ({ children }) => {
-  const [isRunning, setIsRunning] = useState<boolean>(() => {
+export const RunningStatusProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Initialize isRunning from localStorage or default to true
+  const [isRunning, setIsRunningState] = useState<boolean>(() => {
     try {
-      // Try to get the running status from localStorage
-      const storedStatus = localStorage.getItem('hn-live-running');
-      return storedStatus === null ? true : storedStatus === 'true';
+      return getBooleanValue(STORAGE_KEYS.RUNNING, true);
     } catch (e) {
       console.warn('Could not access localStorage for running status');
-      return true; // Default to running
+      return true;
     }
   });
 
-  // Save running status to localStorage when it changes
+  // Update localStorage when isRunning changes
   useEffect(() => {
     try {
-      localStorage.setItem('hn-live-running', isRunning.toString());
+      setBooleanValue(STORAGE_KEYS.RUNNING, isRunning);
     } catch (e) {
       console.warn('Could not save running status to localStorage');
     }
   }, [isRunning]);
 
+  const setIsRunning = (value: boolean) => {
+    setIsRunningState(value);
+  };
+
+  const toggleRunning = () => {
+    setIsRunningState(prev => !prev);
+  };
+
   return (
-    <RunningStatusContext.Provider value={{ isRunning, setIsRunning }}>
+    <RunningStatusContext.Provider value={{ isRunning, setIsRunning, toggleRunning }}>
       {children}
     </RunningStatusContext.Provider>
   );

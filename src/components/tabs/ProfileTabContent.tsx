@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { useProfile } from '../../hooks/useProfile';
+import { STORAGE_KEYS } from '../../config/constants';
 
 interface ProfileTabContentProps {
   theme: 'green' | 'og' | 'dog';
@@ -102,10 +103,10 @@ export function ProfileTabContent({
           <div className="flex items-center gap-4">
             <button
               onClick={() => {
-                localStorage.removeItem('hn-username');
-                localStorage.removeItem('hn-new-replies');
-                localStorage.removeItem('hn-unread-count');
-                localStorage.removeItem('hn-comment-tracker');
+                localStorage.removeItem(STORAGE_KEYS.USERNAME);
+                localStorage.removeItem(STORAGE_KEYS.NEW_REPLIES);
+                localStorage.removeItem(STORAGE_KEYS.UNREAD_COUNT);
+                localStorage.removeItem(STORAGE_KEYS.COMMENT_TRACKER);
                 onUpdateHnUsername(null);
                 onShowSettings();
               }}

@@ -1,13 +1,12 @@
 import { UserTag } from '../types/UserTag';
-
-const TAGS_STORAGE_KEY = 'hn-user-tags';
+import { STORAGE_KEYS } from '../config/constants';
 
 /**
  * Get all user tags from local storage
  */
 export function getUserTags(): UserTag[] {
   try {
-    const tagsJson = localStorage.getItem(TAGS_STORAGE_KEY);
+    const tagsJson = localStorage.getItem(STORAGE_KEYS.USER_TAGS);
     return tagsJson ? JSON.parse(tagsJson) : [];
   } catch (error) {
     console.error('Error loading user tags:', error);
@@ -20,7 +19,7 @@ export function getUserTags(): UserTag[] {
  */
 export function saveUserTags(tags: UserTag[]): boolean {
   try {
-    localStorage.setItem(TAGS_STORAGE_KEY, JSON.stringify(tags));
+    localStorage.setItem(STORAGE_KEYS.USER_TAGS, JSON.stringify(tags));
     return true;
   } catch (error) {
     console.error('Error saving user tags:', error);

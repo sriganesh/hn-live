@@ -1,10 +1,11 @@
 import { FollowedUser } from '../hooks/useFollowing';
+import { STORAGE_KEYS } from '../config/constants';
 
 // Auth API base URL
 const AUTH_API_URL = 'https://auth.hn.live';
 
 // Get the auth token from localStorage
-const getToken = () => localStorage.getItem('hnlive_token');
+const getToken = () => localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 
 // Check if user is authenticated
 const isAuthenticated = () => !!getToken();
@@ -13,8 +14,8 @@ const isAuthenticated = () => !!getToken();
 export const getFollowedUsers = async (): Promise<FollowedUser[]> => {
   try {
     // Get local data only
-    const savedFollowing = localStorage.getItem('hn-following');
-    let followingData: FollowedUser[] = savedFollowing ? JSON.parse(savedFollowing) : [];
+    const savedFollowing = localStorage.getItem(STORAGE_KEYS.FOLLOWING);
+    const followingData: FollowedUser[] = savedFollowing ? JSON.parse(savedFollowing) : [];
     
     // Sort by followedAt, most recent first
     return followingData.sort((a, b) => 
@@ -30,7 +31,7 @@ export const getFollowedUsers = async (): Promise<FollowedUser[]> => {
 export const followUser = async (userId: string): Promise<void> => {
   try {
     // Get current following data
-    const savedFollowing = localStorage.getItem('hn-following');
+    const savedFollowing = localStorage.getItem(STORAGE_KEYS.FOLLOWING);
     const followingData: FollowedUser[] = savedFollowing ? JSON.parse(savedFollowing) : [];
     
     // Check if already following
@@ -45,7 +46,7 @@ export const followUser = async (userId: string): Promise<void> => {
     };
     
     followingData.push(newFollowing);
-    localStorage.setItem('hn-following', JSON.stringify(followingData));
+    localStorage.setItem(STORAGE_KEYS.FOLLOWING, JSON.stringify(followingData));
   } catch (error) {
     console.error('Error following user:', error);
     throw new Error('Failed to follow user');
@@ -56,11 +57,11 @@ export const followUser = async (userId: string): Promise<void> => {
 export const unfollowUser = async (userId: string): Promise<void> => {
   try {
     // Update local storage
-    const savedFollowing = localStorage.getItem('hn-following');
+    const savedFollowing = localStorage.getItem(STORAGE_KEYS.FOLLOWING);
     let followingData: FollowedUser[] = savedFollowing ? JSON.parse(savedFollowing) : [];
     
     followingData = followingData.filter(f => f.userId !== userId);
-    localStorage.setItem('hn-following', JSON.stringify(followingData));
+    localStorage.setItem(STORAGE_KEYS.FOLLOWING, JSON.stringify(followingData));
   } catch (error) {
     console.error('Error unfollowing user:', error);
     throw new Error('Failed to unfollow user');
@@ -77,7 +78,7 @@ export const syncFollowedUsers = async (): Promise<void> => {
     const token = getToken();
     
     // Get local data
-    const savedFollowing = localStorage.getItem('hn-following');
+    const savedFollowing = localStorage.getItem(STORAGE_KEYS.FOLLOWING);
     const localData: FollowedUser[] = savedFollowing ? JSON.parse(savedFollowing) : [];
     
     // Send local data to cloud
@@ -98,7 +99,7 @@ export const syncFollowedUsers = async (): Promise<void> => {
     const syncedData = await response.json();
     
     // Update local storage with synced data
-    localStorage.setItem('hn-following', JSON.stringify(syncedData));
+    localStorage.setItem(STORAGE_KEYS.FOLLOWING, JSON.stringify(syncedData));
     
     // Dispatch sync event
     window.dispatchEvent(new Event('following-synced'));
@@ -111,7 +112,7 @@ export const syncFollowedUsers = async (): Promise<void> => {
 // Export followed users
 export const exportFollowedUsers = async (): Promise<void> => {
   try {
-    const savedFollowing = localStorage.getItem('hn-following');
+    const savedFollowing = localStorage.getItem(STORAGE_KEYS.FOLLOWING);
     const followingData = savedFollowing ? JSON.parse(savedFollowing) : [];
     
     const timestamp = Math.floor(Date.now() / 1000);

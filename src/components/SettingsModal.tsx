@@ -3,6 +3,22 @@ import { startTracking } from '../registerServiceWorker';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useSettings } from '../hooks/useSettings';
+import { STORAGE_KEYS } from '../config/constants';
+import {
+  setBooleanValue,
+  setStringValue,
+  getUsername,
+  setUsername,
+  setTheme,
+  setAutoscroll,
+  setDirectLinks,
+  setShowCommentParents,
+  setClassicLayout,
+  setUseAlgoliaApi,
+  setColorizeUsernames,
+  setFontSize,
+  setFont
+} from '../utils/localStorage';
 
 type FontOption = 'mono' | 'jetbrains' | 'fira' | 'source' | 'sans' | 'serif' | 'system';
 
@@ -165,7 +181,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     }));
   };
 
-  // Handle the setting change
+  // Update the handlers to use the new utility functions
   const handleCommentParentsChange = () => {
     const newOptions = {
       ...localOptions,
@@ -173,7 +189,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     };
     setLocalOptions(newOptions);
     onUpdateOptions(newOptions);
-    localStorage.setItem('hn-live-show-comment-parents', newOptions.showCommentParents.toString());
+    setShowCommentParents(newOptions.showCommentParents);
 
     // Show appropriate notification based on device
     if (isMobile) {
@@ -193,7 +209,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     };
     setLocalOptions(newOptions);
     onUpdateOptions(newOptions);
-    localStorage.setItem('hn-live-direct-links', newOptions.directLinks.toString());
+    setDirectLinks(newOptions.directLinks);
 
     // Show appropriate notification based on device
     if (isMobile) {
@@ -213,7 +229,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     };
     setLocalOptions(newOptions);
     onUpdateOptions(newOptions);
-    localStorage.setItem('hn-live-autoscroll', newOptions.autoscroll.toString());
+    setAutoscroll(newOptions.autoscroll);
   };
 
   // Handle classic layout change
@@ -224,7 +240,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     };
     setLocalOptions(newOptions);
     onUpdateOptions(newOptions);
-    localStorage.setItem('hn-live-classic-layout', newOptions.classicLayout.toString());
+    setClassicLayout(newOptions.classicLayout);
   };
 
   // Handle Algolia API change
@@ -235,14 +251,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     };
     setLocalOptions(newOptions);
     onUpdateOptions(newOptions);
-    localStorage.setItem('hn-live-use-algolia-api', newOptions.useAlgoliaApi.toString());
+    setUseAlgoliaApi(newOptions.useAlgoliaApi);
   };
 
   // Handle colorize usernames change
   const handleColorizeUsernamesChange = () => {
     const newValue = !colorizeUsernames;
     onColorizeUsernamesChange(newValue);
-    localStorage.setItem('hn-live-colorize-usernames', JSON.stringify(newValue));
+    setColorizeUsernames(newValue);
   };
 
   // Handle theme change
@@ -254,11 +270,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     setLocalOptions(newOptions);
     onUpdateOptions(newOptions);
     
-    // Update localStorage directly to ensure it's available to all components
-    localStorage.setItem('hn-live-theme', newTheme);
-    
-    // Update document element's data-theme attribute
-    document.documentElement.setAttribute('data-theme', newTheme);
+    // Update theme using the utility function
+    setTheme(newTheme);
   };
 
   // Update the validateAndSaveUsername function
@@ -273,8 +286,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       if (!userData) {
         setValidationError('User not found');
       } else {
-        // Update localStorage
-        localStorage.setItem('hn-username', usernameInput);
+        // Update username using the utility function
+        setUsername(usernameInput);
         // Start tracking for replies
         startTracking(usernameInput);
         // Update the username in the parent component
@@ -437,6 +450,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   };
 
+  // In the input change handlers
+  const handleFontSizeChange = (newSize: keyof typeof fontSizeOptions) => {
+    // Update font size using the utility function
+    setFontSize(newSize);
+    // Update local options
+    setLocalOptions({...localOptions, fontSize: newSize});
+    // Update parent options
+    onUpdateOptions({ ...localOptions, fontSize: newSize });
+  };
+
+  const handleFontChange = (newFont: FontOption) => {
+    // Update font using the utility function
+    setFont(newFont);
+    setLocalOptions({...localOptions, font: newFont});
+    onUpdateOptions({...localOptions, font: newFont});
+  };
+
   if (!isOpen) return null;
 
   const themeColors = theme === 'green'
@@ -515,12 +545,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       value={Object.keys(fontSizeOptions).indexOf(localOptions.fontSize)}
                       onChange={(e) => {
                         const newSize = Object.keys(fontSizeOptions)[parseInt(e.target.value)] as keyof typeof fontSizeOptions;
-                        // Update localStorage directly to ensure it's saved
-                        localStorage.setItem('hn-live-font-size', newSize);
-                        // Update local options
-                        setLocalOptions({...localOptions, fontSize: newSize});
-                        // Update parent options
-                        onUpdateOptions({ ...localOptions, fontSize: newSize });
+                        handleFontSizeChange(newSize);
                       }}
                       className={`
                         w-full h-2 rounded-lg appearance-none cursor-pointer
@@ -569,12 +594,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                             index === Object.keys(fontSizeOptions).length - 1 ? 'text-right' : ''
                           } cursor-pointer`}
                           onClick={() => {
-                            // Update localStorage directly to ensure it's saved
-                            localStorage.setItem('hn-live-font-size', size);
-                            // Update local options
-                            setLocalOptions({...localOptions, fontSize: size as keyof typeof fontSizeOptions});
-                            // Update parent options
-                            onUpdateOptions({ ...localOptions, fontSize: size as keyof typeof fontSizeOptions });
+                            handleFontSizeChange(size as keyof typeof fontSizeOptions);
                           }}
                         >
                           {sizeLabels[size as keyof typeof sizeLabels]}
@@ -590,9 +610,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     value={localOptions.font}
                     onChange={(e) => {
                       const newFont = e.target.value as FontOption;
-                      localStorage.setItem('hn-live-font', newFont);
-                      setLocalOptions({...localOptions, font: newFont});
-                      onUpdateOptions({...localOptions, font: newFont});
+                      handleFontChange(newFont);
                     }}
                     className={`
                       w-full px-3 py-2 pr-8 rounded
@@ -763,10 +781,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       <button
                         onClick={() => {
                           // Clear only the keys we're actually using
-                          localStorage.removeItem('hn-username');
-                          localStorage.removeItem('hn-new-replies');
-                          localStorage.removeItem('hn-unread-count');
-                          localStorage.removeItem('hn-comment-tracker');
+                          localStorage.removeItem(STORAGE_KEYS.USERNAME);
+                          localStorage.removeItem(STORAGE_KEYS.NEW_REPLIES);
+                          localStorage.removeItem(STORAGE_KEYS.UNREAD_COUNT);
+                          localStorage.removeItem(STORAGE_KEYS.COMMENT_TRACKER);
                           
                           onUpdateHnUsername(null);
                           setUsernameInput('');

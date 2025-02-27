@@ -1,3 +1,5 @@
+import { STORAGE_KEYS } from '../config/constants';
+
 export interface HistoryEntry {
   id: number;
   timestamp: number;
@@ -18,7 +20,7 @@ interface MinimalHistoryEntry {
  */
 export function addToHistory(storyId: number, storyData?: { title?: string, by?: string, url?: string }): void {
   try {
-    const history = JSON.parse(localStorage.getItem('hn-live-history') || '[]') as MinimalHistoryEntry[];
+    const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]') as MinimalHistoryEntry[];
     
     const existingIndex = history.findIndex((entry) => entry.id === storyId);
     
@@ -37,7 +39,7 @@ export function addToHistory(storyId: number, storyData?: { title?: string, by?:
       history.pop();
     }
     
-    localStorage.setItem('hn-live-history', JSON.stringify(history));
+    localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
   } catch (error) {
     console.error('Error adding to history:', error);
   }
@@ -49,7 +51,7 @@ export function addToHistory(storyId: number, storyData?: { title?: string, by?:
  */
 export async function getHistory(): Promise<HistoryEntry[]> {
   try {
-    const minimalHistory = JSON.parse(localStorage.getItem('hn-live-history') || '[]') as MinimalHistoryEntry[];
+    const minimalHistory = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]') as MinimalHistoryEntry[];
     
     // Fetch additional details for each history entry
     const historyWithDetails = await Promise.all(
@@ -88,7 +90,7 @@ export async function getHistory(): Promise<HistoryEntry[]> {
  */
 export function clearHistory(): void {
   try {
-    localStorage.setItem('hn-live-history', '[]');
+    localStorage.setItem(STORAGE_KEYS.HISTORY, '[]');
   } catch (error) {
     console.error('Error clearing history:', error);
   }
@@ -100,9 +102,9 @@ export function clearHistory(): void {
  */
 export function removeHistoryEntry(storyId: number): void {
   try {
-    const history = JSON.parse(localStorage.getItem('hn-live-history') || '[]') as MinimalHistoryEntry[];
+    const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]') as MinimalHistoryEntry[];
     const updatedHistory = history.filter((entry) => entry.id !== storyId);
-    localStorage.setItem('hn-live-history', JSON.stringify(updatedHistory));
+    localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(updatedHistory));
   } catch (error) {
     console.error('Error removing history entry:', error);
   }
@@ -113,7 +115,7 @@ export function removeHistoryEntry(storyId: number): void {
  */
 export function exportHistory(): void {
   try {
-    const history = JSON.parse(localStorage.getItem('hn-live-history') || '[]');
+    const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]');
     const timestamp = Math.floor(Date.now() / 1000);
     const content = JSON.stringify(history, null, 2);
     const blob = new Blob([content], { type: 'application/json' });

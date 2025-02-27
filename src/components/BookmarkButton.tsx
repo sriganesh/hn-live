@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { AUTH_TOKEN_KEY, API_BASE_URL } from '../types/auth';
+import { STORAGE_KEYS } from '../config/constants';
 
 interface BookmarkEntry {
   id: number;
@@ -52,22 +53,22 @@ export function BookmarkButton({ item, storyId, storyTitle, theme, variant = 'ic
   const { user } = useAuth();
 
   useEffect(() => {
-    const bookmarks: BookmarkEntry[] = JSON.parse(localStorage.getItem('hn-bookmarks') || '[]');
+    const bookmarks: BookmarkEntry[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.BOOKMARKS) || '[]');
     setIsBookmarked(bookmarks.some(b => b.id === item.id));
   }, [item.id]);
 
   const toggleBookmark = async () => {
-    const bookmarks: BookmarkEntry[] = JSON.parse(localStorage.getItem('hn-bookmarks') || '[]');
-    let bookmarkCache: Record<string, HNItem> = JSON.parse(localStorage.getItem('hn-bookmark-cache') || '{}');
+    const bookmarks: BookmarkEntry[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.BOOKMARKS) || '[]');
+    const bookmarkCache: Record<string, HNItem> = JSON.parse(localStorage.getItem(STORAGE_KEYS.BOOKMARK_CACHE) || '{}');
     
     if (isBookmarked) {
       // Remove from local storage
       const updatedBookmarks = bookmarks.filter(b => b.id !== item.id);
-      localStorage.setItem('hn-bookmarks', JSON.stringify(updatedBookmarks));
+      localStorage.setItem(STORAGE_KEYS.BOOKMARKS, JSON.stringify(updatedBookmarks));
       
       // Remove from cache
       delete bookmarkCache[item.id];
-      localStorage.setItem('hn-bookmark-cache', JSON.stringify(bookmarkCache));
+      localStorage.setItem(STORAGE_KEYS.BOOKMARK_CACHE, JSON.stringify(bookmarkCache));
       
       setIsBookmarked(false);
 
@@ -100,11 +101,11 @@ export function BookmarkButton({ item, storyId, storyTitle, theme, variant = 'ic
         storyId: item.type === 'comment' ? storyId : undefined,
         timestamp: Date.now()
       };
-      localStorage.setItem('hn-bookmarks', JSON.stringify([...bookmarks, newBookmark]));
+      localStorage.setItem(STORAGE_KEYS.BOOKMARKS, JSON.stringify([...bookmarks, newBookmark]));
 
       // Add to cache
       bookmarkCache[item.id] = item;
-      localStorage.setItem('hn-bookmark-cache', JSON.stringify(bookmarkCache));
+      localStorage.setItem(STORAGE_KEYS.BOOKMARK_CACHE, JSON.stringify(bookmarkCache));
       
       setIsBookmarked(true);
 

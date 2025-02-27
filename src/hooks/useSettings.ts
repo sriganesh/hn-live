@@ -10,7 +10,7 @@ export interface UserSettings {
 // Get theme from localStorage or use default
 const getThemeFromStorage = (): 'green' | 'og' | 'dog' => {
   try {
-    const theme = localStorage.getItem('hn-live-theme');
+    const theme = localStorage.getItem(STORAGE_KEYS.THEME);
     return (theme === 'green' || theme === 'og' || theme === 'dog') ? theme : 'green';
   } catch (e) {
     return 'green';
@@ -56,7 +56,7 @@ export function useSettings() {
       
       // Also update the theme in localStorage for compatibility with the main site
       if (settings.theme) {
-        localStorage.setItem('hn-live-theme', settings.theme);
+        localStorage.setItem(STORAGE_KEYS.THEME, settings.theme);
       }
       
       setError(null);
@@ -76,7 +76,7 @@ export function useSettings() {
     // Special handling for theme to ensure it's also saved to hn-live-theme
     if (key === 'theme' && typeof value === 'string') {
       try {
-        localStorage.setItem('hn-live-theme', value);
+        localStorage.setItem(STORAGE_KEYS.THEME, value);
       } catch (error) {
         console.error('Error saving theme to localStorage:', error);
       }

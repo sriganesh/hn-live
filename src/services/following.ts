@@ -1,5 +1,6 @@
 import { Following } from '../types/Following';
 import { AUTH_TOKEN_KEY } from '../types/auth';
+import { STORAGE_KEYS } from '../config/constants';
 
 // Auth API base URL
 const AUTH_API_URL = 'https://auth.hn.live';
@@ -10,7 +11,7 @@ export async function syncFollowing() {
 
   try {
     // Get local following list
-    const localFollowing: Following[] = JSON.parse(localStorage.getItem('hn-following') || '[]');
+    const localFollowing: Following[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.FOLLOWING) || '[]');
 
     // Get cloud following list
     const response = await fetch(`${AUTH_API_URL}/api/following`, {
@@ -50,7 +51,7 @@ export async function syncFollowing() {
     const finalFollowing = Array.from(mergedFollowing.values());
 
     // Update local storage
-    localStorage.setItem('hn-following', JSON.stringify(finalFollowing));
+    localStorage.setItem(STORAGE_KEYS.FOLLOWING, JSON.stringify(finalFollowing));
 
     // Sync to cloud
     await fetch(`${AUTH_API_URL}/api/following/sync`, {

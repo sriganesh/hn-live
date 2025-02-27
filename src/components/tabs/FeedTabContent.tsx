@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addToHistory } from '../../services/history';
 import { useFeed, FeedItem, FeedFilters } from '../../hooks/useFeed';
+import { STORAGE_KEYS } from '../../config/constants';
 
 interface FeedTabContentProps {
   theme: 'green' | 'og' | 'dog';
@@ -29,7 +30,7 @@ export function FeedTabContent({
   const loadingRef = useRef<HTMLDivElement>(null);
   
   // Add check for following data
-  const following = JSON.parse(localStorage.getItem('hn-following') || '[]');
+  const following = JSON.parse(localStorage.getItem(STORAGE_KEYS.FOLLOWING) || '[]');
   const hasFollowing = following.length > 0;
 
   // Set up intersection observer for infinite scrolling

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { syncBookmarks } from '../services/bookmarks';
 import { AUTH_TOKEN_KEY, API_BASE_URL } from '../types/auth';
 import { BookmarkEntry } from '../types/bookmarks';
+import { STORAGE_KEYS } from '../config/constants';
 
 interface Bookmark {
   id: number;
@@ -50,13 +51,13 @@ export function useBookmarks() {
     
     try {
       // Get core bookmark data
-      const bookmarkEntries: BookmarkEntry[] = JSON.parse(localStorage.getItem('hn-bookmarks') || '[]');
+      const bookmarkEntries: BookmarkEntry[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.BOOKMARKS) || '[]');
       
       // Sort by timestamp (newest first)
       bookmarkEntries.sort((a, b) => b.timestamp - a.timestamp);
 
       // Get or initialize cache
-      let bookmarkCache = JSON.parse(localStorage.getItem('hn-bookmark-cache') || '{}');
+      const bookmarkCache = JSON.parse(localStorage.getItem(STORAGE_KEYS.BOOKMARK_CACHE) || '{}');
 
       // Fetch items not in cache
       const itemsToFetch = bookmarkEntries.filter(b => !bookmarkCache[b.id]);
@@ -82,7 +83,7 @@ export function useBookmarks() {
         });
         
         // Save updated cache
-        localStorage.setItem('hn-bookmark-cache', JSON.stringify(bookmarkCache));
+        localStorage.setItem(STORAGE_KEYS.BOOKMARK_CACHE, JSON.stringify(bookmarkCache));
       }
 
       // For comments, fetch their parent stories if not in cache
@@ -94,7 +95,7 @@ export function useBookmarks() {
               const storyResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${entry.storyId}.json`);
               const story = await storyResponse.json();
               bookmarkCache[entry.storyId] = story;
-              localStorage.setItem('hn-bookmark-cache', JSON.stringify(bookmarkCache));
+              localStorage.setItem(STORAGE_KEYS.BOOKMARK_CACHE, JSON.stringify(bookmarkCache));
               return { ...item, story };
             }
             return { ...item, story: bookmarkCache[entry.storyId] };
@@ -117,15 +118,15 @@ export function useBookmarks() {
     try {
       // First delete locally
       const bookmarkEntries: BookmarkEntry[] = JSON.parse(
-        localStorage.getItem('hn-bookmarks') || '[]'
+        localStorage.getItem(STORAGE_KEYS.BOOKMARKS) || '[]'
       );
       const updatedBookmarks = bookmarkEntries.filter(b => b.id !== bookmarkId);
-      localStorage.setItem('hn-bookmarks', JSON.stringify(updatedBookmarks));
+      localStorage.setItem(STORAGE_KEYS.BOOKMARKS, JSON.stringify(updatedBookmarks));
 
       // Remove from cache
-      const bookmarkCache = JSON.parse(localStorage.getItem('hn-bookmark-cache') || '{}');
+      const bookmarkCache = JSON.parse(localStorage.getItem(STORAGE_KEYS.BOOKMARK_CACHE) || '{}');
       delete bookmarkCache[bookmarkId];
-      localStorage.setItem('hn-bookmark-cache', JSON.stringify(bookmarkCache));
+      localStorage.setItem(STORAGE_KEYS.BOOKMARK_CACHE, JSON.stringify(bookmarkCache));
 
       // Update UI
       setBookmarks(prev => prev.filter(b => b.id !== bookmarkId));

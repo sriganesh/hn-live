@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Following } from '../types/Following';
 import { useAuth } from '../contexts/AuthContext';
 import { API_BASE_URL } from '../types/auth';
+import { STORAGE_KEYS } from '../config/constants';
 
 interface FollowButtonProps {
   userId: string;
@@ -15,7 +16,7 @@ export function FollowButton({ userId, theme }: FollowButtonProps) {
 
   useEffect(() => {
     try {
-      const following: Following[] = JSON.parse(localStorage.getItem('hn-following') || '[]');
+      const following: Following[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.FOLLOWING) || '[]');
       setIsFollowing(following.some(f => f.userId === userId));
     } catch (e) {
       console.error('Error loading following data:', e);
@@ -24,12 +25,12 @@ export function FollowButton({ userId, theme }: FollowButtonProps) {
 
   const toggleFollow = async () => {
     try {
-      const following: Following[] = JSON.parse(localStorage.getItem('hn-following') || '[]');
+      const following: Following[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.FOLLOWING) || '[]');
       
       if (isFollowing) {
         // Remove from local storage
         const updatedFollowing = following.filter(f => f.userId !== userId);
-        localStorage.setItem('hn-following', JSON.stringify(updatedFollowing));
+        localStorage.setItem(STORAGE_KEYS.FOLLOWING, JSON.stringify(updatedFollowing));
         setIsFollowing(false);
 
         // If authenticated, remove from cloud
@@ -50,7 +51,7 @@ export function FollowButton({ userId, theme }: FollowButtonProps) {
             timestamp: Date.now()
           }
         ];
-        localStorage.setItem('hn-following', JSON.stringify(newFollowing));
+        localStorage.setItem(STORAGE_KEYS.FOLLOWING, JSON.stringify(newFollowing));
         setIsFollowing(true);
 
         // If authenticated, add to cloud

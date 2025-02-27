@@ -3,13 +3,37 @@ export const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.hn.liv
 
 // Local storage keys
 export const STORAGE_KEYS = {
+  // Authentication
   AUTH_TOKEN: 'hnlive_token',
   USER_INFO: 'hnlive_user',
-  BOOKMARKS: 'hn-bookmarks',
-  FOLLOWING: 'hn-following',
-  HISTORY: 'hn-history',
-  SETTINGS: 'hn-settings',
-  THEME: 'hn-theme'
+  
+  // User content
+  BOOKMARKS: 'hn-live-bookmarks',
+  BOOKMARK_CACHE: 'hn-live-bookmark-cache',
+  FOLLOWING: 'hn-live-following',
+  HISTORY: 'hn-live-history',
+  USER_TAGS: 'hn-live-user-tags',
+  
+  // User data for notifications
+  USERNAME: 'hn-live-username',
+  COMMENT_TRACKER: 'hn-live-comment-tracker',
+  NEW_REPLIES: 'hn-live-new-replies',
+  UNREAD_COUNT: 'hn-live-unread-count',
+  
+  // Settings
+  SETTINGS: 'hn-live-settings',
+  THEME: 'hn-live-theme',
+  FONT_SIZE: 'hn-live-font-size',
+  FONT: 'hn-live-font',
+  AUTOSCROLL: 'hn-live-autoscroll',
+  COLORIZE_USERNAMES: 'hn-live-colorize-usernames',
+  CLASSIC_LAYOUT: 'hn-live-classic-layout',
+  SHOW_COMMENT_PARENTS: 'hn-live-show-comment-parents',
+  DIRECT_LINKS: 'hn-live-direct-links',
+  USE_ALGOLIA_API: 'hn-live-use-algolia-api',
+  
+  // Application state
+  RUNNING: 'hn-live-running'
 };
 
 // Default pagination limits

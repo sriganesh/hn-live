@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { syncBookmarks } from '../services/bookmarks';
+import { STORAGE_KEYS } from '../config/constants';
 
 interface BookmarkEntry {
   id: number;
@@ -59,7 +60,7 @@ export function BookmarkManager({ theme }: BookmarkManagerProps) {
 
   const exportBookmarks = () => {
     // Just get the raw bookmarks data from localStorage
-    const bookmarks: BookmarkEntry[] = JSON.parse(localStorage.getItem('hn-bookmarks') || '[]');
+    const bookmarks: BookmarkEntry[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.BOOKMARKS) || '[]');
     
     // Get Unix timestamp for filename
     const timestamp = Math.floor(Date.now() / 1000);

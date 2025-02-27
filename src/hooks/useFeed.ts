@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Following } from '../types/Following';
+import { STORAGE_KEYS } from '../config/constants';
 
 export interface FeedFilters {
   type: 'all' | 'stories' | 'comments';
@@ -97,7 +98,7 @@ export function useFeed() {
     abortControllerRef.current = new AbortController();
     
     try {
-      const currentFollowing = JSON.parse(localStorage.getItem('hn-following') || '[]') as Following[];
+      const currentFollowing = JSON.parse(localStorage.getItem(STORAGE_KEYS.FOLLOWING) || '[]') as Following[];
 
       if (!currentFollowing.length) {
         setFeedItems([]);
