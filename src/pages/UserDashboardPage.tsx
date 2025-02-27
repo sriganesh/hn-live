@@ -390,7 +390,7 @@ export function UserDashboardPage() {
     <div className={`min-h-screen ${themeStyles.background} ${themeStyles.text}`}>
       <div className="max-w-4xl mx-auto p-4">
         <div className="mb-6 flex justify-between items-center">
-          <h1 className={`text-2xl font-bold ${themeStyles.accent} flex items-center`}>
+          <h1 className={`text-lg font-bold ${themeStyles.accent} flex items-center`}>
             HN
             <span className={`mx-1 animate-pulse ${!isRunning ? 'text-gray-500' : ''}`}>•</span>
             Live Dashboard
