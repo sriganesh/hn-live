@@ -387,7 +387,7 @@ export function UserDashboardPage() {
   }, [unreadCount]);
 
   return (
-    <div className={`min-h-screen ${themeStyles.background} ${themeStyles.text}`}>
+    <div className={`min-h-screen ${themeStyles.background} ${themeStyles.text} relative z-40`}>
       <div className="max-w-4xl mx-auto p-4">
         <div className="mb-6 flex justify-between items-center">
           <h1 className={`text-lg font-bold ${themeStyles.accent} flex items-center`}>

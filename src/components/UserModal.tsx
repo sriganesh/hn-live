@@ -181,7 +181,7 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
   return (
     <div 
       ref={modalRef}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[150] flex items-center justify-center p-4"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {

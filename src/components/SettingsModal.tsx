@@ -476,13 +476,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     : 'text-[#828282] bg-[#1a1a1a] border-[#ff6600]/30';
 
   return (
-    <div className="fixed inset-0 z-[100]">
+    <div className="fixed inset-0 z-[150]">
       <div 
         className="absolute inset-0 bg-black/50" 
         onClick={onClose}
       />
       
-      <div className="relative z-[101] flex items-center justify-center h-full p-4">
+      <div className="relative z-[151] flex items-center justify-center h-full p-4">
         <div className={`w-full max-w-lg ${themeColors} border p-4 shadow-lg font-mono max-h-[85vh] overflow-y-auto mb-20 sm:mb-0 settings-modal-content text-base`}>
           {/* Terminal-style header */}
           <div className="flex items-center justify-between mb-6 border-b border-current pb-2">
