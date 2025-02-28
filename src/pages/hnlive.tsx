@@ -26,7 +26,7 @@ import { TermsPage } from './Terms';
 import { PrivacyPage } from './Privacy';
 import HistoricalFrontPage from '../components/HistoricalFrontPage';
 import { ActivePage } from '../components/ActivePage';
-import { UserDashboardPage } from '../components/UserDashboardPage';
+import { UserDashboardPage } from './UserDashboardPage';
 import { addToHistory } from '../services/history';
 import { useRunningStatus } from '../contexts/RunningStatusContext';
 import { STORAGE_KEYS } from '../config/constants';
@@ -2038,6 +2038,13 @@ export default function HNLiveTerminal() {
             username={hnUsername}
             unreadCount={unreadReplies}
           />
+        )}
+
+        {/* Add UserDashboardPage component to the render */}
+        {location.pathname === '/dashboard' && (
+          <div className="fixed inset-0 z-[100] bg-inherit">
+            <UserDashboardPage />
+          </div>
         )}
 
       </div>

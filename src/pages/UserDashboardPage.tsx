@@ -412,7 +412,7 @@ export function UserDashboardPage() {
               [SETTINGS]
             </button>
             <button 
-              onClick={() => navigate('/')}
+              onClick={() => navigate(-1)}
               className={themeStyles.tabInactive}
             >
               [ESC]
