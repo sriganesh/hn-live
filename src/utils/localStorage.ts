@@ -239,11 +239,26 @@ export function setColorizeUsernames(enabled: boolean): void {
  * @returns The current font size
  */
 export function getFontSize(): 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' {
-  const fontSize = getStringValue(STORAGE_KEYS.FONT_SIZE, 'base');
-  // Validate the font size
-  if (['xs', 'sm', 'base', 'lg', 'xl', '2xl'].includes(fontSize)) {
-    return fontSize as 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl';
+  // Check if there's a stored font size
+  const storedFontSize = localStorage.getItem(STORAGE_KEYS.FONT_SIZE);
+  
+  // If there's no stored font size, determine default based on device
+  if (storedFontSize === null) {
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+    const isMobile = window.innerWidth < 640; // 640px is Tailwind's 'sm' breakpoint
+    
+    if (isPWA || isMobile) {
+      return 'sm';
+    }
+    return 'base';
   }
+  
+  // If there is a stored font size, validate it
+  if (['xs', 'sm', 'base', 'lg', 'xl', '2xl'].includes(storedFontSize)) {
+    return storedFontSize as 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl';
+  }
+  
+  // Fallback to base if the stored value is invalid
   return 'base';
 }
 

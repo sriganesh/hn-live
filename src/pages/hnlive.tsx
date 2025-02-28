@@ -30,6 +30,7 @@ import { UserDashboardPage } from './UserDashboardPage';
 import { addToHistory } from '../services/history';
 import { useRunningStatus } from '../contexts/RunningStatusContext';
 import { STORAGE_KEYS } from '../config/constants';
+import { showConsoleGreeting } from '../utils/consoleGreeting';
 import {
   getBooleanValue,
   getStringValue,
@@ -1020,33 +1021,8 @@ export default function HNLiveTerminal() {
     // Only log if we haven't logged before
     if (hasLoggedRef.current) return;
     hasLoggedRef.current = true;
-
-    const styles = [
-      'color: #ff6600',
-      'font-size: 20px',
-      'font-weight: bold',
-      'padding: 10px',
-    ].join(';');
-
-    const secondaryStyles = [
-      'color: #828282',
-      'font-size: 14px',
-      'padding: 5px',
-    ].join(';');
-
-    console.log('%c👋 Hello fellow hacker!', styles);
-    console.log(
-      '%c💡 Have ideas for making HN Live faster/better? Let me know!', 
-      secondaryStyles
-    );
-    console.log(
-      '%c🐛 Found a bug? Want to add a feature? PRs are welcome!', 
-      secondaryStyles
-    );
-    console.log(
-      '%c🌟 HN Live is open source: https://github.com/sriganesh/hn-live', 
-      secondaryStyles
-    );
+    
+    showConsoleGreeting();
   }, []);
 
   // Add this effect to update theme-color meta tag when theme changes
@@ -2042,7 +2018,7 @@ export default function HNLiveTerminal() {
 
         {/* Add UserDashboardPage component to the render */}
         {location.pathname === '/dashboard' && (
-          <div className="fixed inset-0 z-[100] bg-inherit">
+          <div className="fixed inset-0 z-[100] bg-inherit overflow-auto">
             <UserDashboardPage />
           </div>
         )}
