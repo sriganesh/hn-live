@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MobileBottomBar } from './MobileBottomBar';
-import { UserTag } from '../types/UserTag';
-import { FollowButton } from './FollowButton';
-import { topUsers } from '../data/top-users.json';
-import { STORAGE_KEYS } from '../config/constants';
+import { MobileBottomBar } from '../../components/navigation/MobileBottomBar';
+import { UserTag } from '../../types/UserTag';
+import { FollowButton } from '../../components/user/FollowButton';
+import { topUsers } from '../../data/top-users.json';
+import { STORAGE_KEYS } from '../../config/constants';
 
 interface UserPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -85,8 +85,8 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
   const [userTags, setUserTags] = useState<string[]>(() => {
     try {
       const tags = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
-      const userTag = tags.find((t: UserTag) => t.userId === userId);
-      return userTag?.tags || [];
+      const userTagEntry = tags.find((t: UserTag) => t.userId === userId);
+      return userTagEntry?.tags || [];
     } catch (e) {
       console.error('Error parsing user tags:', e);
       return [];
@@ -136,11 +136,13 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
     if (userId) {
       try {
         const tags = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
-        const userTags = tags
-          .filter((t: UserTag) => t.userId === userId)
-          .map((t: UserTag) => t.tag);
+        const userTagEntry = tags.find((t: UserTag) => t.userId === userId);
         
-        setUserTags(userTags);
+        if (userTagEntry) {
+          setUserTags(userTagEntry.tags);
+        } else {
+          setUserTags([]);
+        }
       } catch (e) {
         console.error('Error loading user tags:', e);
         setUserTags([]);
@@ -180,24 +182,29 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
     try {
       const tags: UserTag[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
       
-      // Check if this user already has this tag
-      const existingTagIndex = tags.findIndex(t => t.userId === userId && t.tag === newTag.trim());
+      // Check if this user already has tags
+      const existingTagIndex = tags.findIndex(t => t.userId === userId);
       
       if (existingTagIndex === -1) {
-        // Add new tag
+        // Add new tag entry
         tags.push({
-          userId,
-          tag: newTag.trim(),
+          userId: userId || '',
+          tags: [newTag.trim()],
           timestamp: Date.now()
         });
-        
-        // Update localStorage
-        localStorage.setItem(STORAGE_KEYS.USER_TAGS, JSON.stringify(tags));
-        
-        // Update state
-        setUserTags(prev => [...prev, newTag.trim()]);
-        setNewTag('');
+      } else {
+        // Add to existing tags if not already present
+        if (!tags[existingTagIndex].tags.includes(newTag.trim())) {
+          tags[existingTagIndex].tags.push(newTag.trim());
+        }
       }
+      
+      // Update localStorage
+      localStorage.setItem(STORAGE_KEYS.USER_TAGS, JSON.stringify(tags));
+      
+      // Update state
+      setUserTags(prev => [...prev, newTag.trim()]);
+      setNewTag('');
     } catch (e) {
       console.error('Error adding tag:', e);
     }
@@ -207,16 +214,24 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
     try {
       const tags: UserTag[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
       
-      // Filter out the tag to remove
-      const updatedTags = tags.filter(
-        t => !(t.userId === userId && t.tag === tagToRemove)
-      );
+      // Find the user's tag entry
+      const userTagIndex = tags.findIndex(t => t.userId === userId);
       
-      // Update localStorage
-      localStorage.setItem(STORAGE_KEYS.USER_TAGS, JSON.stringify(updatedTags));
-      
-      // Update state
-      setUserTags(prev => prev.filter(tag => tag !== tagToRemove));
+      if (userTagIndex !== -1) {
+        // Remove the specific tag
+        tags[userTagIndex].tags = tags[userTagIndex].tags.filter(tag => tag !== tagToRemove);
+        
+        // If no tags left, remove the entire entry
+        if (tags[userTagIndex].tags.length === 0) {
+          tags.splice(userTagIndex, 1);
+        }
+        
+        // Update localStorage
+        localStorage.setItem(STORAGE_KEYS.USER_TAGS, JSON.stringify(tags));
+        
+        // Update state
+        setUserTags(prev => prev.filter(tag => tag !== tagToRemove));
+      }
     } catch (e) {
       console.error('Error removing tag:', e);
     }

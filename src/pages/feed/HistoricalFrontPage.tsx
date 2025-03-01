@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MobileBottomBar } from './MobileBottomBar';
+import { MobileBottomBar } from '../../components/navigation/MobileBottomBar';
 
 interface HistoricalFrontPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -163,7 +163,7 @@ const HistoricalFrontPage = ({
         const end = start + 30;
         const pageStoryIds = allIds.slice(start, end).map(String);
         
-        const storyPromises = pageStoryIds.map(id => fetchStoryDetails(id));
+        const storyPromises = pageStoryIds.map((id: string) => fetchStoryDetails(id));
         const newStories = await Promise.all(storyPromises);
         const validStories = newStories.filter((story): story is HNStory => story !== null);
         

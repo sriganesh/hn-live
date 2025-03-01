@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { MOBILE_MENU_ITEMS } from '../config/navigation';
+import { MOBILE_MENU_ITEMS } from '../../config/navigation';
 import { Link } from 'react-router-dom';
 
 interface MobileMoreMenuProps {

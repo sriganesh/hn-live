@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { topUsers } from '../data/top-users.json';
-import { UserTag } from '../types/UserTag';
+import { topUsers } from '../../data/top-users.json';
+import { UserTag } from '../../types/UserTag';
 import { FollowButton } from './FollowButton';
-import { STORAGE_KEYS } from '../config/constants';
+import { STORAGE_KEYS } from '../../config/constants';
 
 interface UserModalProps {
   userId: string;
@@ -99,24 +99,29 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
     try {
       const tags: UserTag[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
       
-      // Check if this user already has this tag
-      const existingTagIndex = tags.findIndex(t => t.userId === userId && t.tag === newTag.trim());
+      // Check if this user already has tags
+      const existingTagIndex = tags.findIndex(t => t.userId === userId);
       
       if (existingTagIndex === -1) {
-        // Add new tag
+        // Add new tag entry
         tags.push({
           userId,
-          tag: newTag.trim(),
+          tags: [newTag.trim()],
           timestamp: Date.now()
         });
-        
-        // Update localStorage
-        localStorage.setItem(STORAGE_KEYS.USER_TAGS, JSON.stringify(tags));
-        
-        // Update state
-        setUserTags(prev => [...prev, newTag.trim()]);
-        setNewTag('');
+      } else {
+        // Add to existing tags if not already present
+        if (!tags[existingTagIndex].tags.includes(newTag.trim())) {
+          tags[existingTagIndex].tags.push(newTag.trim());
+        }
       }
+      
+      // Update localStorage
+      localStorage.setItem(STORAGE_KEYS.USER_TAGS, JSON.stringify(tags));
+      
+      // Update state
+      setUserTags(prev => [...prev, newTag.trim()]);
+      setNewTag('');
     } catch (e) {
       console.error('Error adding tag:', e);
     }
@@ -126,16 +131,24 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
     try {
       const tags: UserTag[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
       
-      // Filter out the tag to remove
-      const updatedTags = tags.filter(
-        t => !(t.userId === userId && t.tag === tagToRemove)
-      );
+      // Find the user's tag entry
+      const userTagIndex = tags.findIndex(t => t.userId === userId);
       
-      // Update localStorage
-      localStorage.setItem(STORAGE_KEYS.USER_TAGS, JSON.stringify(updatedTags));
-      
-      // Update state
-      setUserTags(prev => prev.filter(tag => tag !== tagToRemove));
+      if (userTagIndex !== -1) {
+        // Remove the specific tag
+        tags[userTagIndex].tags = tags[userTagIndex].tags.filter(tag => tag !== tagToRemove);
+        
+        // If no tags left, remove the entire entry
+        if (tags[userTagIndex].tags.length === 0) {
+          tags.splice(userTagIndex, 1);
+        }
+        
+        // Update localStorage
+        localStorage.setItem(STORAGE_KEYS.USER_TAGS, JSON.stringify(tags));
+        
+        // Update state
+        setUserTags(prev => prev.filter(tag => tag !== tagToRemove));
+      }
     } catch (e) {
       console.error('Error removing tag:', e);
     }
@@ -145,11 +158,14 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
   useEffect(() => {
     if (userId) {
       try {
-        const tags = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]')
-          .filter((t: UserTag) => t.userId === userId)
-          .map((t: UserTag) => t.tag);
+        const tags = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
+        const userTagEntry = tags.find((t: UserTag) => t.userId === userId);
         
-        setUserTags(tags);
+        if (userTagEntry) {
+          setUserTags(userTagEntry.tags);
+        } else {
+          setUserTags([]);
+        }
       } catch (e) {
         console.error('Error loading user tags:', e);
       }

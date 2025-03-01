@@ -1,18 +1,18 @@
 import { useEffect, useRef } from 'react';
-import { useTopUsers } from '../hooks/useTopUsers';
-import { BasePageProps, ThemeOption } from '../types/common';
-import { useHNStories } from '../hooks/useHNStories';
-import { BasePage } from './common/BasePage';
+import { useTopUsers } from '../../hooks/useTopUsers';
+import { BasePageProps, ThemeOption } from '../../types/common';
+import { useHNStories } from '../../hooks/useHNStories';
+import { BasePage } from '../../components/common/BasePage';
 
-export function AskPage(props: BasePageProps) {
+export function ShowPage(props: BasePageProps) {
   const { isTopUser, getTopUserClass } = useTopUsers();
-  const { stories, loading, loadingMore, hasMore, loadMore, loadStories } = useHNStories('ask');
+  const { stories, loading, loadingMore, hasMore, loadMore, loadStories } = useHNStories('show');
   const initialLoadRef = useRef(false);
 
   // Force the initial load on mount, but only once
   useEffect(() => {
     if (!initialLoadRef.current) {
-      console.log('AskPage: Forcing initial load (first time)');
+      console.log('ShowPage: Forcing initial load (first time)');
       initialLoadRef.current = true;
       loadStories(1, false);
     }
@@ -26,17 +26,17 @@ export function AskPage(props: BasePageProps) {
   return (
     <BasePage
       {...props}
-      title="ASK HN"
+      title="SHOW HN"
       stories={stories}
       loading={loading}
       loadingMore={loadingMore}
       hasMore={hasMore}
       loadMore={loadMore}
-      currentPage="ask"
+      currentPage="show"
       isTopUser={isTopUser}
       getTopUserClass={getTopUserClassWrapper}
-      noMoreContentMessage="That's all the Ask HN posts for now!"
-      searchMessage="Search all Ask HN posts in history"
+      noMoreContentMessage="That's all the Show HN posts for now!"
+      searchMessage="Search all Show HN posts in history"
       backMessage="Head back to the live feed to see real-time stories and discussions"
     />
   );

@@ -1,22 +1,22 @@
 import { useEffect, useRef } from 'react';
-import { useTopUsers } from '../hooks/useTopUsers';
-import { BasePageProps, ThemeOption } from '../types/common';
-import { useBestComments } from '../hooks/useBestComments';
-import { CommentsPage } from './common/CommentsPage';
+import { useTopUsers } from '../../hooks/useTopUsers';
+import { BasePageProps, ThemeOption } from '../../types/common';
+import { useActiveStories } from '../../hooks/useActiveStories';
+import { BasePage } from '../../components/common/BasePage';
 
-export function BestCommentsPage(props: BasePageProps) {
+export function ActivePage(props: BasePageProps) {
   const { isTopUser, getTopUserClass } = useTopUsers();
-  const { comments, loading, loadingMore, hasMore, loadMore, loadComments } = useBestComments();
+  const { stories, loading, loadingMore, hasMore, loadMore, loadStories } = useActiveStories();
   const initialLoadRef = useRef(false);
 
   // Force the initial load on mount, but only once
   useEffect(() => {
     if (!initialLoadRef.current) {
-      console.log('BestCommentsPage: Forcing initial load (first time)');
+      console.log('ActivePage: Forcing initial load (first time)');
       initialLoadRef.current = true;
-      loadComments(1, false);
+      loadStories(1, false);
     }
-  }, [loadComments]);
+  }, [loadStories]);
 
   // Create a wrapper function with the correct type signature
   const getTopUserClassWrapper = (theme: string): string => {
@@ -24,19 +24,19 @@ export function BestCommentsPage(props: BasePageProps) {
   };
 
   return (
-    <CommentsPage
+    <BasePage
       {...props}
-      title="BEST COMMENTS"
-      comments={comments}
+      title="TRENDING"
+      stories={stories}
       loading={loading}
       loadingMore={loadingMore}
       hasMore={hasMore}
       loadMore={loadMore}
-      currentPage="best-comments"
+      currentPage="trending"
       isTopUser={isTopUser}
       getTopUserClass={getTopUserClassWrapper}
-      noMoreContentMessage="No more comments to load"
-      searchMessage="Search all comments"
+      noMoreContentMessage="That's all the trending stories for now!"
+      searchMessage="Search all trending stories in history"
       backMessage="Head back to the live feed to see real-time stories and discussions"
     />
   );

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { UserModal } from './UserModal';
+import { UserModal } from '../../components/user/UserModal';
 
 interface LinksViewProps {
   theme: 'green' | 'og' | 'dog';

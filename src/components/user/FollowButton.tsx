@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Following } from '../types/Following';
-import { useAuth } from '../contexts/AuthContext';
-import { API_BASE_URL } from '../types/auth';
-import { STORAGE_KEYS } from '../config/constants';
+import { Following } from '../../types/Following';
+import { useAuth } from '../../contexts/AuthContext';
+import { API_BASE_URL } from '../../types/auth';
+import { STORAGE_KEYS } from '../../config/constants';
 
 interface FollowButtonProps {
   userId: string;

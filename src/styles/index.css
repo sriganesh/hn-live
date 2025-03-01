@@ -1,0 +1,219 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  background: black;
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+  height: -webkit-fill-available;
+}
+
+/* Mobile text wrapping for long content */
+pre, code, .prose pre, .prose code {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.prose p, .prose li, .prose blockquote {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Username coloring */
+[data-theme='og'] .hn-username,
+[data-theme='dog'] .hn-username {
+  color: #ff6600;
+}
+
+[data-theme='green'] .hn-username {
+  color: #4ade80;
+}
+
+:root {
+  --sat: env(safe-area-inset-top);
+  --sar: env(safe-area-inset-right);
+  --sab: env(safe-area-inset-bottom);
+  --sal: env(safe-area-inset-left);
+}
+
+@media all and (display-mode: standalone) {
+  html, body {
+    height: 100vh;
+    height: -webkit-fill-available;
+    overflow: hidden;
+  }
+
+  #root {
+    height: 100vh;
+    height: -webkit-fill-available;
+    overflow: hidden;
+  }
+
+  html {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+html, body {
+  height: 100%;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Range slider styles */
+.range-slider-green::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #4ade80;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.range-slider-orange::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ff6600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.range-slider-green::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: #4ade80;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.range-slider-orange::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: #ff6600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.range-slider:focus {
+  outline: none;
+}
+
+.range-slider-green::-webkit-slider-thumb:hover,
+.range-slider-green::-moz-range-thumb:hover {
+  background: #22c55e;
+}
+
+.range-slider-orange::-webkit-slider-thumb:hover,
+.range-slider-orange::-moz-range-thumb:hover {
+  background: #ff8533;
+}
+
+.range-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 5px;
+}
+
+.range-slider-green::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 8px;
+  cursor: pointer;
+  background: rgba(74, 222, 128, 0.2);
+  border-radius: 5px;
+}
+
+.range-slider-green::-moz-range-track {
+  width: 100%;
+  height: 8px;
+  cursor: pointer;
+  background: rgba(74, 222, 128, 0.2);
+  border-radius: 5px;
+}
+
+.range-slider-orange::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 8px;
+  cursor: pointer;
+  background: rgba(255, 102, 0, 0.2);
+  border-radius: 5px;
+}
+
+.range-slider-orange::-moz-range-track {
+  width: 100%;
+  height: 8px;
+  cursor: pointer;
+  background: rgba(255, 102, 0, 0.2);
+  border-radius: 5px;
+}
+
+/* Settings modal font size overrides */
+.settings-modal-content {
+  font-size: 14px;
+}
+
+.settings-modal-content * {
+  font-size: inherit;
+}
+
+.settings-modal-content .text-xs {
+  font-size: 12px;
+}
+
+.settings-modal-content .text-sm {
+  font-size: 14px;
+}
+
+.settings-modal-content .text-lg {
+  font-size: 18px;
+}
+
+.settings-modal-content .text-xl {
+  font-size: 20px;
+}
+
+.settings-modal-content .text-2xl {
+  font-size: 24px;
+} 

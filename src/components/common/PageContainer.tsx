@@ -1,6 +1,6 @@
 import React, { ReactNode, RefObject } from 'react';
 import { ThemeOption, FontOption } from '../../types/common';
-import { MobileBottomBar } from '../MobileBottomBar';
+import { MobileBottomBar } from '../navigation/MobileBottomBar';
 
 interface PageContainerProps {
   theme: ThemeOption;
@@ -30,7 +30,9 @@ export const PageContainer: React.FC<PageContainerProps> = ({
   containerRef
 }) => {
   return (
-    <div className={`
+    <div 
+      ref={containerRef}
+      className={`
       fixed inset-0 z-50 overflow-hidden
       ${font === 'mono' ? 'font-mono' : 
         font === 'jetbrains' ? 'font-jetbrains' :

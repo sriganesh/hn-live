@@ -9,7 +9,7 @@ import { FollowingTabContent } from '../components/tabs/FollowingTabContent';
 import { TagsTabContent } from '../components/tabs/TagsTabContent';
 import SettingsModal from '../components/SettingsModal';
 import { useRunningStatus } from '../contexts/RunningStatusContext';
-import { MobileBottomBar } from '../components/MobileBottomBar';
+import { MobileBottomBar } from '../components/navigation/MobileBottomBar';
 import SearchModal from '../components/SearchModal';
 import { STORAGE_KEYS } from '../config/constants';
 import {
