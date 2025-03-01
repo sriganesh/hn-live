@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { topUsers } from '../data/top-users.json';
 import { UserTag } from '../types/UserTag';
 import { FollowButton } from './FollowButton';
+import { STORAGE_KEYS } from '../config/constants';
 
 interface UserModalProps {
   userId: string;
@@ -96,64 +97,64 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
     if (!newTag.trim()) return;
     
     try {
-      const tags: UserTag[] = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
-      const existingTagIndex = tags.findIndex(t => t.userId === userId);
+      const tags: UserTag[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
       
-      if (existingTagIndex >= 0) {
-        if (!tags[existingTagIndex].tags.includes(newTag)) {
-          tags[existingTagIndex].tags.push(newTag);
-          tags[existingTagIndex].timestamp = Date.now();
-        }
-      } else {
+      // Check if this user already has this tag
+      const existingTagIndex = tags.findIndex(t => t.userId === userId && t.tag === newTag.trim());
+      
+      if (existingTagIndex === -1) {
+        // Add new tag
         tags.push({
           userId,
-          tags: [newTag],
+          tag: newTag.trim(),
           timestamp: Date.now()
         });
+        
+        // Update localStorage
+        localStorage.setItem(STORAGE_KEYS.USER_TAGS, JSON.stringify(tags));
+        
+        // Update state
+        setUserTags(prev => [...prev, newTag.trim()]);
+        setNewTag('');
       }
-      
-      localStorage.setItem('hn-user-tags', JSON.stringify(tags));
-      setUserTags(prev => [...prev, newTag]);
-      setNewTag('');
-
-      // Dispatch event to notify other components
-      window.dispatchEvent(new CustomEvent('tags-updated'));
     } catch (e) {
       console.error('Error adding tag:', e);
     }
   };
 
   const removeTag = (tagToRemove: string) => {
-    const tags: UserTag[] = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
-    const userTagIndex = tags.findIndex(t => t.userId === userId);
-    
-    if (userTagIndex >= 0) {
-      tags[userTagIndex].tags = tags[userTagIndex].tags.filter(t => t !== tagToRemove);
-      tags[userTagIndex].timestamp = Date.now();
+    try {
+      const tags: UserTag[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
       
-      if (tags[userTagIndex].tags.length === 0) {
-        tags.splice(userTagIndex, 1);
-      }
+      // Filter out the tag to remove
+      const updatedTags = tags.filter(
+        t => !(t.userId === userId && t.tag === tagToRemove)
+      );
       
-      localStorage.setItem('hn-user-tags', JSON.stringify(tags));
-      setUserTags(prev => prev.filter(t => t !== tagToRemove));
-
-      // Dispatch event to notify other components
-      window.dispatchEvent(new CustomEvent('tags-updated'));
+      // Update localStorage
+      localStorage.setItem(STORAGE_KEYS.USER_TAGS, JSON.stringify(updatedTags));
+      
+      // Update state
+      setUserTags(prev => prev.filter(tag => tag !== tagToRemove));
+    } catch (e) {
+      console.error('Error removing tag:', e);
     }
   };
 
-  // Add this effect to update tags when userId changes
+  // Load user tags
   useEffect(() => {
-    try {
-      const tags = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
-      const userTag = tags.find((t: UserTag) => t.userId === userId);
-      setUserTags(userTag?.tags || []);
-    } catch (e) {
-      console.error('Error parsing user tags:', e);
-      setUserTags([]);
+    if (userId) {
+      try {
+        const tags = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]')
+          .filter((t: UserTag) => t.userId === userId)
+          .map((t: UserTag) => t.tag);
+        
+        setUserTags(tags);
+      } catch (e) {
+        console.error('Error loading user tags:', e);
+      }
     }
-  }, [userId]); // Add userId as dependency
+  }, [userId]);
 
   // Add the date check functions
   const isUserAnniversary = (createdTimestamp: number): boolean => {
@@ -180,7 +181,7 @@ export function UserModal({ userId, isOpen, onClose, theme, fontSize }: UserModa
   return (
     <div 
       ref={modalRef}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[150] flex items-center justify-center p-4"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {

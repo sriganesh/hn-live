@@ -2,6 +2,14 @@
 const CACHE_NAME = 'hn-live-comments-v1';
 const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
+// Define storage keys to match the constants in src/config/constants.ts
+const STORAGE_KEYS = {
+  COMMENT_TRACKER: 'hn-live-comment-tracker',
+  NEW_REPLIES: 'hn-live-new-replies',
+  UNREAD_COUNT: 'hn-live-unread-count',
+  USERNAME: 'hn-live-username'
+};
+
 // Instead of direct localStorage access, we should receive username through messages
 let currentUsername = null;
 let checkInterval = null;
@@ -186,7 +194,7 @@ function stopTracking() {
 
 async function startReplyCheck(username) {
   // Initial load of tracker data
-  const trackerData = JSON.parse(localStorage.getItem('hn-comment-tracker') || '{"comments":[], "lastSeenReplies":{}}');
+  const trackerData = JSON.parse(localStorage.getItem(STORAGE_KEYS.COMMENT_TRACKER) || '{"comments":[], "lastSeenReplies":{}}');
   
   checkInterval = setInterval(async () => {
     // Get all comment IDs to check
@@ -218,8 +226,8 @@ async function startReplyCheck(username) {
 
     // Update localStorage if new replies found
     if (Object.keys(newReplies).length > 0) {
-      localStorage.setItem('hn-new-replies', JSON.stringify(newReplies));
-      localStorage.setItem('hn-unread-count', Object.values(newReplies)
+      localStorage.setItem(STORAGE_KEYS.NEW_REPLIES, JSON.stringify(newReplies));
+      localStorage.setItem(STORAGE_KEYS.UNREAD_COUNT, Object.values(newReplies)
         .reduce((count, replies) => count + replies.filter(r => !r.seen).length, 0)
       );
     }

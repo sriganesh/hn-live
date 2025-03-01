@@ -84,7 +84,7 @@ export const AboutOverlay = ({ theme, themeColors, themeBg, headerColor, onClose
             </a>
           </p>
           <p className="text-sm opacity-75">
-            An independent project, not affiliated with HN/YC (yet)
+            An independent project, not affiliated with HN/YC
           </p>
         </div>
       </div>

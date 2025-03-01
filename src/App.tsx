@@ -4,6 +4,10 @@ import HNLiveTerminal from "./pages/hnlive";
 import { register as registerServiceWorker } from './registerServiceWorker';
 import { useEffect } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
+import { UserDashboardPage } from './pages/UserDashboardPage';
+import { RunningStatusProvider } from './contexts/RunningStatusContext';
+import { STORAGE_KEYS } from './config/constants';
+import { getTheme, getJSONValue, setJSONValue, setStringValue } from './utils/localStorage';
 
 // Add type definitions at the top
 interface NewReply {
@@ -12,6 +16,12 @@ interface NewReply {
 }
 
 export function App() {
+  // Set theme on document element
+  useEffect(() => {
+    const theme = getTheme();
+    document.documentElement.setAttribute('data-theme', theme);
+  }, []);
+
   useEffect(() => {
     registerServiceWorker();
 
@@ -23,12 +33,12 @@ export function App() {
         const { trackerData, newReplies, unreadCount, isFirstLoad } = event.data.data;
 
         // Always update tracker data
-        localStorage.setItem('hn-comment-tracker', JSON.stringify(trackerData));
+        setJSONValue(STORAGE_KEYS.COMMENT_TRACKER, trackerData);
         
         // Only update new replies and unread count if not first load
         if (!isFirstLoad) {
           // Merge with existing new replies to prevent overwriting
-          const existingNewReplies = JSON.parse(localStorage.getItem('hn-new-replies') || '{}') as Record<string, NewReply[]>;
+          const existingNewReplies = getJSONValue<Record<string, NewReply[]>>(STORAGE_KEYS.NEW_REPLIES, {});
           const mergedNewReplies: Record<string, NewReply[]> = { ...existingNewReplies };
           
           // Add new replies while preserving existing ones and deduplicating
@@ -58,7 +68,7 @@ export function App() {
             }
           });
 
-          localStorage.setItem('hn-new-replies', JSON.stringify(mergedNewReplies));
+          setJSONValue(STORAGE_KEYS.NEW_REPLIES, mergedNewReplies);
           
           // Calculate total unread count from merged data
           const totalUnreadCount = Object.values(mergedNewReplies)
@@ -70,26 +80,26 @@ export function App() {
               return count + uniqueUnseenReplies.size;
             }, 0);
           
-          localStorage.setItem('hn-unread-count', totalUnreadCount.toString());
+          setStringValue(STORAGE_KEYS.UNREAD_COUNT, totalUnreadCount.toString());
         } else {
           // First load, initialize with empty values
           console.log('App: First load, initializing with empty values');
-          localStorage.setItem('hn-new-replies', '{}');
-          localStorage.setItem('hn-unread-count', '0');
+          setJSONValue(STORAGE_KEYS.NEW_REPLIES, {});
+          setStringValue(STORAGE_KEYS.UNREAD_COUNT, '0');
         }
       } else if (event.data.type === 'getTrackerState') {
         // Send current state back to service worker
-        const trackerData = JSON.parse(localStorage.getItem('hn-comment-tracker') || '{"comments":[]}');
-        const newReplies = JSON.parse(localStorage.getItem('hn-new-replies') || '{}');
+        const trackerData = getJSONValue(STORAGE_KEYS.COMMENT_TRACKER, {"comments":[]});
+        const newReplies = getJSONValue(STORAGE_KEYS.NEW_REPLIES, {});
         navigator.serviceWorker.controller?.postMessage({
           type: 'trackerState',
           data: trackerData,
           newReplies
         });
       } else if (event.data.type === 'clearCommentTracker') {
-        localStorage.removeItem('hn-comment-tracker');
-        localStorage.setItem('hn-new-replies', '{}');
-        localStorage.setItem('hn-unread-count', '0');
+        localStorage.removeItem(STORAGE_KEYS.COMMENT_TRACKER);
+        localStorage.setItem(STORAGE_KEYS.NEW_REPLIES, '{}');
+        localStorage.setItem(STORAGE_KEYS.UNREAD_COUNT, '0');
       }
     };
 
@@ -110,26 +120,28 @@ export function App() {
     <HelmetProvider>
       <Router>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<HNLiveTerminal />}>
-              <Route path="front" element={null} />
-              <Route path="trending" element={null} />
-              <Route path="frontpage-history" element={null} />
-              <Route path="item/:itemId" element={null} />
-              <Route path="item/:itemId/comment/:commentId" element={null} />
-              <Route path="show" element={null} />
-              <Route path="ask" element={null} />
-              <Route path="jobs" element={null} />
-              <Route path="best" element={null} />
-              <Route path="user/:userId" element={null} />
-              <Route path="replay/:itemId" element={null} />
-              <Route path="links/:itemId" element={null} />
-              <Route path="terms" element={null} />
-              <Route path="privacy" element={null} />
-              <Route path="best-comments" element={null} />
-              <Route path="dashboard" element={null} />
-            </Route>
-          </Routes>
+          <RunningStatusProvider>
+            <Routes>
+              <Route path="/" element={<HNLiveTerminal />}>
+                <Route path="front" element={null} />
+                <Route path="trending" element={null} />
+                <Route path="frontpage-history" element={null} />
+                <Route path="item/:itemId" element={null} />
+                <Route path="item/:itemId/comment/:commentId" element={null} />
+                <Route path="show" element={null} />
+                <Route path="ask" element={null} />
+                <Route path="jobs" element={null} />
+                <Route path="best" element={null} />
+                <Route path="user/:userId" element={null} />
+                <Route path="replay/:itemId" element={null} />
+                <Route path="links/:itemId" element={null} />
+                <Route path="terms" element={null} />
+                <Route path="privacy" element={null} />
+                <Route path="best-comments" element={null} />
+                <Route path="dashboard" element={null} />
+              </Route>
+            </Routes>
+          </RunningStatusProvider>
         </AuthProvider>
       </Router>
     </HelmetProvider>

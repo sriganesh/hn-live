@@ -772,7 +772,7 @@ export function StoryView({
                 
                 // Find the top-level parent of this comment
                 let currentId = scrollToId;
-                let targetCommentChain: number[] = [];
+                const targetCommentChain: number[] = [];
                 while (currentId) {
                   targetCommentChain.unshift(currentId);
                   const parent = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentId}.json`, { signal: abortController.signal })
@@ -850,7 +850,7 @@ export function StoryView({
               
               // Find the top-level parent of this comment
               let currentId = scrollToId;
-              let targetCommentChain: number[] = [];
+              const targetCommentChain: number[] = [];
               while (currentId) {
                 targetCommentChain.unshift(currentId);
                 const parent = await fetch(`https://hacker-news.firebaseio.com/v0/item/${currentId}.json`, { signal: abortController.signal })

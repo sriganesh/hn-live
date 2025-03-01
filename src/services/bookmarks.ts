@@ -1,4 +1,5 @@
 import { AUTH_TOKEN_KEY, API_BASE_URL } from '../types/auth';
+import { STORAGE_KEYS } from '../config/constants';
 
 interface BookmarkEntry {
   id: number;
@@ -37,7 +38,7 @@ export async function syncBookmarks() {
     const { bookmarks: cloudBookmarks } = await cloudResponse.json() as { bookmarks: CloudBookmark[] };
 
     // Get local bookmarks
-    const localBookmarks: BookmarkEntry[] = JSON.parse(localStorage.getItem('hn-bookmarks') || '[]');
+    const localBookmarks: BookmarkEntry[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.BOOKMARKS) || '[]');
 
     // Convert cloud bookmarks to local format
     const cloudConverted = cloudBookmarks.map(bookmark => ({
@@ -65,7 +66,7 @@ export async function syncBookmarks() {
       .sort((a, b) => b.timestamp - a.timestamp);
 
     // Update local storage
-    localStorage.setItem('hn-bookmarks', JSON.stringify(mergedBookmarks));
+    localStorage.setItem(STORAGE_KEYS.BOOKMARKS, JSON.stringify(mergedBookmarks));
 
     // Sync back to cloud
     const syncRequest = {

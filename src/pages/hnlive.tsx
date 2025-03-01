@@ -26,8 +26,18 @@ import { TermsPage } from './Terms';
 import { PrivacyPage } from './Privacy';
 import HistoricalFrontPage from '../components/HistoricalFrontPage';
 import { ActivePage } from '../components/ActivePage';
-import { UserDashboardPage } from '../components/UserDashboardPage';
+import { UserDashboardPage } from './UserDashboardPage';
 import { addToHistory } from '../services/history';
+import { useRunningStatus } from '../contexts/RunningStatusContext';
+import { STORAGE_KEYS } from '../config/constants';
+import { showConsoleGreeting } from '../utils/consoleGreeting';
+import {
+  getBooleanValue,
+  getStringValue,
+  getFontSize,
+  getFont,
+  getTheme
+} from '../utils/localStorage';
 
 interface HNItem {
   id: number;
@@ -78,7 +88,6 @@ const MAX_DISPLAY_INTERVAL = 2000; // Maximum time between displaying items
 
 const getStoredSettings = () => {
   try {
-    const storedSize = localStorage.getItem('hn-live-font-size');
     // Determine default font size based on screen width and PWA mode
     const defaultSize = (() => {
       const isPWA = window.matchMedia('(display-mode: standalone)').matches;
@@ -89,20 +98,15 @@ const getStoredSettings = () => {
       return isMobile ? 'sm' as const : 'base' as const;
     })();
 
-    // Validate stored font size
-    const fontSize = storedSize && ['xs', 'sm', 'base', 'lg', 'xl', '2xl'].includes(storedSize) 
-      ? storedSize as 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl'
-      : defaultSize;
-
     return {
-      theme: localStorage.getItem('hn-live-theme') as 'green' | 'og' | 'dog' || 'og',
-      autoscroll: localStorage.getItem('hn-live-autoscroll') === 'true',
-      directLinks: localStorage.getItem('hn-live-direct') === 'true',
-      fontSize,
-      classicLayout: localStorage.getItem('hn-live-classic-layout') === 'true',
-      showCommentParents: localStorage.getItem('hn-live-comment-parents') !== 'false',
-      font: localStorage.getItem('hn-live-font') as FontOption || 'mono',
-      useAlgoliaApi: localStorage.getItem('hn-use-algolia-api') !== 'false'
+      theme: getTheme(),
+      autoscroll: getBooleanValue(STORAGE_KEYS.AUTOSCROLL, false),
+      directLinks: getBooleanValue(STORAGE_KEYS.DIRECT_LINKS, false),
+      fontSize: getFontSize(),
+      classicLayout: getBooleanValue(STORAGE_KEYS.CLASSIC_LAYOUT, false),
+      showCommentParents: getBooleanValue(STORAGE_KEYS.SHOW_COMMENT_PARENTS, true),
+      font: getFont(),
+      useAlgoliaApi: getBooleanValue(STORAGE_KEYS.USE_ALGOLIA_API, true)
     };
   } catch (e) {
     console.warn('Could not access localStorage');
@@ -176,7 +180,7 @@ export default function HNLiveTerminal() {
   
   const [items, setItems] = useState<HNItem[]>([]);
   const [options, setOptions] = useState(getStoredSettings());
-  const [isRunning, setIsRunning] = useState(true);
+  const { isRunning, setIsRunning } = useRunningStatus();
   
   const [filters, setFilters] = useState<SearchFilters>({
     text: ''
@@ -201,8 +205,9 @@ export default function HNLiveTerminal() {
   const location = useLocation();
   const { itemId, commentId } = useParams();
 
-  const { isTopUser, getTopUserClass } = useTopUsers();
-  const { user, isAuthenticated } = useAuth();
+  // Remove unused destructured elements
+  const { /* isTopUser, getTopUserClass */ } = useTopUsers();
+  const { /* user, isAuthenticated */ } = useAuth();
 
   // Format timestamp
   const formatTimestamp = (timestamp: number) => {
@@ -273,7 +278,7 @@ export default function HNLiveTerminal() {
           if (currentParent.type === 'story') {
             parentStory = currentParent;
           }
-        } catch (error) {
+        } catch (error: any) {
           // Only log error if it's not an abort error
           if (error.name !== 'AbortError') {
             console.error('Error fetching parent story:', error);
@@ -325,28 +330,26 @@ export default function HNLiveTerminal() {
 
   // Start/stop feed
   const toggleFeed = () => {
-    setIsRunning(prev => {
-      if (prev) {
-        // If we're stopping, just stop processing and network calls
-        isProcessingRef.current = false;
-        
-        // Abort any ongoing fetches
-        abortControllerRef.current?.abort();
-        
-        // Clear the polling interval
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = undefined;
-        }
-
-        // Clear any pending timeout
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-          timeoutRef.current = undefined;
-        }
+    if (isRunning) {
+      // If we're stopping, just stop processing and network calls
+      isProcessingRef.current = false;
+      
+      // Abort any ongoing fetches
+      abortControllerRef.current?.abort();
+      
+      // Clear the polling interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = undefined;
       }
-      return !prev;
-    });
+
+      // Clear any pending timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = undefined;
+      }
+    }
+    setIsRunning(!isRunning);
   };
 
   // Clear screen
@@ -689,7 +692,7 @@ export default function HNLiveTerminal() {
   // Update the useEffect that handles theme changes
   useEffect(() => {
     try {
-      localStorage.setItem('hn-live-theme', options.theme);
+      localStorage.setItem(STORAGE_KEYS.THEME, options.theme);
       // Add this line to set the data-theme attribute on the HTML element
       document.documentElement.setAttribute('data-theme', options.theme);
     } catch (e) {
@@ -705,7 +708,7 @@ export default function HNLiveTerminal() {
   // Add an effect to save directLinks preference
   useEffect(() => {
     try {
-      localStorage.setItem('hn-live-direct', options.directLinks.toString());
+      localStorage.setItem(STORAGE_KEYS.DIRECT_LINKS, options.directLinks.toString());
     } catch (e) {
       console.warn('Could not save direct links preference');
     }
@@ -714,7 +717,7 @@ export default function HNLiveTerminal() {
   // Add a new effect to save autoscroll changes
   useEffect(() => {
     try {
-      localStorage.setItem('hn-live-autoscroll', options.autoscroll.toString());
+      localStorage.setItem(STORAGE_KEYS.AUTOSCROLL, options.autoscroll.toString());
     } catch (e) {
       console.warn('Could not save autoscroll preference');
     }
@@ -723,7 +726,7 @@ export default function HNLiveTerminal() {
   // Add effect to save font size changes
   useEffect(() => {
     try {
-      localStorage.setItem('hn-live-font-size', options.fontSize);
+      localStorage.setItem(STORAGE_KEYS.FONT_SIZE, options.fontSize);
     } catch (e) {
       console.warn('Could not save font size preference');
     }
@@ -905,26 +908,26 @@ export default function HNLiveTerminal() {
 
   // Add state for username colorization
   const [colorizeUsernames, setColorizeUsernames] = useState(() => {
-    const saved = localStorage.getItem('hn-live-colorize-usernames');
+    const saved = localStorage.getItem(STORAGE_KEYS.COLORIZE_USERNAMES);
     return saved ? JSON.parse(saved) : false; // Default to false - usernames not colorized
   });
 
   // Add effect to save setting
   useEffect(() => {
-    localStorage.setItem('hn-live-colorize-usernames', JSON.stringify(colorizeUsernames));
+    localStorage.setItem(STORAGE_KEYS.COLORIZE_USERNAMES, JSON.stringify(colorizeUsernames));
   }, [colorizeUsernames]);
 
   // Update the settings handler to store the layout preference
   const handleSettingsUpdate = (newOptions: TerminalOptions) => {
     setOptions(newOptions);
     try {
-      localStorage.setItem('hn-live-theme', newOptions.theme);
-      localStorage.setItem('hn-live-autoscroll', String(newOptions.autoscroll));
-      localStorage.setItem('hn-live-direct', String(newOptions.directLinks));
-      localStorage.setItem('hn-live-classic-layout', String(newOptions.classicLayout));
-      localStorage.setItem('hn-live-comment-parents', String(newOptions.showCommentParents));
-      localStorage.setItem('hn-live-font', newOptions.font);
-      localStorage.setItem('hn-use-algolia-api', String(newOptions.useAlgoliaApi));
+      localStorage.setItem(STORAGE_KEYS.THEME, newOptions.theme);
+      localStorage.setItem(STORAGE_KEYS.AUTOSCROLL, String(newOptions.autoscroll));
+      localStorage.setItem(STORAGE_KEYS.DIRECT_LINKS, String(newOptions.directLinks));
+      localStorage.setItem(STORAGE_KEYS.CLASSIC_LAYOUT, String(newOptions.classicLayout));
+      localStorage.setItem(STORAGE_KEYS.SHOW_COMMENT_PARENTS, String(newOptions.showCommentParents));
+      localStorage.setItem(STORAGE_KEYS.FONT, newOptions.font);
+      localStorage.setItem(STORAGE_KEYS.USE_ALGOLIA_API, String(newOptions.useAlgoliaApi));
     } catch (e) {
       console.warn('Could not save settings to localStorage');
     }
@@ -933,7 +936,7 @@ export default function HNLiveTerminal() {
   // Add effect to save comment parent preference
   useEffect(() => {
     try {
-      localStorage.setItem('hn-live-comment-parents', String(options.showCommentParents));
+      localStorage.setItem(STORAGE_KEYS.SHOW_COMMENT_PARENTS, String(options.showCommentParents));
     } catch (e) {
       console.warn('Could not save comment parent preference');
     }
@@ -1018,33 +1021,8 @@ export default function HNLiveTerminal() {
     // Only log if we haven't logged before
     if (hasLoggedRef.current) return;
     hasLoggedRef.current = true;
-
-    const styles = [
-      'color: #ff6600',
-      'font-size: 20px',
-      'font-weight: bold',
-      'padding: 10px',
-    ].join(';');
-
-    const secondaryStyles = [
-      'color: #828282',
-      'font-size: 14px',
-      'padding: 5px',
-    ].join(';');
-
-    console.log('%c👋 Hello fellow hacker!', styles);
-    console.log(
-      '%c💡 Have ideas for making HN Live faster/better? Let us know!', 
-      secondaryStyles
-    );
-    console.log(
-      '%c🐛 Found a bug? Want to add a feature? PRs are welcome!', 
-      secondaryStyles
-    );
-    console.log(
-      '%c🌟 HN Live is open source: https://github.com/sriganesh/hn-live', 
-      secondaryStyles
-    );
+    
+    showConsoleGreeting();
   }, []);
 
   // Add this effect to update theme-color meta tag when theme changes
@@ -1065,7 +1043,7 @@ export default function HNLiveTerminal() {
   // Add near other state declarations
   const [hnUsername, setHnUsername] = useState<string | null>(() => {
     try {
-      return localStorage.getItem('hn-username');
+      return localStorage.getItem(STORAGE_KEYS.USERNAME);
     } catch (e) {
       console.warn('Could not access localStorage');
       return null;
@@ -1076,9 +1054,9 @@ export default function HNLiveTerminal() {
   const handleUpdateHnUsername = (username: string | null) => {
     try {
       if (username) {
-        localStorage.setItem('hn-username', username);
+        localStorage.setItem(STORAGE_KEYS.USERNAME, username);
       } else {
-        localStorage.removeItem('hn-username');
+        localStorage.removeItem(STORAGE_KEYS.USERNAME);
       }
       setHnUsername(username);
     } catch (e) {
@@ -1389,6 +1367,7 @@ export default function HNLiveTerminal() {
               >
                 [?]
               </button>
+              
               {headerText && (
                 headerLink ? (
                   <a 
@@ -1405,6 +1384,8 @@ export default function HNLiveTerminal() {
                   </span>
                 )
               )}
+
+
             </div>
             <div className="flex items-center gap-4">
               {/* Main navigation */}
@@ -1447,7 +1428,7 @@ export default function HNLiveTerminal() {
                           rel="noopener noreferrer"
                           className="block px-4 py-2 hover:opacity-75"
                         >
-                          [{item.label}]
+                          [{typeof item.label === 'string' ? item.label : item.label(hnUsername)}]
                         </a>
                       ) : (
                         <button
@@ -1458,7 +1439,7 @@ export default function HNLiveTerminal() {
                           }}
                           className="w-full text-left px-4 py-2 hover:opacity-75"
                         >
-                          [{item.label}]
+                          [{typeof item.label === 'string' ? item.label : item.label(hnUsername)}]
                         </button>
                       )
                     ))}
@@ -1613,8 +1594,8 @@ export default function HNLiveTerminal() {
                       href={item.formatted?.links.main}
                       className={`${themeColors} transition-colors cursor-pointer`}
                       dangerouslySetInnerHTML={{ 
-                        __html: item.type === 'story' 
-                          ? item.formatted?.text.replace(
+                        __html: item.type === 'story' && item.formatted?.text
+                          ? item.formatted.text.replace(
                               item.title || '',
                               `<span class="font-bold">${item.title || ''}</span>`
                             ) 
@@ -1654,8 +1635,8 @@ export default function HNLiveTerminal() {
                       href={item.formatted?.links.main}
                       className={`${themeColors} transition-colors cursor-pointer`}
                       dangerouslySetInnerHTML={{ 
-                        __html: item.type === 'story' 
-                          ? item.formatted?.text.replace(
+                        __html: item.type === 'story' && item.formatted?.text
+                          ? item.formatted.text.replace(
                               item.title || '',
                               `<span class="font-bold">${item.title || ''}</span>`
                             ) 
@@ -2037,22 +2018,14 @@ export default function HNLiveTerminal() {
 
         {/* Add UserDashboardPage component to the render */}
         {location.pathname === '/dashboard' && (
-          <UserDashboardPage 
-            theme={options.theme}
-            fontSize={options.fontSize}
-            font={options.font}
-            onShowSearch={() => setShowSearch(true)}
-            onCloseSearch={() => setShowSearch(false)}
-            onShowSettings={() => setShowSettings(true)}
-            isRunning={isRunning}
-            onUserClick={(username) => setViewingUser(username)}
-            onUpdateHnUsername={handleUpdateHnUsername}
-            username={hnUsername}
-          />
+          <div className="fixed inset-0 z-[100] bg-inherit overflow-auto">
+            <UserDashboardPage />
+          </div>
         )}
+
       </div>
 
       <Outlet />
     </>
   );
-} 
+}

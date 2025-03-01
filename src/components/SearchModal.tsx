@@ -159,7 +159,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, theme, initi
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex bg-black/80">
+    <div className="fixed inset-0 z-[150] flex bg-black/80">
       <div className={`w-full max-w-3xl h-full sm:h-[90vh] m-auto ${themeColors} border shadow-lg overflow-hidden flex flex-col`}>
         <div className="p-3 sm:p-4 space-y-4 flex flex-col h-full">
           {/* Header */}

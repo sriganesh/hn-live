@@ -4,6 +4,7 @@ import { MobileBottomBar } from './MobileBottomBar';
 import { UserTag } from '../types/UserTag';
 import { FollowButton } from './FollowButton';
 import { topUsers } from '../data/top-users.json';
+import { STORAGE_KEYS } from '../config/constants';
 
 interface UserPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -83,7 +84,7 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
   const [error, setError] = useState<string | null>(null);
   const [userTags, setUserTags] = useState<string[]>(() => {
     try {
-      const tags = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
+      const tags = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
       const userTag = tags.find((t: UserTag) => t.userId === userId);
       return userTag?.tags || [];
     } catch (e) {
@@ -130,6 +131,23 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
     fetchUser();
   }, [userId]);
 
+  // Load user tags
+  useEffect(() => {
+    if (userId) {
+      try {
+        const tags = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
+        const userTags = tags
+          .filter((t: UserTag) => t.userId === userId)
+          .map((t: UserTag) => t.tag);
+        
+        setUserTags(userTags);
+      } catch (e) {
+        console.error('Error loading user tags:', e);
+        setUserTags([]);
+      }
+    }
+  }, [userId]);
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -160,44 +178,47 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
     if (!newTag.trim()) return;
     
     try {
-      const tags: UserTag[] = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
-      const existingTagIndex = tags.findIndex(t => t.userId === userId);
+      const tags: UserTag[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
       
-      if (existingTagIndex >= 0) {
-        if (!tags[existingTagIndex].tags.includes(newTag)) {
-          tags[existingTagIndex].tags.push(newTag);
-          tags[existingTagIndex].timestamp = Date.now();
-        }
-      } else {
+      // Check if this user already has this tag
+      const existingTagIndex = tags.findIndex(t => t.userId === userId && t.tag === newTag.trim());
+      
+      if (existingTagIndex === -1) {
+        // Add new tag
         tags.push({
-          userId: userId!,
-          tags: [newTag],
+          userId,
+          tag: newTag.trim(),
           timestamp: Date.now()
         });
+        
+        // Update localStorage
+        localStorage.setItem(STORAGE_KEYS.USER_TAGS, JSON.stringify(tags));
+        
+        // Update state
+        setUserTags(prev => [...prev, newTag.trim()]);
+        setNewTag('');
       }
-      
-      localStorage.setItem('hn-user-tags', JSON.stringify(tags));
-      setUserTags(prev => [...prev, newTag]);
-      setNewTag('');
     } catch (e) {
       console.error('Error adding tag:', e);
     }
   };
 
   const removeTag = (tagToRemove: string) => {
-    const tags: UserTag[] = JSON.parse(localStorage.getItem('hn-user-tags') || '[]');
-    const userTagIndex = tags.findIndex(t => t.userId === userId);
-    
-    if (userTagIndex >= 0) {
-      tags[userTagIndex].tags = tags[userTagIndex].tags.filter(t => t !== tagToRemove);
-      tags[userTagIndex].timestamp = Date.now();
+    try {
+      const tags: UserTag[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
       
-      if (tags[userTagIndex].tags.length === 0) {
-        tags.splice(userTagIndex, 1);
-      }
+      // Filter out the tag to remove
+      const updatedTags = tags.filter(
+        t => !(t.userId === userId && t.tag === tagToRemove)
+      );
       
-      localStorage.setItem('hn-user-tags', JSON.stringify(tags));
-      setUserTags(prev => prev.filter(t => t !== tagToRemove));
+      // Update localStorage
+      localStorage.setItem(STORAGE_KEYS.USER_TAGS, JSON.stringify(updatedTags));
+      
+      // Update state
+      setUserTags(prev => prev.filter(tag => tag !== tagToRemove));
+    } catch (e) {
+      console.error('Error removing tag:', e);
     }
   };
 
