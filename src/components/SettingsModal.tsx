@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { startTracking } from '../registerServiceWorker';
+import { startTracking } from '../services/registerServiceWorker';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useSettings } from '../hooks/useSettings';
