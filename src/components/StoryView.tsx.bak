@@ -1219,9 +1219,7 @@ export function StoryView({
                     <span className={`ml-1 px-1 py-0.5 text-xs rounded ${
                       theme === 'green' 
                         ? 'bg-green-500/20 text-green-400' 
-                        : theme === 'og'
-                        ? 'bg-orange-500/10 text-orange-600' 
-                        : 'bg-blue-500/20 text-blue-400'
+                        : 'bg-gray-200/10'
                     }`}>
                       [highlighted]
                     </span>
@@ -1984,83 +1982,78 @@ export function StoryView({
                       className="text-center py-8"
                     >
                       {commentState.isLoadingMore ? (
-                        <div className={`${
-                          theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
-                        } opacity-75`}>
-                          Loading more comments...
+                      <div className={`${
+                        theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
+                      } opacity-75`}>
+                        Loading more comments...
+                      </div>
+                    ) : (
+                      <div className="h-20 opacity-50">
+                        <div className="text-sm">
+                          Viewing {commentState.loadedTotal} of {story.descendants} comments ({commentState.loadedCount} threads)
                         </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer message */}
+              {!commentState.hasMore && (
+                <div className="text-center py-8 pb-24 sm:pb-8 space-y-4">
+                  {/* Bottom Announcement */}
+                  {bottomAnnouncement && (
+                    <div className={`mb-4 text-sm ${
+                      theme === 'green' 
+                        ? 'text-green-500' 
+                        : 'text-[#ff6600]'
+                    }`}>
+                      {bottomAnnouncementLink ? (
+                        <a 
+                          href={bottomAnnouncementLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:opacity-75"
+                        >
+                          {bottomAnnouncement}
+                        </a>
                       ) : (
-                        <div className="h-20 opacity-50">
-                          <div className="text-sm">
-                            Viewing {commentState.loadedTotal} of {story.descendants} comments ({commentState.loadedCount} threads)
-                          </div>
-                        </div>
+                        bottomAnnouncement
                       )}
                     </div>
                   )}
-                </div>
 
-                {/* Footer message */}
-                {!commentState.hasMore && (
-                  <div className="text-center py-8 pb-24 sm:pb-8 space-y-4">
-                    {/* Bottom Announcement */}
-                    {bottomAnnouncement && (
-                      <div className={`mb-4 text-sm ${
-                        theme === 'green' 
-                          ? 'text-green-500' 
-                          : 'text-[#ff6600]'
-                      }`}>
-                        {bottomAnnouncementLink ? (
-                          <a 
-                            href={bottomAnnouncementLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:opacity-75"
-                          >
-                            {bottomAnnouncement}
-                          </a>
-                        ) : (
-                          bottomAnnouncement
-                        )}
-                      </div>
-                    )}
-
-                    <div className="text-sm space-y-2">
-                      <div>
-                        <a
-                          href={`https://news.ycombinator.com/item?id=${story.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`${
-                            theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
-                          } hover:opacity-75`}
-                        >
-                          → View this story on Hacker News
-                        </a>
-                      </div>
-                      <div className="my-2">
-                        <span className="opacity-50">or</span>
-                      </div>
-                      <div>
-                        <button
-                          onClick={() => navigate('/')}
-                          className={`${
-                            theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
-                          } hover:opacity-75`}
-                        >
-                          → Head back to the live feed to see real-time stories and discussions
-                        </button>
-                      </div>
+                  <div className="text-sm space-y-2">
+                    <div>
+                      <a
+                        href={`https://news.ycombinator.com/item?id=${story.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${
+                          theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
+                        } hover:opacity-75`}
+                      >
+                        → View this story on Hacker News
+                      </a>
+                    </div>
+                    <div className="my-2">
+                      <span className="opacity-50">or</span>
+                    </div>
+                    <div>
+                      <button
+                        onClick={() => navigate('/')}
+                        className={`${
+                          theme === 'green' ? 'text-green-400' : 'text-[#ff6600]'
+                        } hover:opacity-75`}
+                      >
+                        → Head back to the live feed to see real-time stories and discussions
+                      </button>
                     </div>
                   </div>
-                )}
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                Loading...
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
       
