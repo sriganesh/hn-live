@@ -1586,9 +1586,9 @@ export function StoryView({
       >
         <div 
           ref={containerRef}
-          className="h-full overflow-y-auto p-4"
+          className="h-full overflow-y-auto p-2"
         >
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-4">
             <button 
               onClick={onClose}
               className={`${

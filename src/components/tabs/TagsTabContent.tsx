@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ThemeOption } from '../../types/common';
 import { LoadingIndicator } from '../common/LoadingIndicator';
+import { STORAGE_KEYS } from '../../config/constants';
 
 // Define the actual format of tags in localStorage
 interface StoredTag {
@@ -18,73 +19,76 @@ interface GroupedUserTag {
 
 interface TagsTabContentProps {
   theme: ThemeOption;
-  onViewTag: (tag: string) => void;
-  onUserClick?: (userId: string) => void;
+  onViewUser: (userId: string) => void;
 }
 
-// The correct localStorage key for user tags
-const USER_TAGS_KEY = 'hn-live-user-tags';
+// Use the centralized constant instead of defining it locally
+// const USER_TAGS_KEY = 'hn-live-user-tags';
 
 export const TagsTabContent: React.FC<TagsTabContentProps> = ({
   theme,
-  onViewTag,
-  onUserClick
+  onViewUser
 }) => {
   const { isAuthenticated } = useAuth();
   const [userTags, setUserTags] = useState<GroupedUserTag[]>([]);
   const [loading, setLoading] = useState(true);
+  const [newTag, setNewTag] = useState('');
+  const [userId, setUserId] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  // Load user tags from localStorage and group by userId
+  // Load tags on component mount
   useEffect(() => {
+    loadTags();
+  }, []);
+
+  // Load tags from localStorage
+  const loadTags = () => {
     setLoading(true);
     try {
       // Get user tags from localStorage using the correct key
-      const storedTags: StoredTag[] = JSON.parse(localStorage.getItem(USER_TAGS_KEY) || '[]');
+      const storedTags: StoredTag[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
       
       // Group tags by userId
-      const userTagMap: Record<string, string[]> = {};
+      const groupedTags: { [key: string]: string[] } = {};
       
-      storedTags.forEach(item => {
-        if (!userTagMap[item.userId]) {
-          userTagMap[item.userId] = [];
+      storedTags.forEach(tag => {
+        if (!groupedTags[tag.userId]) {
+          groupedTags[tag.userId] = [];
         }
-        if (!userTagMap[item.userId].includes(item.tag)) {
-          userTagMap[item.userId].push(item.tag);
-        }
+        groupedTags[tag.userId].push(tag.tag);
       });
       
-      // Convert to array format
-      const groupedTags: GroupedUserTag[] = Object.keys(userTagMap).map(userId => ({
+      // Convert to array format for rendering
+      const formattedTags: GroupedUserTag[] = Object.keys(groupedTags).map(userId => ({
         userId,
-        tags: userTagMap[userId]
+        tags: groupedTags[userId]
       }));
       
-      setUserTags(groupedTags);
+      setUserTags(formattedTags);
     } catch (error) {
-      console.error('Error loading user tags from localStorage:', error);
-      setUserTags([]);
-    } finally {
-      setLoading(false);
+      console.error('Error loading tags:', error);
+      setError('Failed to load tags');
     }
-  }, []);
+    setLoading(false);
+  };
 
-  // Handle removing a tag from a user
-  const handleRemoveTag = (userId: string, tagToRemove: string) => {
+  // Remove a tag for a user
+  const removeTag = (userId: string, tagToRemove: string) => {
     try {
       // Get current tags
-      const storedTags: StoredTag[] = JSON.parse(localStorage.getItem(USER_TAGS_KEY) || '[]');
+      const storedTags: StoredTag[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
       
       // Filter out the tag to remove
       const updatedTags = storedTags.filter(
-        item => !(item.userId === userId && item.tag === tagToRemove)
+        tag => !(tag.userId === userId && tag.tag === tagToRemove)
       );
       
       // Save back to localStorage
-      localStorage.setItem(USER_TAGS_KEY, JSON.stringify(updatedTags));
+      localStorage.setItem(STORAGE_KEYS.USER_TAGS, JSON.stringify(updatedTags));
       
       // Update state by removing the tag
-      setUserTags(prev => 
-        prev.map(userTag => {
+      setUserTags(prevTags => 
+        prevTags.map(userTag => {
           if (userTag.userId === userId) {
             return {
               ...userTag,
@@ -96,26 +100,30 @@ export const TagsTabContent: React.FC<TagsTabContentProps> = ({
       );
     } catch (error) {
       console.error('Error removing tag:', error);
+      setError('Failed to remove tag');
     }
   };
 
-  // Export tags function
-  const handleExportTags = () => {
+  // Export tags as JSON file
+  const exportTags = () => {
     try {
       const timestamp = Math.floor(Date.now() / 1000);
-      const storedTags = localStorage.getItem(USER_TAGS_KEY) || '[]';
+      const storedTags = localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]';
       const blob = new Blob([storedTags], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       
       const a = document.createElement('a');
       a.href = url;
-      a.download = `hn-live-tags-${timestamp}.json`;
+      a.download = `hn-live-user-tags-${timestamp}.json`;
       document.body.appendChild(a);
       a.click();
+      
+      // Clean up
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error exporting tags:', error);
+      setError('Failed to export tags');
     }
   };
 
@@ -131,7 +139,7 @@ export const TagsTabContent: React.FC<TagsTabContentProps> = ({
         </div>
         {userTags.length > 0 && (
           <button
-            onClick={handleExportTags}
+            onClick={exportTags}
             className={`opacity-75 hover:opacity-100 ${theme === 'green' ? 'text-green-400' : 'text-[#828282]'}`}
           >
             [EXPORT]
@@ -155,7 +163,7 @@ export const TagsTabContent: React.FC<TagsTabContentProps> = ({
           {userTags.map(userTag => (
             <div key={userTag.userId} className="space-y-2">
               <button
-                onClick={() => onUserClick && onUserClick(userTag.userId)}
+                onClick={() => onViewUser(userTag.userId)}
                 className={`${
                   theme === 'green'
                     ? 'text-green-500'
@@ -176,7 +184,7 @@ export const TagsTabContent: React.FC<TagsTabContentProps> = ({
                   >
                     {tagName}
                     <button
-                      onClick={() => handleRemoveTag(userTag.userId, tagName)}
+                      onClick={() => removeTag(userTag.userId, tagName)}
                       className="opacity-75 hover:opacity-100 ml-1"
                     >
                       ×

@@ -19,9 +19,6 @@ interface BasePageComponentProps extends BasePageProps {
   currentPage?: string;
   isTopUser?: (username: string) => boolean;
   getTopUserClass?: (theme: string) => string;
-  username?: string | null;
-  unreadCount?: number;
-  onCloseSearch?: () => void;
   noMoreContentMessage?: string;
   searchMessage?: string;
   backMessage?: string;
@@ -51,7 +48,6 @@ export const BasePage: React.FC<BasePageComponentProps> = ({
   getTopUserClass = () => '',
   username = null,
   unreadCount = 0,
-  onCloseSearch = () => {},
   noMoreContentMessage,
   searchMessage,
   backMessage
@@ -85,10 +81,9 @@ export const BasePage: React.FC<BasePageComponentProps> = ({
       isRunning={isRunning}
       username={username}
       unreadCount={unreadCount}
-      onCloseSearch={onCloseSearch}
       containerRef={containerRef}
     >
-      <div className="h-full overflow-y-auto p-4" ref={containerRef}>
+      <div className="h-full overflow-y-auto p-2" ref={containerRef}>
         <PageHeader
           theme={theme}
           title={title}
@@ -100,6 +95,7 @@ export const BasePage: React.FC<BasePageComponentProps> = ({
           grepFilter={grepState.searchTerm}
           onGrepFilterChange={updateGrepTerm}
           currentPage={currentPage}
+          unreadCount={unreadCount}
         />
 
         {loading ? (

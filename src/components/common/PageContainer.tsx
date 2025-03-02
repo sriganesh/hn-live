@@ -48,7 +48,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({
         : 'bg-[#1a1a1a] text-[#828282]'}
       text-${fontSize}
     `}>
-      <div className="h-full overflow-y-auto overflow-x-hidden p-4">
+      <div className="h-full overflow-y-auto overflow-x-hidden p-2">
         {children}
       </div>
 

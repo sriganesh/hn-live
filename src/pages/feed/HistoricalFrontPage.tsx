@@ -350,7 +350,7 @@ const HistoricalFrontPage = ({
       text-${fontSize}
     `}>
       {/* Header */}
-      <div className="p-4">
+      <div className="p-2">
         <div className="space-y-2">
           {/* First line - update to include ESC button */}
           <div className="flex items-center gap-4">

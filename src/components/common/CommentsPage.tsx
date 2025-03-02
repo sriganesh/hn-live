@@ -148,7 +148,7 @@ export const CommentsPage: React.FC<CommentsPageProps> = ({
       onCloseSearch={onCloseSearch}
       containerRef={containerRef}
     >
-      <div className="h-full overflow-y-auto overflow-x-hidden p-4 max-w-full" ref={containerRef}>
+      <div className="h-full overflow-y-auto overflow-x-hidden p-2 max-w-full" ref={containerRef}>
         <PageHeader
           theme={theme}
           title={title}
@@ -160,6 +160,7 @@ export const CommentsPage: React.FC<CommentsPageProps> = ({
           grepFilter={grepState.searchTerm}
           onGrepFilterChange={updateGrepTerm}
           currentPage={currentPage}
+          unreadCount={unreadCount}
         />
 
         {loading ? (

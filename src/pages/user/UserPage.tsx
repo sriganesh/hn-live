@@ -319,7 +319,7 @@ export default function UserPage({ theme, fontSize, onShowSearch, onShowSettings
   return (
     <>
       <div className={`fixed inset-0 z-50 ${themeColors} overflow-hidden text-${fontSize}`}>
-        <div className="h-full overflow-y-auto overflow-x-hidden p-4">
+        <div className="h-full overflow-y-auto overflow-x-hidden p-2">
           {/* Header */}
           <div className="max-w-3xl mx-auto mb-8">
             <div className="flex items-center justify-between">

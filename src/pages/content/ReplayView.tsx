@@ -426,7 +426,7 @@ const ReplayView = ({
 
       {/* Comments */}
       <div className="overflow-y-auto h-[calc(100vh-200px)]" ref={containerRef}>
-        <div className="p-4 space-y-6">
+        <div className="p-2 space-y-6">
           {comments.length === 0 ? (
             <div className="text-center py-8">No comments yet</div>
           ) : (
