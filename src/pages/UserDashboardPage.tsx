@@ -9,7 +9,7 @@ import { FollowingTabContent } from '../components/tabs/FollowingTabContent';
 import { TagsTabContent } from '../components/tabs/TagsTabContent';
 import SettingsModal from '../components/SettingsModal';
 import { useRunningStatus } from '../contexts/RunningStatusContext';
-import { MobileBottomBar } from '../components/MobileBottomBar';
+import { MobileBottomBar } from '../components/navigation/MobileBottomBar';
 import SearchModal from '../components/SearchModal';
 import { STORAGE_KEYS } from '../config/constants';
 import {
@@ -258,7 +258,10 @@ export function UserDashboardPage() {
       case 'following':
         return <FollowingTabContent theme={settings.theme} onUserClick={handleUserClick} />;
       case 'tags':
-        return <TagsTabContent theme={settings.theme} onUserClick={handleUserClick} />;
+        return <TagsTabContent 
+          theme={settings.theme} 
+          onViewUser={handleUserClick}
+        />;
       default:
         return <div>Invalid tab</div>;
     }
@@ -388,7 +391,7 @@ export function UserDashboardPage() {
 
   return (
     <div className={`min-h-screen ${themeStyles.background} ${themeStyles.text} relative z-40`}>
-      <div className="max-w-4xl mx-auto p-4">
+      <div className="max-w-4xl mx-auto p-2">
         <div className="mb-6 flex justify-between items-center">
           <h1 className={`text-lg font-bold ${themeStyles.accent} flex items-center`}>
             HN

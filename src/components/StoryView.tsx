@@ -2,8 +2,8 @@ import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTopUsers } from '../hooks/useTopUsers';
-import { UserModal } from './UserModal';
-import { BookmarkButton } from './BookmarkButton';
+import { UserModal } from './user/UserModal';
+import { BookmarkButton } from './common/BookmarkButton';
 import { CopyButton } from './CopyButton';
 import { addToHistory } from '../services/history';
 
@@ -1586,9 +1586,9 @@ export function StoryView({
       >
         <div 
           ref={containerRef}
-          className="h-full overflow-y-auto p-4"
+          className="h-full overflow-y-auto p-2"
         >
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-4">
             <button 
               onClick={onClose}
               className={`${

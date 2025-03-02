@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { UserModal } from './UserModal';
+import { UserModal } from '../../components/user/UserModal';
 
 interface LinksViewProps {
   theme: 'green' | 'og' | 'dog';
@@ -38,6 +38,8 @@ export function LinksView({ theme, fontSize, font, isRunning }: LinksViewProps) 
   const [activeTab, setActiveTab] = useState<'all' | 'external' | 'hn'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewingUser, setViewingUser] = useState<string | null>(null);
+  const [isBackToTopVisible, setIsBackToTopVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Helper function to extract links from HTML text
   const extractLinks = (html: string): { url: string; title?: string }[] => {
@@ -114,6 +116,27 @@ export function LinksView({ theme, fontSize, font, isRunning }: LinksViewProps) 
     }
   }, [itemId]);
 
+  // Add this useEffect to handle scroll detection
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      setIsBackToTopVisible(container.scrollTop > 500);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Add this function to handle the scroll to top
+  const scrollToTop = () => {
+    containerRef.current?.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   // Filter links based on active tab and search term
   const filteredLinks = links.filter(link => {
     const matchesTab = 
@@ -181,8 +204,9 @@ export function LinksView({ theme, fontSize, font, isRunning }: LinksViewProps) 
             : 'bg-[#1a1a1a] text-[#828282]'}
           text-${fontSize}
         `}
+        ref={containerRef}
       >
-        <div className="p-4">
+        <div className="p-2">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <button 
@@ -370,6 +394,36 @@ export function LinksView({ theme, fontSize, font, isRunning }: LinksViewProps) 
           </div>
         </div>
       </div>
+
+      {/* Back to top button */}
+      {isBackToTopVisible && (
+        <button
+          onClick={scrollToTop}
+          className={`fixed bottom-28 right-8 p-2 rounded-full shadow-lg z-[60] 
+            ${theme === 'green' 
+              ? 'bg-green-500/10 hover:bg-green-500/20 text-green-400' 
+              : theme === 'og'
+              ? 'bg-[#ff6600]/10 hover:bg-[#ff6600]/20 text-[#ff6600]'
+              : 'bg-gray-800 hover:bg-gray-700 text-gray-200'
+            }
+            transition-all duration-200 opacity-90 hover:opacity-100`}
+          aria-label="Back to top"
+        >
+          <svg 
+            className="w-6 h-6" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M5 10l7-7m0 0l7 7m-7-7v18"
+            />
+          </svg>
+        </button>
+      )}
 
       {/* Add UserModal at the bottom of the component */}
       {viewingUser && (

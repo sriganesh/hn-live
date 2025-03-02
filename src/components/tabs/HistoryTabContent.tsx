@@ -1,5 +1,4 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useHistory } from '../../hooks/useHistory';
 import { NavigateFunction } from 'react-router-dom';
 

@@ -1,13 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
-import HNLiveTerminal from "./pages/hnlive";
-import { register as registerServiceWorker } from './registerServiceWorker';
+import HNLiveTerminal from "../pages/hnlive";
+import { register as registerServiceWorker } from '../services/registerServiceWorker';
 import { useEffect } from 'react';
-import { AuthProvider } from './contexts/AuthContext';
-import { UserDashboardPage } from './pages/UserDashboardPage';
-import { RunningStatusProvider } from './contexts/RunningStatusContext';
-import { STORAGE_KEYS } from './config/constants';
-import { getTheme, getJSONValue, setJSONValue, setStringValue } from './utils/localStorage';
+import { AuthProvider } from '../contexts/AuthContext';
+import { RunningStatusProvider } from '../contexts/RunningStatusContext';
+import { STORAGE_KEYS } from '../config/constants';
+import { getTheme, getJSONValue, setJSONValue, setStringValue } from '../utils/localStorage';
 
 // Add type definitions at the top
 interface NewReply {
@@ -148,4 +147,4 @@ export function App() {
   );
 }
 
-export default App;
+export default App; 

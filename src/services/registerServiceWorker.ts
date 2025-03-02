@@ -1,4 +1,4 @@
-import { getUsername } from './utils/localStorage';
+import { getUsername } from '../utils/localStorage';
 
 // Register the service worker
 export function register() {

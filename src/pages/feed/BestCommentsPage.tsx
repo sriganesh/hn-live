@@ -1,22 +1,22 @@
 import { useEffect, useRef } from 'react';
-import { useTopUsers } from '../hooks/useTopUsers';
-import { BasePageProps, ThemeOption } from '../types/common';
-import { useHNStories } from '../hooks/useHNStories';
-import { BasePage } from './common/BasePage';
+import { useTopUsers } from '../../hooks/useTopUsers';
+import { BasePageProps, ThemeOption } from '../../types/common';
+import { useBestComments } from '../../hooks/useBestComments';
+import { CommentsPage } from '../../components/common/CommentsPage';
 
-export function BestPage(props: BasePageProps) {
+export function BestCommentsPage(props: BasePageProps) {
   const { isTopUser, getTopUserClass } = useTopUsers();
-  const { stories, loading, loadingMore, hasMore, loadMore, loadStories } = useHNStories('best');
+  const { comments, loading, loadingMore, hasMore, loadMore, loadComments } = useBestComments();
   const initialLoadRef = useRef(false);
 
   // Force the initial load on mount, but only once
   useEffect(() => {
     if (!initialLoadRef.current) {
-      console.log('BestPage: Forcing initial load (first time)');
+      console.log('BestCommentsPage: Forcing initial load (first time)');
       initialLoadRef.current = true;
-      loadStories(1, false);
+      loadComments(1, false);
     }
-  }, [loadStories]);
+  }, [loadComments]);
 
   // Create a wrapper function with the correct type signature
   const getTopUserClassWrapper = (theme: string): string => {
@@ -24,19 +24,19 @@ export function BestPage(props: BasePageProps) {
   };
 
   return (
-    <BasePage
+    <CommentsPage
       {...props}
-      title="BEST"
-      stories={stories}
+      title="BEST COMMENTS"
+      comments={comments}
       loading={loading}
       loadingMore={loadingMore}
       hasMore={hasMore}
       loadMore={loadMore}
-      currentPage="best"
+      currentPage="best-comments"
       isTopUser={isTopUser}
       getTopUserClass={getTopUserClassWrapper}
-      noMoreContentMessage="That's all the Best stories for now!"
-      searchMessage="Search all Best stories in history"
+      noMoreContentMessage="No more comments to load"
+      searchMessage="Search all comments"
       backMessage="Head back to the live feed to see real-time stories and discussions"
     />
   );

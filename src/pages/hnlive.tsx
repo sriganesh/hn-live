@@ -4,28 +4,28 @@ import { StoryView } from '../components/StoryView';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useLocation, useParams, Outlet } from 'react-router-dom';
 import SearchModal from '../components/SearchModal';
-import { FrontPage } from '../components/FrontPage';
-import { ShowPage } from '../components/ShowPage';
-import { AskPage } from '../components/AskPage';
-import { JobsPage } from '../components/JobsPage';
-import { BestPage } from '../components/BestPage';
-import { BestCommentsPage } from '../components/BestCommentsPage';
+import { FrontPage } from '../pages/feed/FrontPage';
+import { ShowPage } from '../pages/feed/ShowPage';
+import { AskPage } from '../pages/feed/AskPage';
+import { JobsPage } from '../pages/feed/JobsPage';
+import { BestPage } from '../pages/feed/BestPage';
+import { BestCommentsPage } from '../pages/feed/BestCommentsPage';
 import { useTopUsers } from '../hooks/useTopUsers';
 import SettingsModal from '../components/SettingsModal';
-import { MobileBottomBar } from '../components/MobileBottomBar';
-import UserPage from '../components/UserPage';
-import { UserModal } from '../components/UserModal';
+import { MobileBottomBar } from '../components/navigation/MobileBottomBar';
+import UserPage from '../pages/user/UserPage';
+import { UserModal } from '../components/user/UserModal';
 import { AboutOverlay } from '../content/about';
 import { navigationItems } from '../config/navigation';
-import { ReplayView } from '../components/ReplayView';
+import ReplayView from '../pages/content/ReplayView';
 import { UpdateNotifier } from '../components/UpdateNotifier';
-import { LinksView } from '../components/LinksView';
+import { LinksView } from '../pages/content/LinksView';
 import { useAuth } from '../contexts/AuthContext';
 import { useSwipeable } from 'react-swipeable';
 import { TermsPage } from './Terms';
 import { PrivacyPage } from './Privacy';
-import HistoricalFrontPage from '../components/HistoricalFrontPage';
-import { ActivePage } from '../components/ActivePage';
+import HistoricalFrontPage from '../pages/feed/HistoricalFrontPage';
+import { ActivePage } from '../pages/feed/ActivePage';
 import { UserDashboardPage } from './UserDashboardPage';
 import { addToHistory } from '../services/history';
 import { useRunningStatus } from '../contexts/RunningStatusContext';
@@ -1691,12 +1691,15 @@ export default function HNLiveTerminal() {
             colorizeUsernames={colorizeUsernames}
             classicLayout={options.classicLayout}
             onShowSearch={() => setShowSearch(true)}
+            onCloseSearch={() => setShowSearch(false)}
             onShowGrep={() => setShowGrep(true)}
             onShowSettings={() => setShowSettings(true)}
             isSettingsOpen={showSettings}
             isSearchOpen={showSearch}
             onViewUser={(userId) => setViewingUser(userId)}
             isRunning={isRunning}
+            username={hnUsername}
+            unreadCount={unreadReplies}
           />
         )}
 
@@ -1740,12 +1743,15 @@ export default function HNLiveTerminal() {
               colorizeUsernames={colorizeUsernames}
               classicLayout={options.classicLayout}
               onShowSearch={() => setShowSearch(true)}
+              onCloseSearch={() => setShowSearch(false)}
               onShowGrep={() => setShowGrep(true)}
               onShowSettings={() => setShowSettings(true)}
               isSettingsOpen={showSettings}
               isSearchOpen={showSearch}
               onViewUser={(userId) => setViewingUser(userId)}
               isRunning={isRunning}
+              username={hnUsername}
+              unreadCount={unreadReplies}
             />
             <SearchModal 
               isOpen={showSearch}
@@ -1766,12 +1772,15 @@ export default function HNLiveTerminal() {
               colorizeUsernames={colorizeUsernames}
               classicLayout={options.classicLayout}
               onShowSearch={() => setShowSearch(true)}
+              onCloseSearch={() => setShowSearch(false)}
               onShowGrep={() => setShowGrep(true)}
               onShowSettings={() => setShowSettings(true)}
               isSettingsOpen={showSettings}
               isSearchOpen={showSearch}
               onViewUser={(userId) => setViewingUser(userId)}
               isRunning={isRunning}
+              username={hnUsername}
+              unreadCount={unreadReplies}
             />
             <SearchModal 
               isOpen={showSearch}
@@ -1784,50 +1793,44 @@ export default function HNLiveTerminal() {
 
         {/* Add the JobsPage component to the render */}
         {location.pathname === '/jobs' && (
-          <>
-            <JobsPage 
-              theme={options.theme}
-              fontSize={options.fontSize}
-              font={options.font}
-              onShowSearch={() => setShowSearch(true)}
-              onShowSettings={() => setShowSettings(true)}
-              isSettingsOpen={showSettings}
-              isSearchOpen={showSearch}
-              isRunning={isRunning}
-              colorizeUsernames={colorizeUsernames}
-              classicLayout={options.classicLayout}
-            />
-            <SearchModal 
-              isOpen={showSearch}
-              onClose={() => setShowSearch(false)}
-              theme={options.theme}
-            />
-          </>
+          <JobsPage 
+            theme={options.theme}
+            fontSize={options.fontSize}
+            font={options.font}
+            colorizeUsernames={colorizeUsernames}
+            classicLayout={options.classicLayout}
+            onShowSearch={() => setShowSearch(true)}
+            onCloseSearch={() => setShowSearch(false)}
+            onShowGrep={() => setShowGrep(true)}
+            onShowSettings={() => setShowSettings(true)}
+            isSettingsOpen={showSettings}
+            isSearchOpen={showSearch}
+            onViewUser={(userId) => setViewingUser(userId)}
+            isRunning={isRunning}
+            username={hnUsername}
+            unreadCount={unreadReplies}
+          />
         )}
 
         {/* Add the BestPage component to the render */}
         {location.pathname === '/best' && (
-          <>
-            <BestPage 
-              theme={options.theme} 
-              fontSize={options.fontSize}
-              font={options.font}
-              colorizeUsernames={colorizeUsernames}
-              classicLayout={options.classicLayout}
-              onShowSearch={() => setShowSearch(true)}
-              onShowGrep={() => setShowGrep(true)}
-              onShowSettings={() => setShowSettings(true)}
-              isSettingsOpen={showSettings}
-              isSearchOpen={showSearch}
-              onViewUser={(userId) => setViewingUser(userId)}
-              isRunning={isRunning}
-            />
-            <SearchModal 
-              isOpen={showSearch}
-              onClose={() => setShowSearch(false)}
-              theme={options.theme}
-            />
-          </>
+          <BestPage 
+            theme={options.theme}
+            fontSize={options.fontSize}
+            font={options.font}
+            colorizeUsernames={colorizeUsernames}
+            classicLayout={options.classicLayout}
+            onShowSearch={() => setShowSearch(true)}
+            onCloseSearch={() => setShowSearch(false)}
+            onShowGrep={() => setShowGrep(true)}
+            onShowSettings={() => setShowSettings(true)}
+            isSettingsOpen={showSettings}
+            isSearchOpen={showSearch}
+            onViewUser={(userId) => setViewingUser(userId)}
+            isRunning={isRunning}
+            username={hnUsername}
+            unreadCount={unreadReplies}
+          />
         )}
 
         {/* Add the Terms page component to the render */}
@@ -1948,6 +1951,8 @@ export default function HNLiveTerminal() {
             onShowSettings={() => setShowSettings(true)}
             isSettingsOpen={showSettings}
             isRunning={isRunning}
+            onShowSearch={() => setShowSearch(true)}
+            isSearchOpen={showSearch}
           />
         )}
 
@@ -1988,12 +1993,15 @@ export default function HNLiveTerminal() {
             colorizeUsernames={colorizeUsernames}
             classicLayout={options.classicLayout}
             onShowSearch={() => setShowSearch(true)}
+            onCloseSearch={() => setShowSearch(false)}
             onShowGrep={() => setShowGrep(true)}
             onShowSettings={() => setShowSettings(true)}
             isSettingsOpen={showSettings}
             isSearchOpen={showSearch}
             onViewUser={(userId) => setViewingUser(userId)}
             isRunning={isRunning}
+            username={hnUsername}
+            unreadCount={unreadReplies}
           />
         )}
 
@@ -2004,8 +2012,10 @@ export default function HNLiveTerminal() {
             fontSize={options.fontSize}
             font={options.font}
             colorizeUsernames={colorizeUsernames}
+            classicLayout={options.classicLayout}
             onShowSearch={() => setShowSearch(true)}
             onCloseSearch={() => setShowSearch(false)}
+            onShowGrep={() => setShowGrep(true)}
             onShowSettings={() => setShowSettings(true)}
             isSettingsOpen={showSettings}
             isSearchOpen={showSearch}

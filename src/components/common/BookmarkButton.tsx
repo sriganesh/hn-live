@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { AUTH_TOKEN_KEY, API_BASE_URL } from '../types/auth';
-import { STORAGE_KEYS } from '../config/constants';
+import { useAuth } from '../../contexts/AuthContext';
+import { AUTH_TOKEN_KEY, API_BASE_URL } from '../../types/auth';
+import { STORAGE_KEYS } from '../../config/constants';
 
 interface BookmarkEntry {
   id: number;

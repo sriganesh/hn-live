@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
-import { BasePageProps, ThemeOption } from '../types/common';
-import { useHNStories } from '../hooks/useHNStories';
-import { BasePage } from './common/BasePage';
+import { BasePageProps, ThemeOption } from '../../types/common';
+import { useHNStories } from '../../hooks/useHNStories';
+import { BasePage } from '../../components/common/BasePage';
 
 export function JobsPage(props: BasePageProps) {
   const { stories, loading, loadingMore, hasMore, loadMore, loadStories } = useHNStories('job');

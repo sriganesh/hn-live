@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { useTopUsers } from '../hooks/useTopUsers';
-import { UserModal } from './UserModal';
+import { useTopUsers } from '../../hooks/useTopUsers';
+import { UserModal } from '../../components/user/UserModal';
 
 interface ReplayViewProps {
   theme: 'green' | 'og' | 'dog';
@@ -610,3 +610,5 @@ function flattenComments(comments: any[], level: number = 0): ReplayComment[] {
     return acc;
   }, []);
 } 
+
+export default ReplayView; 

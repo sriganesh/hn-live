@@ -13,6 +13,7 @@ interface PageHeaderProps {
   grepFilter: string;
   onGrepFilterChange: (value: string) => void;
   currentPage?: string;
+  unreadCount?: number;
 }
 
 export const PageHeader: React.FC<PageHeaderProps> = ({
@@ -25,7 +26,8 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   showGrep,
   grepFilter,
   onGrepFilterChange,
-  currentPage = ''
+  currentPage = '',
+  unreadCount = 0
 }) => {
   const navigate = useNavigate();
 
@@ -47,7 +49,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   return (
     <>
       {/* Desktop view */}
-      <div className="hidden sm:flex items-center justify-between mb-8">
+      <div className="hidden sm:flex items-center justify-between mb-4">
         <div className="flex items-center">
           <button 
             onClick={() => navigate('/')}
@@ -73,6 +75,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
             {title}
           </span>
+          {title === 'FRONT PAGE' && (
+            <button
+              onClick={() => navigate('/frontpage-history')}
+              className={`ml-4 ${themeColors} hover:opacity-75`}
+            >
+              [VIEW HISTORY]
+            </button>
+          )}
         </div>
 
         {/* Desktop controls */}
@@ -116,9 +126,18 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           )}
           <button 
             onClick={() => navigate('/dashboard')}
-            className={themeColors}
+            className={`${themeColors} relative`}
           >
             [DASHBOARD]
+            {unreadCount > 0 && (
+              <span className={`absolute -top-2 -right-2 w-5 h-5 text-xs rounded-full inline-flex items-center justify-center ${
+                theme === 'green' 
+                  ? 'bg-green-500 text-black' 
+                  : 'bg-[#ff6600] text-white'
+              }`}>
+                {unreadCount}
+              </span>
+            )}
           </button>
           <button
             onClick={onShowSettings}
@@ -136,7 +155,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       </div>
 
       {/* Mobile view */}
-      <div className="sm:hidden mb-8">
+      <div className="sm:hidden mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <button 
@@ -160,6 +179,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
               / {title}
             </span>
+            {title === 'FRONT PAGE' && (
+              <button
+                onClick={() => navigate('/frontpage-history')}
+                className={`ml-2 text-sm ${themeColors} hover:opacity-75`}
+              >
+                [HISTORY]
+              </button>
+            )}
           </div>
         </div>
       </div>

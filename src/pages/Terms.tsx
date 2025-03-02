@@ -37,7 +37,7 @@ export function TermsPage({ theme, isRunning }: TermsPageProps) {
         ? 'bg-[#f6f6ef] text-[#828282]'
         : 'bg-[#1a1a1a] text-[#828282]'}
     `}>
-      <div className="h-full overflow-y-auto overflow-x-hidden p-4 pb-20">
+      <div className="h-full overflow-y-auto overflow-x-hidden p-2 pb-20">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">

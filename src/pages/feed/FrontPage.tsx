@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { useTopUsers } from '../hooks/useTopUsers';
-import { BasePageProps, ThemeOption } from '../types/common';
-import { useHNStories } from '../hooks/useHNStories';
-import { BasePage } from './common/BasePage';
+import { useTopUsers } from '../../hooks/useTopUsers';
+import { BasePageProps, ThemeOption } from '../../types/common';
+import { useHNStories } from '../../hooks/useHNStories';
+import { BasePage } from '../../components/common/BasePage';
 
 export function FrontPage(props: BasePageProps) {
   const { isTopUser, getTopUserClass } = useTopUsers();

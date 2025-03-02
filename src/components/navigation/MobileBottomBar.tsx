@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MOBILE_MENU_ITEMS } from '../config/navigation';
+import { MOBILE_MENU_ITEMS } from '../../config/navigation';
 
 interface MobileBottomBarProps {
   theme: 'green' | 'og' | 'dog';
@@ -10,9 +10,10 @@ interface MobileBottomBarProps {
   isRunning: boolean;
   username: string | null;
   unreadCount?: number;
+  className?: string;
 }
 
-export function MobileBottomBar({ theme, onShowSearch, onCloseSearch, onShowSettings, isRunning, username, unreadCount = 0 }: MobileBottomBarProps) {
+export function MobileBottomBar({ theme, onShowSearch, onCloseSearch, onShowSettings, isRunning, username, unreadCount = 0, className = '' }: MobileBottomBarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -82,6 +83,7 @@ export function MobileBottomBar({ theme, onShowSearch, onCloseSearch, onShowSett
         translate-y-[0.5rem]
         bottom-0
         z-[9999]
+        ${className}
       `}>
         <div className="grid grid-cols-6 w-full py-2 px-4">
           <div className="flex justify-center">
