@@ -81,10 +81,12 @@ const HistoricalFrontPage = ({
     const params = new URLSearchParams(window.location.search);
     const dateParam = params.get('date');
     if (dateParam) {
-      const date = new Date(dateParam);
-      if (!isNaN(date.getTime())) {
-        // Set to beginning of day in local time
-        date.setHours(0, 0, 0, 0);
+      // Parse the date parts manually to avoid timezone issues
+      const [year, month, day] = dateParam.split('-').map(Number);
+      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+        // Create date in local time zone (months are 0-indexed in JS Date)
+        const date = new Date(year, month - 1, day);
+        // Don't adjust hours - keep it as is
         return date;
       }
     }
@@ -240,13 +242,10 @@ const HistoricalFrontPage = ({
     }
 
     try {
-      // Convert to local date with time set to beginning of day
-      const selectedDate = new Date(date);
-      selectedDate.setHours(0, 0, 0, 0);
-      
-      // Compare dates using local time
+      // For date comparison, we need to ensure we're working with the date as provided
+      // without any timezone adjustments
+      const selectedDateStr = formatDateForApi(date);
       const todayStr = formatDateForApi(TODAY);
-      const selectedDateStr = formatDateForApi(selectedDate);
       
       // If date is today, use Firebase topstories API with pagination
       if (selectedDateStr === todayStr) {
@@ -267,8 +266,9 @@ const HistoricalFrontPage = ({
         setHasMore(end < allIds.length);
       } 
       // Use our custom API for all other dates
-      else if (selectedDate.getTime() >= START_DATE.getTime()) {
-        const formattedDate = formatDateForApi(selectedDate);
+      else if (new Date(date).getTime() >= START_DATE.getTime()) {
+        // Use the formatted date string directly without creating a new Date object
+        const formattedDate = selectedDateStr;
         const response = await fetch(`https://fp-api.hn.live/?date=${formattedDate}&page=${page}`);
         
         // If we get a 404, it just means no more pages - handle silently
@@ -425,7 +425,13 @@ const HistoricalFrontPage = ({
 
   // Update URL when date changes
   useEffect(() => {
-    const formattedDate = formatDateForApi(selectedDate);
+    // Use the exact date parts from the selectedDate to create the URL
+    // This ensures we don't have timezone issues
+    const year = selectedDate.getFullYear();
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(selectedDate.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+    
     const newUrl = `/frontpage-history?date=${formattedDate}`;
     window.history.replaceState({}, '', newUrl);
   }, [selectedDate]);
@@ -724,11 +730,18 @@ const HistoricalFrontPage = ({
                 }
                 setIsDragging(false);
               }}
+              // Add touch-action to improve touch handling
+              style={{ touchAction: 'none' }}
+              // Add aria attributes for accessibility
+              aria-label="Date slider"
+              aria-valuemin={0}
+              aria-valuemax={getTotalDays()}
+              aria-valuenow={dateToSliderValue(tempDate || selectedDate)}
               className={`
-                w-full h-2 rounded-lg appearance-none cursor-pointer
+                w-full rounded-lg appearance-none cursor-pointer
                 ${theme === 'green'
-                  ? 'bg-green-500/20 range-slider-green'
-                  : 'bg-[#ff6600]/20 range-slider-orange'
+                  ? 'range-slider-green'
+                  : 'range-slider-orange'
                 }
                 range-slider
               `}
