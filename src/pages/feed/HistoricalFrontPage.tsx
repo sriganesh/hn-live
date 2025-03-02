@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MobileBottomBar } from '../../components/navigation/MobileBottomBar';
+import { useSwipeable } from 'react-swipeable';
+import '../../styles/historyPageAnimations.css'; // Import the animations from styles directory
 
 interface HistoricalFrontPageProps {
   theme: 'green' | 'og' | 'dog';
@@ -59,9 +61,19 @@ const HistoricalFrontPage = ({
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadingRef = useRef<HTMLDivElement>(null);
   const [allStoryIds, setAllStoryIds] = useState<string[]>([]);
+  const [swipeAnimation, setSwipeAnimation] = useState<string>('');
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Constants for date range - use UTC dates
-  const START_DATE = new Date(Date.UTC(2007, 1, 19)); // February 19, 2007 UTC
+  // Constants for date range - use local dates instead of UTC
+  const START_DATE = new Date(2007, 1, 19); // February 19, 2007 in local time
+  
+  // Get today's date in local time
+  const TODAY = new Date();
+  TODAY.setHours(0, 0, 0, 0); // Set to beginning of day in local time
+
+  // Get yesterday's date in local time
+  const YESTERDAY = new Date(TODAY);
+  YESTERDAY.setDate(YESTERDAY.getDate() - 1);
 
   // Initialize with today's date
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
@@ -71,55 +83,137 @@ const HistoricalFrontPage = ({
     if (dateParam) {
       const date = new Date(dateParam);
       if (!isNaN(date.getTime())) {
-        return new Date(Date.UTC(
-          date.getUTCFullYear(),
-          date.getUTCMonth(),
-          date.getUTCDate()
-        ));
+        // Set to beginning of day in local time
+        date.setHours(0, 0, 0, 0);
+        return date;
       }
     }
     // Fall back to today's date
-    const now = new Date();
-    return new Date(Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate()
-    ));
+    return TODAY;
+  });
+
+  // Function to navigate to the previous day
+  const goToPreviousDay = useCallback(() => {
+    if (selectedDate.getTime() <= START_DATE.getTime() || isTransitioning) {
+      // Already at the earliest date or currently transitioning, don't go further back
+      return;
+    }
+    
+    // Set transitioning state to prevent multiple swipes
+    setIsTransitioning(true);
+    
+    // Create a new date object for the previous day
+    const prevDate = new Date(selectedDate);
+    prevDate.setDate(prevDate.getDate() - 1);
+    
+    // Set animation
+    setSwipeAnimation('slide-right');
+    
+    // Update the date after animation is mostly complete
+    setTimeout(() => {
+      // Clear animation first
+      setSwipeAnimation('');
+      
+      // Small delay before changing date to ensure overlay is still visible
+      setTimeout(() => {
+        setSelectedDate(prevDate);
+        
+        // Keep overlay visible until content is loaded
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 500);
+      }, 50);
+    }, 200);
+  }, [selectedDate, isTransitioning]);
+
+  // Function to navigate to the next day
+  const goToNextDay = useCallback(() => {
+    // Check if we're already at today's date or currently transitioning
+    if (selectedDate.getTime() >= TODAY.getTime() || isTransitioning) {
+      // Already at today or currently transitioning, don't go further
+      return;
+    }
+    
+    // Set transitioning state to prevent multiple swipes
+    setIsTransitioning(true);
+    
+    // Create a new date object for the next day
+    const nextDate = new Date(selectedDate);
+    nextDate.setDate(nextDate.getDate() + 1);
+    
+    // If the next date would be after today, set it to today
+    if (nextDate.getTime() > TODAY.getTime()) {
+      nextDate.setTime(TODAY.getTime());
+    }
+    
+    // Set animation
+    setSwipeAnimation('slide-left');
+    
+    // Update the date after animation is mostly complete
+    setTimeout(() => {
+      // Clear animation first
+      setSwipeAnimation('');
+      
+      // Small delay before changing date to ensure overlay is still visible
+      setTimeout(() => {
+        setSelectedDate(nextDate);
+        
+        // Keep overlay visible until content is loaded
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 500);
+      }, 50);
+    }, 200);
+  }, [selectedDate, TODAY, isTransitioning]);
+
+  // Set up swipe handlers
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      // Swipe left means go to next day (newer)
+      goToNextDay();
+    },
+    onSwipedRight: () => {
+      // Swipe right means go to previous day (older)
+      goToPreviousDay();
+    },
+    preventScrollOnSwipe: true,
+    trackTouch: true,
+    trackMouse: false,
+    delta: 50, // minimum swipe distance
+    swipeDuration: 500, // maximum time for swipe motion
+    touchEventOptions: { passive: false } // important for preventing default touch behavior
   });
 
   // Format date for API call - convert local date to YYYY-MM-DD format
   const formatDateForApi = (date: Date) => {
-    // Use UTC methods to ensure consistent date formatting
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
 
   // Format date for display (with weekday) - for header
   const formatDisplayDate = (date: Date) => {
-    return new Date(date.getTime()).toLocaleDateString(undefined, {
+    return date.toLocaleDateString(undefined, {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric',
-      timeZone: 'UTC' // Force UTC timezone for display
+      day: 'numeric'
     });
   };
 
   // Format date for slider (without weekday and with short month)
   const formatSliderDate = (date: Date) => {
-    return new Date(date.getTime()).toLocaleDateString(undefined, {
+    return date.toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
-      timeZone: 'UTC'
+      day: 'numeric'
     });
   };
 
   // Format start date to show only year
   const formatStartDate = (date: Date) => {
-    return new Date(date.getTime()).toLocaleDateString(undefined, {
+    return date.toLocaleDateString(undefined, {
       year: 'numeric'
     });
   };
@@ -146,14 +240,16 @@ const HistoricalFrontPage = ({
     }
 
     try {
-      const selectedDate = new Date(Date.UTC(
-        date.getUTCFullYear(),
-        date.getUTCMonth(),
-        date.getUTCDate()
-      ));
+      // Convert to local date with time set to beginning of day
+      const selectedDate = new Date(date);
+      selectedDate.setHours(0, 0, 0, 0);
+      
+      // Compare dates using local time
+      const todayStr = formatDateForApi(TODAY);
+      const selectedDateStr = formatDateForApi(selectedDate);
       
       // If date is today, use Firebase topstories API with pagination
-      if (selectedDate.toISOString().split('T')[0] === new Date().toISOString().split('T')[0]) {
+      if (selectedDateStr === todayStr) {
         const response = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json');
         const allIds = await response.json();
         setAllStoryIds(allIds.map(String));
@@ -169,7 +265,9 @@ const HistoricalFrontPage = ({
         
         setStories(prev => append ? [...prev, ...validStories] : validStories);
         setHasMore(end < allIds.length);
-      } else if (selectedDate.getTime() >= START_DATE.getTime()) {
+      } 
+      // Use our custom API for all other dates
+      else if (selectedDate.getTime() >= START_DATE.getTime()) {
         const formattedDate = formatDateForApi(selectedDate);
         const response = await fetch(`https://fp-api.hn.live/?date=${formattedDate}&page=${page}`);
         
@@ -217,12 +315,12 @@ const HistoricalFrontPage = ({
 
   const sliderValueToDate = (value: number) => {
     const newDate = new Date(START_DATE.getTime());
-    newDate.setUTCDate(START_DATE.getUTCDate() + value);
+    newDate.setDate(START_DATE.getDate() + value);
     
     // Check specifically for Feb 18, 2007 using UTC methods
-    if (newDate.getUTCFullYear() === 2007 && 
-        newDate.getUTCMonth() === 1 && 
-        newDate.getUTCDate() === 18) {
+    if (newDate.getFullYear() === 2007 && 
+        newDate.getMonth() === 1 && 
+        newDate.getDate() === 18) {
       return new Date(START_DATE.getTime());
     }
     
@@ -236,9 +334,9 @@ const HistoricalFrontPage = ({
 
   const dateToSliderValue = (date: Date) => {
     // Check specifically for Feb 18, 2007 using UTC methods
-    if (date.getUTCFullYear() === 2007 && 
-        date.getUTCMonth() === 1 && 
-        date.getUTCDate() === 18) {
+    if (date.getFullYear() === 2007 && 
+        date.getMonth() === 1 && 
+        date.getDate() === 18) {
       return 0;
     }
     
@@ -333,299 +431,323 @@ const HistoricalFrontPage = ({
   }, [selectedDate]);
 
   return (
-    <div className={`
-      fixed inset-0 z-50 overflow-x-hidden
-      ${font === 'mono' ? 'font-mono' : 
-        font === 'jetbrains' ? 'font-jetbrains' :
-        font === 'fira' ? 'font-fira' :
-        font === 'source' ? 'font-source' :
-        font === 'sans' ? 'font-sans' :
-        font === 'serif' ? 'font-serif' :
-        'font-system'}
-      ${theme === 'green'
-        ? 'bg-black text-green-400'
-        : theme === 'og'
-        ? 'bg-[#f6f6ef] text-[#828282]'
-        : 'bg-[#1a1a1a] text-[#828282]'}
-      text-${fontSize}
-    `}>
-      {/* Header */}
-      <div className="p-2">
-        <div className="space-y-2">
-          {/* First line - update to include ESC button */}
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => navigate('/')}
-              className={`${
-                theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
-              } font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
-            >
-              HN
-              <span className="animate-pulse">
-                <span className={`inline-block w-2 h-2 rounded-full ${
-                  isRunning ? 'bg-current' : 'bg-gray-500'
-                } opacity-50`}></span>
-              </span>
-              LIVE
-            </button>
-            <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
-              /
-            </span>
-            <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
-              FRONT PAGE HISTORY
-            </span>
-            <div className="flex-1" />
-            <button
-              onClick={() => navigate(-1)}
-              className="opacity-50 hover:opacity-100"
-            >
-              [ESC]
-            </button>
-          </div>
-
-          {/* Second line */}
-          <div className={`${theme === 'green' ? 'text-green-400' : 'text-[#828282]'} opacity-75`}>
-            {formatDisplayDate(tempDate || selectedDate)}
+    <>
+      {/* Transition overlay - completely blocks any content from showing through */}
+      {isTransitioning && (
+        <div 
+          className={`fixed inset-0 z-[200] ${
+            theme === 'green'
+              ? 'bg-black'
+              : theme === 'og'
+              ? 'bg-[#f6f6ef]'
+              : 'bg-[#1a1a1a]'
+          } flex items-center justify-center`}
+        >
+          <div className={`${
+            theme === 'green' ? 'text-green-400' : 'text-[#828282]'
+          } text-center`}>
+            <div className="animate-pulse">Loading...</div>
           </div>
         </div>
-      </div>
-
-      {/* Scrollable Content Area */}
-      <div className="overflow-y-auto h-full pb-[240px] sm:pb-52">
-        <div className="px-4">
-          {loading ? (
-            <div className="flex items-center justify-center h-32">
-              Loading stories...
-            </div>
-          ) : (
-            <div className={`max-w-3xl mx-auto space-y-6 ${!hasMore ? 'pb-4' : ''}`}>
-              {stories.map((story, index) => (
-                <div key={story.id} className="group relative">
-                  {classicLayout ? (
-                    <div className="flex items-baseline gap-2">
-                      <span className="opacity-50">{index + 1}.</span>
-                      <div className="space-y-1">
-                        <div>
-                          <a
-                            href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
-                            onClick={(e) => {
-                              if (!story.url) {
-                                e.preventDefault();
-                                navigate(`/item/${story.id}`);
-                              }
-                            }}
-                            className={`
-                              group-hover:opacity-75
-                              ${story.url && theme === 'green' && 'visited:text-green-600/30'}
-                              ${story.url && theme === 'og' && 'visited:text-[#999999]'}
-                              ${story.url && theme === 'dog' && 'visited:text-[#666666]'}
-                            `}
-                            target={story.url ? "_blank" : undefined}
-                            rel={story.url ? "noopener noreferrer" : undefined}
-                          >
-                            {story.title}
-                          </a>
-                          {story.url && (
-                            <span className="ml-2 opacity-50 text-sm break-all">
-                              ({truncateUrl(new URL(story.url).hostname.replace('www.', ''), 30)})
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm opacity-75">
-                          {story.score} points by{' '}
-                          <button 
-                            onClick={() => onViewUser(story.by)}
-                            className={`hover:underline ${
-                              theme === 'green'
-                                ? 'text-green-400'
-                                : colorizeUsernames 
-                                  ? 'hn-username'
-                                  : 'opacity-75'
-                            }`}
-                          >
-                            {story.by}
-                          </button>{' '}
-                          <span className="opacity-75">•</span>{' '}
-                          <button
-                            onClick={() => navigate(`/item/${story.id}`)}
-                            className="hover:underline"
-                          >
-                            {story.descendants || 0} comments
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-baseline gap-3">
-                      <span className={`${theme === 'green' ? 'text-green-500/50' : 'text-[#ff6600]/50'} text-sm font-mono`}>
-                        {(index + 1).toString().padStart(2, '0')}
-                      </span>
-                      <div className="space-y-1 flex-1">
-                        {story.url && (
-                          <div className="flex items-center text-sm opacity-50">
-                            <span className="truncate max-w-full inline-block break-all">
-                              {truncateUrl(new URL(story.url).hostname.replace('www.', ''), 60)}
-                            </span>
-                          </div>
-                        )}
-                        <div className="pr-4">
-                          <a
-                            href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
-                            onClick={(e) => {
-                              if (!story.url) {
-                                e.preventDefault();
-                                navigate(`/item/${story.id}`);
-                              }
-                            }}
-                            className={`
-                              group-hover:opacity-75
-                              ${story.url && theme === 'green' && 'visited:text-green-600/30'}
-                              ${story.url && theme === 'og' && 'visited:text-[#999999]'}
-                              ${story.url && theme === 'dog' && 'visited:text-[#666666]'}
-                            `}
-                            target={story.url ? "_blank" : undefined}
-                            rel={story.url ? "noopener noreferrer" : undefined}
-                          >
-                            {story.title}
-                          </a>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                          <button 
-                            onClick={() => onViewUser(story.by)}
-                            className={`hover:underline ${
-                              theme === 'green'
-                                ? 'text-green-400'
-                                : colorizeUsernames 
-                                  ? 'hn-username'
-                                  : 'opacity-75'
-                            }`}
-                          >
-                            {story.by}
-                          </button>
-                          <span className="opacity-75">•</span>
-                          <span className="font-mono opacity-75">
-                            {story.score} points
-                          </span>
-                          <span className="opacity-75">•</span>
-                          <button
-                            onClick={() => navigate(`/item/${story.id}`)}
-                            className="opacity-75 hover:opacity-100 hover:underline"
-                          >
-                            {story.descendants 
-                              ? `${story.descendants} comment${story.descendants === 1 ? '' : 's'}`
-                              : 'discuss'
-                            }
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div className={`border-b ${
-                    theme === 'green' 
-                      ? 'border-green-500/10' 
-                      : theme === 'og'
-                      ? 'border-[#ff6600]/5'
-                      : 'border-[#828282]/10'
-                  } mt-4`} />
-                </div>
-              ))}
-              {!loading && hasMore && (
-                <div ref={loadingRef} className="text-center py-8">
-                  {loadingMore ? (
-                    <div className="opacity-75">Loading more stories...</div>
-                  ) : (
-                    <div className="h-20"></div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Fixed Bottom Slider - use dynamic viewport calculation */}
-      <div className={`
-        fixed sm:bottom-0 left-0 right-0 z-20
+      )}
+      
+      <div 
+        {...swipeHandlers}
+        className={`
+        fixed inset-0 z-50 overflow-x-hidden
+        ${font === 'mono' ? 'font-mono' : 
+          font === 'jetbrains' ? 'font-jetbrains' :
+          font === 'fira' ? 'font-fira' :
+          font === 'source' ? 'font-source' :
+          font === 'sans' ? 'font-sans' :
+          font === 'serif' ? 'font-serif' :
+          'font-system'}
         ${theme === 'green'
-          ? 'bg-black'
+          ? 'bg-black text-green-400'
           : theme === 'og'
-          ? 'bg-[#f6f6ef]'
-          : 'bg-[#1a1a1a]'}
-        border-t ${
-          theme === 'green'
-            ? 'border-green-500/20'
-            : theme === 'og'
-            ? 'border-[#ff6600]/20'
-            : 'border-[#828282]/20'
-        }
-        px-4 py-6
-        bottom-[calc(env(safe-area-inset-bottom,_0px)_+_3.5rem)]
+          ? 'bg-[#f6f6ef] text-[#828282]'
+          : 'bg-[#1a1a1a] text-[#828282]'}
+        text-${fontSize}
+        ${swipeAnimation}
       `}>
-        <div className="max-w-3xl mx-auto space-y-4">
-          {/* Date display */}
-          <div className="relative flex justify-between items-center text-sm">
-            <span className="opacity-50">
-              {formatStartDate(new Date('2007-02-19'))}
-            </span>
-            <span className={`absolute left-1/2 -translate-x-1/2 ${
-              isDragging ? 'opacity-100' : 'opacity-50'
-            } transition-opacity`}>
-              {formatSliderDate(tempDate || selectedDate)}
-            </span>
-            <span className="opacity-50">Today</span>
-          </div>
-          
-          {/* Slider */}
-          <input
-            type="range"
-            min="0"
-            max={getTotalDays()}
-            step="1"
-            value={dateToSliderValue(tempDate || selectedDate)}
-            onChange={(e) => {
-              const value = Math.max(0, parseInt(e.target.value));
-              const newDate = sliderValueToDate(value);
-              setTempDate(newDate); // Only update temp date while dragging
-            }}
-            onMouseDown={() => setIsDragging(true)}
-            onMouseUp={() => {
-              if (tempDate) {
-                setSelectedDate(tempDate); // This will trigger URL update and data fetch
-                setTempDate(null);
-              }
-              setIsDragging(false);
-            }}
-            onTouchStart={() => setIsDragging(true)}
-            onTouchEnd={() => {
-              if (tempDate) {
-                setSelectedDate(tempDate); // This will trigger URL update and data fetch
-                setTempDate(null);
-              }
-              setIsDragging(false);
-            }}
-            className={`
-              w-full h-2 rounded-lg appearance-none cursor-pointer
-              ${theme === 'green'
-                ? 'bg-green-500/20 range-slider-green'
-                : 'bg-[#ff6600]/20 range-slider-orange'
-              }
-              range-slider
-            `}
-          />
-        </div>
-      </div>
+        {/* Header */}
+        <div className="p-2">
+          <div className="space-y-2">
+            {/* First line - update to include ESC button */}
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => navigate('/')}
+                className={`${
+                  theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
+                } font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
+              >
+                HN
+                <span className="animate-pulse">
+                  <span className={`inline-block w-2 h-2 rounded-full ${
+                    isRunning ? 'bg-current' : 'bg-gray-500'
+                  } opacity-50`}></span>
+                </span>
+                LIVE
+              </button>
+              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
+                /
+              </span>
+              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
+                FRONT PAGE HISTORY
+              </span>
+              <div className="flex-1" />
+              <button
+                onClick={() => navigate(-1)}
+                className="opacity-50 hover:opacity-100"
+              >
+                [ESC]
+              </button>
+            </div>
 
-      <MobileBottomBar 
-        theme={theme}
-        onShowSearch={onShowSearch}
-        onShowSettings={onShowSettings}
-        onCloseSearch={() => {}}
-        isRunning={isRunning}
-        username={null}
-        unreadCount={0}
-        className="z-30"
-      />
-    </div>
+            {/* Second line */}
+            <div className={`${theme === 'green' ? 'text-green-400' : 'text-[#828282]'} opacity-75`}>
+              {formatDisplayDate(tempDate || selectedDate)}
+            </div>
+          </div>
+        </div>
+
+        {/* Scrollable Content Area */}
+        <div className="overflow-y-auto h-full pb-[240px] sm:pb-52">
+          <div className="px-4">
+            {loading ? (
+              <div className="flex items-center justify-center h-32">
+                Loading stories...
+              </div>
+            ) : (
+              <div className={`max-w-3xl mx-auto space-y-6 ${!hasMore ? 'pb-4' : ''}`}>
+                {stories.map((story, index) => (
+                  <div key={story.id} className="group relative">
+                    {classicLayout ? (
+                      <div className="flex items-baseline gap-2">
+                        <span className="opacity-50">{index + 1}.</span>
+                        <div className="space-y-1">
+                          <div>
+                            <a
+                              href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
+                              onClick={(e) => {
+                                if (!story.url) {
+                                  e.preventDefault();
+                                  navigate(`/item/${story.id}`);
+                                }
+                              }}
+                              className={`
+                                group-hover:opacity-75
+                                ${story.url && theme === 'green' && 'visited:text-green-600/30'}
+                                ${story.url && theme === 'og' && 'visited:text-[#999999]'}
+                                ${story.url && theme === 'dog' && 'visited:text-[#666666]'}
+                              `}
+                              target={story.url ? "_blank" : undefined}
+                              rel={story.url ? "noopener noreferrer" : undefined}
+                            >
+                              {story.title}
+                            </a>
+                            {story.url && (
+                              <span className="ml-2 opacity-50 text-sm break-all">
+                                ({truncateUrl(new URL(story.url).hostname.replace('www.', ''), 30)})
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-sm opacity-75">
+                            {story.score} points by{' '}
+                            <button 
+                              onClick={() => onViewUser(story.by)}
+                              className={`hover:underline ${
+                                theme === 'green'
+                                  ? 'text-green-400'
+                                  : colorizeUsernames 
+                                    ? 'hn-username'
+                                    : 'opacity-75'
+                              }`}
+                            >
+                              {story.by}
+                            </button>{' '}
+                            <span className="opacity-75">•</span>{' '}
+                            <button
+                              onClick={() => navigate(`/item/${story.id}`)}
+                              className="hover:underline"
+                            >
+                              {story.descendants || 0} comments
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-baseline gap-3">
+                        <span className={`${theme === 'green' ? 'text-green-500/50' : 'text-[#ff6600]/50'} text-sm font-mono`}>
+                          {(index + 1).toString().padStart(2, '0')}
+                        </span>
+                        <div className="space-y-1 flex-1">
+                          {story.url && (
+                            <div className="flex items-center text-sm opacity-50">
+                              <span className="truncate max-w-full inline-block break-all">
+                                {truncateUrl(new URL(story.url).hostname.replace('www.', ''), 60)}
+                              </span>
+                            </div>
+                          )}
+                          <div className="pr-4">
+                            <a
+                              href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
+                              onClick={(e) => {
+                                if (!story.url) {
+                                  e.preventDefault();
+                                  navigate(`/item/${story.id}`);
+                                }
+                              }}
+                              className={`
+                                group-hover:opacity-75
+                                ${story.url && theme === 'green' && 'visited:text-green-600/30'}
+                                ${story.url && theme === 'og' && 'visited:text-[#999999]'}
+                                ${story.url && theme === 'dog' && 'visited:text-[#666666]'}
+                              `}
+                              target={story.url ? "_blank" : undefined}
+                              rel={story.url ? "noopener noreferrer" : undefined}
+                            >
+                              {story.title}
+                            </a>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                            <button 
+                              onClick={() => onViewUser(story.by)}
+                              className={`hover:underline ${
+                                theme === 'green'
+                                  ? 'text-green-400'
+                                  : colorizeUsernames 
+                                    ? 'hn-username'
+                                    : 'opacity-75'
+                              }`}
+                            >
+                              {story.by}
+                            </button>
+                            <span className="opacity-75">•</span>
+                            <span className="font-mono opacity-75">
+                              {story.score} points
+                            </span>
+                            <span className="opacity-75">•</span>
+                            <button
+                              onClick={() => navigate(`/item/${story.id}`)}
+                              className="opacity-75 hover:opacity-100 hover:underline"
+                            >
+                              {story.descendants 
+                                ? `${story.descendants} comment${story.descendants === 1 ? '' : 's'}`
+                                : 'discuss'
+                              }
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div className={`border-b ${
+                      theme === 'green' 
+                        ? 'border-green-500/10' 
+                        : theme === 'og'
+                        ? 'border-[#ff6600]/5'
+                        : 'border-[#828282]/10'
+                    } mt-4`} />
+                  </div>
+                ))}
+                {!loading && hasMore && (
+                  <div ref={loadingRef} className="text-center py-8">
+                    {loadingMore ? (
+                      <div className="opacity-75">Loading more stories...</div>
+                    ) : (
+                      <div className="h-20"></div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Fixed Bottom Slider - use dynamic viewport calculation */}
+        <div className={`
+          fixed sm:bottom-0 left-0 right-0 z-20
+          ${theme === 'green'
+            ? 'bg-black'
+            : theme === 'og'
+            ? 'bg-[#f6f6ef]'
+            : 'bg-[#1a1a1a]'}
+          border-t ${
+            theme === 'green'
+              ? 'border-green-500/20'
+              : theme === 'og'
+              ? 'border-[#ff6600]/20'
+              : 'border-[#828282]/20'
+          }
+          px-4 py-6
+          bottom-[calc(env(safe-area-inset-bottom,_0px)_+_3.5rem)]
+        `}>
+          <div className="max-w-3xl mx-auto space-y-4">
+            {/* Date display */}
+            <div className="relative flex justify-between items-center text-sm">
+              <span className="opacity-50">
+                {formatStartDate(new Date('2007-02-19'))}
+              </span>
+              <span className={`absolute left-1/2 -translate-x-1/2 ${
+                isDragging ? 'opacity-100' : 'opacity-50'
+              } transition-opacity`}>
+                {formatSliderDate(tempDate || selectedDate)}
+              </span>
+              <span className="opacity-50">Today</span>
+            </div>
+            
+            {/* Slider */}
+            <input
+              type="range"
+              min="0"
+              max={getTotalDays()}
+              step="1"
+              value={dateToSliderValue(tempDate || selectedDate)}
+              onChange={(e) => {
+                const value = Math.max(0, parseInt(e.target.value));
+                const newDate = sliderValueToDate(value);
+                setTempDate(newDate); // Only update temp date while dragging
+              }}
+              onMouseDown={() => setIsDragging(true)}
+              onMouseUp={() => {
+                if (tempDate) {
+                  setSelectedDate(tempDate); // This will trigger URL update and data fetch
+                  setTempDate(null);
+                }
+                setIsDragging(false);
+              }}
+              onTouchStart={() => setIsDragging(true)}
+              onTouchEnd={() => {
+                if (tempDate) {
+                  setSelectedDate(tempDate); // This will trigger URL update and data fetch
+                  setTempDate(null);
+                }
+                setIsDragging(false);
+              }}
+              className={`
+                w-full h-2 rounded-lg appearance-none cursor-pointer
+                ${theme === 'green'
+                  ? 'bg-green-500/20 range-slider-green'
+                  : 'bg-[#ff6600]/20 range-slider-orange'
+                }
+                range-slider
+              `}
+            />
+          </div>
+        </div>
+
+        <MobileBottomBar 
+          theme={theme}
+          onShowSearch={onShowSearch}
+          onShowSettings={onShowSettings}
+          onCloseSearch={() => {}}
+          isRunning={isRunning}
+          username={null}
+          unreadCount={0}
+          className="z-30"
+        />
+      </div>
+    </>
   );
 };
 

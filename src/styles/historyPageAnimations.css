@@ -1,0 +1,33 @@
+/* Slide animations for HistoricalFrontPage */
+
+/* Slide left animation (going to newer date) */
+.slide-left {
+  animation: slideLeft 0.2s ease-out forwards;
+}
+
+@keyframes slideLeft {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-20%);
+  }
+}
+
+/* Slide right animation (going to older date) */
+.slide-right {
+  animation: slideRight 0.2s ease-out forwards;
+}
+
+@keyframes slideRight {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(20%);
+  }
+} 
