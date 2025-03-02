@@ -46,28 +46,50 @@ export const TagsTabContent: React.FC<TagsTabContentProps> = ({
     setLoading(true);
     try {
       // Get user tags from localStorage using the correct key
-      const storedTags: StoredTag[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
+      const storedTagsRaw = localStorage.getItem(STORAGE_KEYS.USER_TAGS);
       
-      // Group tags by userId
-      const groupedTags: { [key: string]: string[] } = {};
+      if (!storedTagsRaw) {
+        setUserTags([]);
+        setLoading(false);
+        return;
+      }
       
-      storedTags.forEach(tag => {
-        if (!groupedTags[tag.userId]) {
-          groupedTags[tag.userId] = [];
-        }
-        groupedTags[tag.userId].push(tag.tag);
-      });
+      const storedTags = JSON.parse(storedTagsRaw);
       
-      // Convert to array format for rendering
-      const formattedTags: GroupedUserTag[] = Object.keys(groupedTags).map(userId => ({
-        userId,
-        tags: groupedTags[userId]
-      }));
-      
-      setUserTags(formattedTags);
+      if (Array.isArray(storedTags)) {
+        // Group tags by userId
+        const groupedTags: { [key: string]: string[] } = {};
+        
+        storedTags.forEach(item => {
+          if (!groupedTags[item.userId]) {
+            groupedTags[item.userId] = [];
+          }
+          
+          // Only handle the current format with tags array
+          if (Array.isArray(item.tags)) {
+            item.tags.forEach((tag: string) => {
+              if (typeof tag === 'string' && !groupedTags[item.userId].includes(tag)) {
+                groupedTags[item.userId].push(tag);
+              }
+            });
+          }
+        });
+        
+        // Convert to array format for rendering
+        const formattedTags: GroupedUserTag[] = Object.keys(groupedTags).map(userId => ({
+          userId,
+          tags: groupedTags[userId]
+        })).filter(userTag => userTag.tags.length > 0);
+        
+        setUserTags(formattedTags);
+      } else {
+        console.error('Unexpected format for stored tags:', storedTags);
+        setUserTags([]);
+      }
     } catch (error) {
       console.error('Error loading tags:', error);
       setError('Failed to load tags');
+      setUserTags([]);
     }
     setLoading(false);
   };
@@ -76,12 +98,19 @@ export const TagsTabContent: React.FC<TagsTabContentProps> = ({
   const removeTag = (userId: string, tagToRemove: string) => {
     try {
       // Get current tags
-      const storedTags: StoredTag[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
+      const storedTags = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_TAGS) || '[]');
       
-      // Filter out the tag to remove
-      const updatedTags = storedTags.filter(
-        tag => !(tag.userId === userId && tag.tag === tagToRemove)
-      );
+      // Update tags for the user
+      const updatedTags = storedTags.map((item: any) => {
+        if (item.userId === userId && Array.isArray(item.tags)) {
+          // Remove the tag from the tags array
+          return {
+            ...item,
+            tags: item.tags.filter((tag: string) => tag !== tagToRemove)
+          };
+        }
+        return item;
+      }).filter((item: any) => !Array.isArray(item.tags) || item.tags.length > 0);
       
       // Save back to localStorage
       localStorage.setItem(STORAGE_KEYS.USER_TAGS, JSON.stringify(updatedTags));
