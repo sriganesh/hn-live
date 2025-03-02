@@ -1216,13 +1216,7 @@ export function StoryView({
                     <span className="opacity-50 ml-1">[OP]</span>
                   )}
                   {highlightedComments.has(comment.id) && (
-                    <span className={`ml-1 px-1 py-0.5 text-xs rounded ${
-                      theme === 'green' 
-                        ? 'bg-green-500/20 text-green-400' 
-                        : theme === 'og'
-                        ? 'bg-orange-500/10 text-orange-600' 
-                        : 'bg-blue-500/20 text-blue-400'
-                    }`}>
+                    <span className="ml-1 px-1 py-0.5 text-xs rounded bg-gray-500/10">
                       [highlighted]
                     </span>
                   )}
