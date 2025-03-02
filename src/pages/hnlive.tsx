@@ -1699,6 +1699,7 @@ export default function HNLiveTerminal() {
             onViewUser={(userId) => setViewingUser(userId)}
             isRunning={isRunning}
             username={hnUsername}
+            unreadCount={unreadReplies}
           />
         )}
 
@@ -1750,6 +1751,7 @@ export default function HNLiveTerminal() {
               onViewUser={(userId) => setViewingUser(userId)}
               isRunning={isRunning}
               username={hnUsername}
+              unreadCount={unreadReplies}
             />
             <SearchModal 
               isOpen={showSearch}
@@ -1778,6 +1780,7 @@ export default function HNLiveTerminal() {
               onViewUser={(userId) => setViewingUser(userId)}
               isRunning={isRunning}
               username={hnUsername}
+              unreadCount={unreadReplies}
             />
             <SearchModal 
               isOpen={showSearch}
@@ -1805,6 +1808,7 @@ export default function HNLiveTerminal() {
             onViewUser={(userId) => setViewingUser(userId)}
             isRunning={isRunning}
             username={hnUsername}
+            unreadCount={unreadReplies}
           />
         )}
 
@@ -1825,6 +1829,7 @@ export default function HNLiveTerminal() {
             onViewUser={(userId) => setViewingUser(userId)}
             isRunning={isRunning}
             username={hnUsername}
+            unreadCount={unreadReplies}
           />
         )}
 
@@ -1996,6 +2001,7 @@ export default function HNLiveTerminal() {
             onViewUser={(userId) => setViewingUser(userId)}
             isRunning={isRunning}
             username={hnUsername}
+            unreadCount={unreadReplies}
           />
         )}
 
