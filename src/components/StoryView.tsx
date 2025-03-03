@@ -48,6 +48,14 @@ interface HNComment {
   hasDeepReplies?: boolean;
   isCollapsed?: boolean;
   parentTitle?: string;
+  isHighlighted?: boolean;
+}
+
+// New interface for story metadata
+interface StoryMetadata {
+  pool?: boolean;
+  invited?: boolean;
+  highlights?: string[]; // Array of comment IDs that are highlighted
 }
 
 // Add these interfaces for Algolia API response
@@ -393,6 +401,27 @@ const fetchFromAlgolia = async (itemId: number, signal?: AbortSignal): Promise<A
   return response.json();
 };
 
+// Add a function to fetch story metadata
+const fetchStoryMetadata = async (storyId: number, signal?: AbortSignal): Promise<StoryMetadata | null> => {
+  try {
+    if (isDev) {
+      console.log('🔄 Fetching story metadata:', `https://metadata-api.hn.live/story/${storyId}`);
+    }
+    const response = await fetch(`https://metadata-api.hn.live/story/${storyId}`, { signal });
+    if (!response.ok) {
+      if (response.status === 404) {
+        // Story metadata not found, return null
+        return null;
+      }
+      throw new Error(`Failed to fetch story metadata: ${response.statusText}`);
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Error fetching story metadata:', error);
+    return null;
+  }
+};
+
 // Add a converter function to transform Algolia data to our format
 const convertAlgoliaStory = (algoliaStory: AlgoliaStory): HNStory => {
   return {
@@ -488,6 +517,10 @@ export function StoryView({
     threadCollapsedComments: new Set(),
     isTopLevelOnly: false
   });
+
+  // Add state for story metadata
+  const [storyMetadata, setStoryMetadata] = useState<StoryMetadata | null>(null);
+  const [highlightedComments, setHighlightedComments] = useState<Set<number>>(new Set());
 
   // Add these inside the StoryView component, near other state declarations
   const [grepState, setGrepState] = useState<GrepState>({
@@ -714,6 +747,17 @@ export function StoryView({
         const rootStoryId = await findRootStoryId(itemId, abortController.signal);
         
         if (!isMounted) return;
+        
+        // Fetch story metadata
+        const metadata = await fetchStoryMetadata(rootStoryId, abortController.signal);
+        if (isMounted && metadata) {
+          setStoryMetadata(metadata);
+          
+          // Create a set of highlighted comment IDs for easier lookup
+          if (metadata.highlights && metadata.highlights.length > 0) {
+            setHighlightedComments(new Set(metadata.highlights.map(id => parseInt(id))));
+          }
+        }
         
         if (useAlgoliaApi) {
           // Use Algolia API
@@ -1134,6 +1178,14 @@ export function StoryView({
               : 'bg-yellow-500/10'
             : ''
         } ${
+          highlightedComments.has(comment.id)
+            ? theme === 'dog'
+              ? 'bg-blue-500/10 border border-blue-500/20' 
+              : theme === 'green'
+              ? 'bg-green-700/30 border border-green-500/30' 
+              : 'bg-orange-500/10 border border-orange-500/20'
+            : ''
+        } ${
           comment.level > 0 
             ? theme === 'og'
               ? 'border-l border-current/10'
@@ -1162,6 +1214,11 @@ export function StoryView({
                   </a>
                   {comment.by === story?.by && (
                     <span className="opacity-50 ml-1">[OP]</span>
+                  )}
+                  {highlightedComments.has(comment.id) && (
+                    <span className="ml-1 px-1 py-0.5 text-xs rounded bg-gray-500/10">
+                      [highlighted]
+                    </span>
                   )}
                   <span>•</span>
                   <a
@@ -1356,7 +1413,7 @@ export function StoryView({
         } my-4`} />
       )}
     </Fragment>
-  ), [commentState, theme, scrollToId, story, handleCollapseComment, fontSize, collapseEntireThread]);
+  ), [commentState, theme, scrollToId, story, handleCollapseComment, fontSize, collapseEntireThread, highlightedComments]);
 
   // Add this helper function for updating the comment tree
   const updateCommentTree = (comments: HNComment[], targetId: number, newReplies: HNComment[]): HNComment[] => {
@@ -1377,6 +1434,20 @@ export function StoryView({
       return c;
     });
   };
+
+  // Add a function to scroll to a highlighted comment
+  const scrollToHighlightedComment = useCallback((commentId: number) => {
+    const element = document.getElementById(`comment-${commentId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // Add a temporary flash effect
+      element.classList.add('highlight-flash');
+      setTimeout(() => {
+        element.classList.remove('highlight-flash');
+      }, 2000);
+    }
+  }, []);
 
   const handleClose = () => {
     navigate('/');
@@ -1408,6 +1479,43 @@ export function StoryView({
             >
               {formatTimeAgo(story.time)}
             </a> • <span className="font-mono">{story.score} points</span> • {story.descendants || 0} comments
+            
+            {/* Show metadata badges */}
+            {storyMetadata && (
+              <>
+                {storyMetadata.highlights && storyMetadata.highlights.length > 0 && (
+                  <> • {(() => {
+                    if (storyMetadata.highlights && storyMetadata.highlights.length === 1) {
+                      const highlightId = parseInt(storyMetadata.highlights[0]);
+                      return (
+                        <button 
+                          onClick={() => scrollToHighlightedComment(highlightId)}
+                          className={`hover:underline ${theme === 'green' ? 'text-green-400' : ''}`}
+                        >
+                          1 highlight
+                        </button>
+                      );
+                    } else {
+                      return (
+                        <span className={theme === 'green' ? 'text-green-400' : ''}>
+                          {storyMetadata.highlights.length} highlights
+                        </span>
+                      );
+                    }
+                  })()}</>
+                )}
+                {storyMetadata.pool && (
+                  <> • <span className={theme === 'green' ? 'text-green-400' : ''}>
+                    pool
+                  </span></>
+                )}
+                {storyMetadata.invited && (
+                  <> • <span className={theme === 'green' ? 'text-green-400' : ''}>
+                    invited
+                  </span></>
+                )}
+              </>
+            )}
           </div>
 
           {/* Title */}
@@ -1565,6 +1673,34 @@ export function StoryView({
               `Discussion of "${story.title}" on Hacker News Live`} 
           />
           <link rel="canonical" href={`https://hn.live/item/${story.id}`} />
+          <style>
+            {`
+              .highlight-flash {
+                animation: flash-highlight 2s ease-in-out;
+              }
+              
+              @keyframes flash-highlight {
+                0%, 100% {
+                  background-color: ${
+                    theme === 'green' 
+                      ? 'rgba(74, 222, 128, 0.3)' 
+                      : theme === 'og'
+                      ? 'rgba(255, 102, 0, 0.2)' 
+                      : 'rgba(59, 130, 246, 0.3)'
+                  };
+                }
+                50% {
+                  background-color: ${
+                    theme === 'green' 
+                      ? 'rgba(74, 222, 128, 0.5)' 
+                      : theme === 'og'
+                      ? 'rgba(255, 102, 0, 0.4)' 
+                      : 'rgba(59, 130, 246, 0.5)'
+                  };
+                }
+              }
+            `}
+          </style>
         </Helmet>
       )}
       <div 
