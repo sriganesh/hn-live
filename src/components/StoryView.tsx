@@ -539,6 +539,59 @@ export function StoryView({
   // Add state for sort mode
   const [sortMode, setSortMode] = useState<CommentSortMode>('nested');
 
+  // Add state for header visibility
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isDesktop, setIsDesktop] = useState(false);
+  
+  // Check if we're on desktop on mount and when window resizes
+  useEffect(() => {
+    const checkIfDesktop = () => {
+      setIsDesktop(window.innerWidth >= 640);
+    };
+    
+    // Initial check
+    checkIfDesktop();
+    
+    // Add resize listener
+    window.addEventListener('resize', checkIfDesktop);
+    return () => window.removeEventListener('resize', checkIfDesktop);
+  }, []);
+  
+  // Modify the existing scroll handler to also handle header visibility
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    const container = containerRef.current;
+    
+    const handleScroll = () => {
+      // Handle back-to-top button visibility
+      if (container.scrollTop > 500) {
+        setIsBackToTopVisible(true);
+      } else {
+        setIsBackToTopVisible(false);
+      }
+      
+      // Handle header visibility (only on desktop)
+      if (isDesktop) {
+        const currentScrollY = container.scrollTop;
+        
+        if (currentScrollY > lastScrollY && currentScrollY > 100) {
+          // Scrolling down & past threshold - hide header
+          setHeaderVisible(false);
+        } else if (currentScrollY < lastScrollY || currentScrollY <= 100) {
+          // Scrolling up or at top - show header
+          setHeaderVisible(true);
+        }
+        
+        setLastScrollY(currentScrollY);
+      }
+    };
+    
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY, isDesktop]);
+
   // Add function to get flattened and sorted comments
   const getFlattenedComments = (comments: HNComment[]): HNComment[] => {
     const flattened: HNComment[] = [];
@@ -1722,9 +1775,31 @@ export function StoryView({
       >
         <div 
           ref={containerRef}
-          className="h-full overflow-y-auto p-2 pt-16"
+          className="h-full overflow-y-auto p-2 pt-16 scroll-smooth"
+          onScroll={(e) => {
+            const container = e.currentTarget;
+            const currentScrollY = container.scrollTop;
+            
+            // Handle back-to-top button visibility
+            setIsBackToTopVisible(currentScrollY > 500);
+            
+            // Handle header visibility (only on desktop)
+            if (isDesktop) {
+              if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                // Scrolling down & past threshold - hide header
+                setHeaderVisible(false);
+              } else if (currentScrollY < lastScrollY || currentScrollY <= 100) {
+                // Scrolling up or at top - show header
+                setHeaderVisible(true);
+              }
+              
+              setLastScrollY(currentScrollY);
+            }
+          }}
         >
-          <div className={`flex items-center justify-between py-3 px-6 fixed top-0 left-0 right-0 z-10 ${
+          <div className={`flex items-center justify-between py-3 px-6 fixed top-0 left-0 right-0 z-10 transition-transform duration-300 ${
+            !headerVisible && isDesktop ? '-translate-y-full' : 'translate-y-0'
+          } ${
             theme === 'green'
               ? 'bg-black text-green-400'
               : theme === 'og'
