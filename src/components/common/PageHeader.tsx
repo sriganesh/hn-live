@@ -43,7 +43,11 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
     ? 'bg-[#ff6600]/90'
     : 'bg-[#1a1a1a]';
 
-  const headerTextColor = theme === 'og' ? 'text-white' : '';
+  const headerTextColor = theme === 'og' 
+    ? 'text-white' 
+    : theme === 'dog'
+    ? 'text-[#ff6600]'
+    : '';
 
   const pages = [
     { id: 'front', label: 'FRONT PAGE', path: '/front' },
@@ -61,19 +65,19 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         <div className="flex items-center">
           <button 
             onClick={() => navigate('/')}
-            className={`font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
+            className={`font-bold tracking-wider flex items-center gap-2 relative cursor-pointer hover:opacity-75 transition-opacity`}
           >
-            <span>HN</span>
+            HN
             <span className="animate-pulse">
               <span className={`inline-block w-2 h-2 rounded-full ${
                 isRunning 
                   ? theme === 'green'
                     ? 'bg-green-500'
-                    : 'bg-white'
+                    : 'bg-red-500'
                   : 'bg-gray-500'
               }`}></span>
             </span>
-            <span>LIVE</span>
+            LIVE
           </button>
           <span className={`font-bold ml-2`}>
             /
@@ -163,19 +167,19 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           <div className="flex items-center">
             <button 
               onClick={() => navigate('/')}
-              className={`font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
+              className={`font-bold tracking-wider flex items-center gap-2 relative cursor-pointer hover:opacity-75 transition-opacity`}
             >
-              <span>HN</span>
+              HN
               <span className="animate-pulse">
                 <span className={`inline-block w-2 h-2 rounded-full ${
                   isRunning 
                     ? theme === 'green'
                       ? 'bg-green-500'
-                      : 'bg-white'
+                      : 'bg-red-500'
                     : 'bg-gray-500'
                 }`}></span>
               </span>
-              <span>LIVE</span>
+              LIVE
             </button>
             <span className={`font-bold ml-2`}>
               / {title}

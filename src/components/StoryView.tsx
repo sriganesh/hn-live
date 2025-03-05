@@ -588,7 +588,7 @@ export function StoryView({
         newCollapsed.delete(commentId);
         newShowCollapseThread.delete(commentId);
         
-        // If this was collapsed by thread collapse, restore the thread
+        // If this was collapsed by thread, restore the thread
         if (newThreadCollapsed.has(commentId)) {
           // Remove all thread-collapsed comments under this one
           const removeThreadCollapsed = (comments: HNComment[]) => {
@@ -1722,20 +1722,28 @@ export function StoryView({
       >
         <div 
           ref={containerRef}
-          className="h-full overflow-y-auto p-2"
+          className="h-full overflow-y-auto p-2 pt-16"
         >
-          <div className="flex items-center justify-between mb-4">
+          <div className={`flex items-center justify-between py-3 px-6 fixed top-0 left-0 right-0 z-10 ${
+            theme === 'green'
+              ? 'bg-black text-green-400'
+              : theme === 'og'
+              ? 'bg-[#ff6600]/90 text-white'
+              : 'bg-[#1a1a1a] text-[#ff6600]'
+          }`}>
             <button 
               onClick={onClose}
-              className={`${
-                theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
-              } font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
+              className="font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity"
             >
               HN
               <span className="animate-pulse">
                 <span className={`inline-block w-2 h-2 rounded-full ${
-                  isRunning ? 'bg-current' : 'bg-gray-500'
-                } opacity-50`}></span>
+                  isRunning 
+                    ? theme === 'green'
+                      ? 'bg-green-500'
+                      : 'bg-red-500'
+                    : 'bg-gray-500'
+                }`}></span>
               </span>
               LIVE
             </button>
