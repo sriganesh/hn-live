@@ -148,7 +148,7 @@ export const CommentsPage: React.FC<CommentsPageProps> = ({
       onCloseSearch={onCloseSearch}
       containerRef={containerRef}
     >
-      <div className="h-full overflow-y-auto overflow-x-hidden p-2 max-w-full" ref={containerRef}>
+      <div className="h-full overflow-y-auto overflow-x-hidden p-2 pt-24 sm:pt-16 max-w-full" ref={containerRef}>
         <PageHeader
           theme={theme}
           title={title}
