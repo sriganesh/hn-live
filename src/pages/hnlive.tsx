@@ -130,7 +130,6 @@ const getStoredSettings = () => {
 const themeStyles = `
   [data-theme='og'] .hn-username,
   [data-theme='dog'] .hn-username,
-  [data-theme='og'] .front-page-link,
   [data-theme='dog'] .front-page-link {
     color: #ff6600 !important;
   }
@@ -567,8 +566,15 @@ export default function HNLiveTerminal() {
   const themeHeaderBg = theme === 'green'
     ? 'bg-black/90'
     : theme === 'og'
-    ? 'bg-[#f6f6ef]/90'
+    ? 'bg-[#ff6600]/90'
     : 'bg-[#1a1a1a]/90';
+
+  // New variable for header text color when using orange background
+  const headerTextColor = theme === 'green'
+    ? 'text-green-400'
+    : theme === 'og'
+    ? 'text-white'
+    : 'text-[#828282]';
 
   const headerColor = theme === 'green'
     ? 'text-green-500'
@@ -1241,7 +1247,7 @@ export default function HNLiveTerminal() {
         />
         <div className={`
           fixed top-0 left-0 right-0 z-50 
-          ${themeHeaderBg} ${themeColors}
+          ${themeHeaderBg} ${theme === 'og' ? headerTextColor : themeColors}
           px-4 sm:px-6
           pt-[max(20px,env(safe-area-inset-top))]
           pb-2
@@ -1254,7 +1260,7 @@ export default function HNLiveTerminal() {
               <div className="flex items-center gap-4">
                 <span 
                   onClick={reloadSite}
-                  className={`${headerColor} font-bold tracking-wider flex items-center gap-2 relative cursor-pointer hover:opacity-75 transition-opacity`}
+                  className={`${theme === 'og' ? headerTextColor : headerColor} font-bold tracking-wider flex items-center gap-2 relative cursor-pointer hover:opacity-75 transition-opacity`}
                 >
                   HN
                   <span className="animate-pulse">
@@ -1263,7 +1269,7 @@ export default function HNLiveTerminal() {
                   LIVE
                   {queueSize > 99 && (
                     <span className={`absolute -top-1 -right-4 min-w-[1.2rem] h-[1.2rem] 
-                      ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
+                      ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-white text-[#ff6600]'} 
                       rounded text-xs flex items-center justify-center font-bold`}
                     >
                       {queueSize}
@@ -1272,7 +1278,7 @@ export default function HNLiveTerminal() {
                 </span>
                 <button 
                   onClick={() => setShowAbout(true)}
-                  className={`${themeColors} mr-2`}
+                  className={`${theme === 'og' ? headerTextColor : headerColor} mr-2`}
                 >
                   [?]
                 </button>
@@ -1288,7 +1294,7 @@ export default function HNLiveTerminal() {
                       type="text"
                       value={filters.text}
                       onChange={(e) => setFilters(prev => ({...prev, text: e.target.value}))}
-                      className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
+                      className={`bg-transparent border-b border-current outline-none w-32 px-1 ${theme === 'og' ? headerTextColor : themeColors}`}
                       placeholder="search..."
                       autoFocus
                       onBlur={() => {
@@ -1301,7 +1307,7 @@ export default function HNLiveTerminal() {
                 ) : (
                   <button
                     onClick={() => setShowGrep(true)}
-                    className={themeColors}
+                    className={theme === 'og' ? headerTextColor : themeColors}
                     title="Ctrl/Cmd + F"
                   >
                     [GREP]
@@ -1313,10 +1319,14 @@ export default function HNLiveTerminal() {
                   onClick={toggleFeed}
                   className={`${
                     isRunning 
-                      ? 'text-red-500' 
+                      ? options.theme === 'og'
+                        ? 'text-white'
+                        : 'text-red-500' 
                       : options.theme === 'green'
                         ? 'text-green-400'
-                        : 'text-green-600'
+                        : options.theme === 'og'
+                          ? 'text-white'
+                          : 'text-green-600'
                   }`}
                 >
                   [{isRunning ? 'STOP' : 'START'}]
@@ -1329,8 +1339,10 @@ export default function HNLiveTerminal() {
                     options.theme === 'green'
                       ? 'text-yellow-400'
                       : options.theme === 'dog'
-                      ? 'text-yellow-500'
-                      : 'text-yellow-600'
+                        ? 'text-yellow-500'
+                        : options.theme === 'og'
+                          ? 'text-white'
+                          : 'text-yellow-600'
                   }`}
                 >
                   [CLEAR]
@@ -1344,7 +1356,7 @@ export default function HNLiveTerminal() {
             <div className="flex items-center gap-4">
               <span 
                 onClick={reloadSite}
-                className={`${headerColor} font-bold tracking-wider flex items-center gap-2 relative cursor-pointer hover:opacity-75 transition-opacity`}
+                className={`${theme === 'og' ? headerTextColor : headerColor} font-bold tracking-wider flex items-center gap-2 relative cursor-pointer hover:opacity-75 transition-opacity`}
               >
                 HN
                 <span className="animate-pulse">
@@ -1353,7 +1365,7 @@ export default function HNLiveTerminal() {
                 LIVE
                 {queueSize > 99 && (
                   <span className={`absolute -top-1 -right-4 min-w-[1.2rem] h-[1.2rem] 
-                    ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-[#ff6600] text-white'} 
+                    ${options.theme === 'green' ? 'bg-green-500 text-black' : 'bg-white text-[#ff6600]'} 
                     rounded text-xs flex items-center justify-center font-bold`}
                   >
                     {queueSize}
@@ -1362,7 +1374,7 @@ export default function HNLiveTerminal() {
               </span>
               <button 
                 onClick={() => setShowAbout(true)}
-                className={`${headerColor} opacity-75 hover:opacity-100 transition-opacity`}
+                className={`${theme === 'og' ? headerTextColor : headerColor} opacity-75 hover:opacity-100 transition-opacity`}
                 title="About"
               >
                 [?]
@@ -1374,12 +1386,12 @@ export default function HNLiveTerminal() {
                     href={headerLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`${headerColor} text-sm font-bold opacity-75 hover:opacity-100 transition-opacity`}
+                    className={`${theme === 'og' ? headerTextColor : headerColor} text-sm font-bold opacity-75 hover:opacity-100 transition-opacity`}
                   >
                     {headerText}
                   </a>
                 ) : (
-                  <span className={`${headerColor} text-sm font-bold opacity-75`}>
+                  <span className={`${theme === 'og' ? headerTextColor : headerColor} text-sm font-bold opacity-75`}>
                     {headerText}
                   </span>
                 )
@@ -1391,7 +1403,7 @@ export default function HNLiveTerminal() {
               {/* Main navigation */}
               <a 
                 href="/front" 
-                className="front-page-link hover:opacity-75"
+                className={`front-page-link hover:opacity-75 ${theme === 'og' ? 'text-white' : ''}`}
                 onClick={(e) => {
                   e.preventDefault();
                   navigate('/front');
@@ -1404,7 +1416,7 @@ export default function HNLiveTerminal() {
               <div className="relative hidden sm:inline-block more-dropdown">
                 <button 
                   onClick={() => setShowMoreMenu(!showMoreMenu)}
-                  className={themeColors}
+                  className={theme === 'og' ? headerTextColor : themeColors}
                 >
                   [MORE]
                 </button>
@@ -1414,7 +1426,7 @@ export default function HNLiveTerminal() {
                     theme === 'green'
                       ? 'bg-black border-green-500/30'
                       : theme === 'og'
-                      ? 'bg-white border-[#ff6600]/30'
+                      ? 'bg-white border-[#ff6600]/30 text-[#828282]'
                       : 'bg-[#1a1a1a] border-[#828282]/30'
                   }`}>
                     {navigationItems.map((item) => (
@@ -1426,7 +1438,7 @@ export default function HNLiveTerminal() {
                           href={item.path}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block px-4 py-2 hover:opacity-75"
+                          className={`block px-4 py-2 hover:opacity-75 ${theme === 'og' ? 'text-[#ff6600] hover:bg-gray-100' : ''}`}
                         >
                           [{typeof item.label === 'string' ? item.label : item.label(hnUsername)}]
                         </a>
@@ -1437,7 +1449,7 @@ export default function HNLiveTerminal() {
                             navigate(item.path);
                             setShowMoreMenu(false);
                           }}
-                          className="w-full text-left px-4 py-2 hover:opacity-75"
+                          className={`w-full text-left px-4 py-2 hover:opacity-75 ${theme === 'og' ? 'text-[#ff6600] hover:bg-gray-100' : ''}`}
                         >
                           [{typeof item.label === 'string' ? item.label : item.label(hnUsername)}]
                         </button>
@@ -1450,7 +1462,7 @@ export default function HNLiveTerminal() {
               {/* Search and other controls */}
               <button 
                 onClick={() => setShowSearch(true)}
-                className={themeColors}
+                className={theme === 'og' ? headerTextColor : themeColors}
                 title="Ctrl/Cmd + K"
               >
                 [SEARCH]
@@ -1465,7 +1477,7 @@ export default function HNLiveTerminal() {
                       type="text"
                       value={filters.text}
                       onChange={(e) => setFilters(prev => ({...prev, text: e.target.value}))}
-                      className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
+                      className={`bg-transparent border-b border-current outline-none w-32 px-1 ${theme === 'og' ? headerTextColor : themeColors}`}
                       placeholder="search..."
                       autoFocus
                       onBlur={() => {
@@ -1478,7 +1490,7 @@ export default function HNLiveTerminal() {
                 ) : (
                   <button
                     onClick={() => setShowGrep(true)}
-                    className={themeColors}
+                    className={theme === 'og' ? headerTextColor : themeColors}
                     title="Ctrl/Cmd + F"
                   >
                     [GREP]
@@ -1490,7 +1502,7 @@ export default function HNLiveTerminal() {
               <div className="relative">
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className={themeColors}
+                  className={theme === 'og' ? headerTextColor : themeColors}
                 >
                   [DASHBOARD]
                 </button>
@@ -1503,7 +1515,7 @@ export default function HNLiveTerminal() {
                     text-xs
                     ${theme === 'green' 
                       ? 'bg-green-500 text-black' 
-                      : 'bg-[#ff6600] text-white'
+                      : 'bg-white text-[#ff6600]'
                     }
                   `}>
                     {unreadReplies}
@@ -1513,7 +1525,7 @@ export default function HNLiveTerminal() {
 
               <button 
                 onClick={() => setShowSettings(true)}
-                className={themeColors}
+                className={theme === 'og' ? headerTextColor : themeColors}
               >
                 [SETTINGS]
               </button>
@@ -1523,12 +1535,14 @@ export default function HNLiveTerminal() {
                 onClick={toggleFeed}
                 className={`${
                   isRunning 
-                    ? options.theme === 'green'
-                      ? 'text-red-500'
-                      : 'text-red-500'
+                    ? options.theme === 'og'
+                      ? 'text-white'
+                      : 'text-red-500' 
                     : options.theme === 'green'
                       ? 'text-green-400'
-                      : 'text-green-600'
+                      : options.theme === 'og'
+                        ? 'text-white'
+                        : 'text-green-600'
                 }`}
                 title="Ctrl/Cmd + S"
               >
@@ -1542,8 +1556,10 @@ export default function HNLiveTerminal() {
                   options.theme === 'green'
                     ? 'text-yellow-400'
                     : options.theme === 'dog'
-                    ? 'text-yellow-500'
-                    : 'text-yellow-600'
+                      ? 'text-yellow-500'
+                      : options.theme === 'og'
+                        ? 'text-white'
+                        : 'text-yellow-600'
                 }`}
                 title="Ctrl/Cmd + L"
               >
@@ -1951,8 +1967,6 @@ export default function HNLiveTerminal() {
             onShowSettings={() => setShowSettings(true)}
             isSettingsOpen={showSettings}
             isRunning={isRunning}
-            onShowSearch={() => setShowSearch(true)}
-            isSearchOpen={showSearch}
           />
         )}
 

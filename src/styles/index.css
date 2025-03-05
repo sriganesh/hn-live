@@ -34,7 +34,6 @@ pre, code, .prose pre, .prose code {
 /* Replace the existing rule with these theme-specific rules */
 [data-theme='og'] .hn-username,
 [data-theme='dog'] .hn-username,
-[data-theme='og'] .front-page-link,
 [data-theme='dog'] .front-page-link {
   color: #ff6600 !important;
 }
