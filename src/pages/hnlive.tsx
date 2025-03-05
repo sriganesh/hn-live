@@ -1249,15 +1249,15 @@ export default function HNLiveTerminal() {
           fixed top-0 left-0 right-0 z-50 
           ${themeHeaderBg} ${theme === 'og' ? headerTextColor : themeColors}
           px-4 sm:px-6
-          pt-[max(20px,env(safe-area-inset-top))]
-          pb-2
-          sm:py-4
+          pt-[max(16px,env(safe-area-inset-top))]
+          pb-1
+          sm:py-3
         `}>
           {/* Mobile Layout - Top Bar */}
           <div className="sm:hidden">
             <div className="flex items-center justify-between">
               {/* Left side with logo and about */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <span 
                   onClick={reloadSite}
                   className={`${theme === 'og' ? headerTextColor : headerColor} font-bold tracking-wider flex items-center gap-2 relative cursor-pointer hover:opacity-75 transition-opacity`}
@@ -1285,7 +1285,7 @@ export default function HNLiveTerminal() {
               </div>
 
               {/* Right side controls */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 {/* Grep control */}
                 {showGrep ? (
                   <div className="flex items-center gap-2">
@@ -1353,7 +1353,7 @@ export default function HNLiveTerminal() {
 
           {/* Desktop Layout */}
           <div className="hidden sm:flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <span 
                 onClick={reloadSite}
                 className={`${theme === 'og' ? headerTextColor : headerColor} font-bold tracking-wider flex items-center gap-2 relative cursor-pointer hover:opacity-75 transition-opacity`}
@@ -1399,7 +1399,7 @@ export default function HNLiveTerminal() {
 
 
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               {/* Main navigation */}
               <a 
                 href="/front" 
@@ -1572,7 +1572,7 @@ export default function HNLiveTerminal() {
         <div 
           ref={containerRef}
           className={`
-            fixed top-[60px] bottom-0 left-0 right-0 
+            fixed top-[52px] bottom-0 left-0 right-0 
             overflow-y-auto overflow-x-hidden 
             px-3 sm:px-4 pb-20 sm:pb-4
             ${options.font === 'mono' ? 'font-mono' : 
