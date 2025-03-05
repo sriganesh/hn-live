@@ -1244,7 +1244,7 @@ export function StoryView({
               ? 'border-l border-current/10'
               : theme === 'green'
               ? 'border-l border-green-900'
-              : 'border-l border-gray-700'
+              : 'border-l border-[#ff6600]/15'
             : ''
         }`}
       >
@@ -1775,7 +1775,7 @@ export function StoryView({
       >
         <div 
           ref={containerRef}
-          className="h-full overflow-y-auto p-2 pt-16 scroll-smooth"
+          className="h-full overflow-y-auto pt-16 scroll-smooth"
           onScroll={(e) => {
             const container = e.currentTarget;
             const currentScrollY = container.scrollTop;
@@ -1853,14 +1853,14 @@ export function StoryView({
           </div>
 
           {/* Story Content */}
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-none mx-auto">
             {story ? (
-              <div className={`p-6 sm:p-8 rounded-lg ${
+              <div className={`p-6 sm:p-8 rounded-b-lg max-w-4xl mx-auto ${
                 theme === 'green'
                   ? 'bg-black/50 border border-green-500/10 shadow-lg shadow-green-500/5'
                   : theme === 'og'
-                  ? 'bg-white shadow-lg border border-[#ff6600]/10'
-                  : 'bg-[#121212] border border-[#333] shadow-lg shadow-black/20'
+                  ? 'bg-white shadow-lg border-x border-b border-[#ff6600]/10'
+                  : 'bg-transparent border border-[#ff6600]/10'
               }`}>
                 {/* Top Announcement */}
                 {topAnnouncement && (
