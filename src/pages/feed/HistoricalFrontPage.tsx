@@ -220,6 +220,35 @@ const HistoricalFrontPage = ({
     });
   };
 
+  // Generate a random date between HN start date (Feb 19, 2007) and today
+  const getRandomDate = () => {
+    const startDate = new Date(2007, 1, 19); // February 19, 2007
+    const endDate = new Date(); // Today
+    
+    const startTimestamp = startDate.getTime();
+    const endTimestamp = endDate.getTime();
+    const randomTimestamp = startTimestamp + Math.random() * (endTimestamp - startTimestamp);
+    
+    const randomDate = new Date(randomTimestamp);
+    return randomDate;
+  };
+
+  // Navigate to a random date
+  const goToRandomDate = () => {
+    const randomDate = getRandomDate();
+    const formattedDate = formatDateForApi(randomDate);
+    
+    // Update the selected date state
+    setSelectedDate(randomDate);
+    
+    // Update the URL
+    navigate(`/frontpage-history?date=${formattedDate}`);
+    
+    // Reset any temporary date or animation
+    setTempDate(null);
+    setSwipeAnimation('');
+  };
+
   // Fetch story details from Firebase
   const fetchStoryDetails = async (id: string) => {
     try {
@@ -350,6 +379,33 @@ const HistoricalFrontPage = ({
       loadStoriesForDate(selectedDate);
     }
   }, [selectedDate, isDragging]);
+
+  // Listen for URL changes and update selectedDate
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const params = new URLSearchParams(window.location.search);
+      const dateParam = params.get('date');
+      if (dateParam) {
+        // Parse the date parts manually to avoid timezone issues
+        const [year, month, day] = dateParam.split('-').map(Number);
+        if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+          // Create date in local time zone (months are 0-indexed in JS Date)
+          const date = new Date(year, month - 1, day);
+          // Only update if it's different from current selectedDate
+          if (date.getTime() !== selectedDate.getTime()) {
+            setSelectedDate(date);
+          }
+        }
+      }
+    };
+
+    // Listen for popstate events (back/forward navigation)
+    window.addEventListener('popstate', handleUrlChange);
+    
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+    };
+  }, [selectedDate]);
 
   const handleDateChange = (newDate: Date) => {
     setSelectedDate(newDate);
@@ -485,29 +541,40 @@ const HistoricalFrontPage = ({
             : 'bg-[#1a1a1a] text-[#ff6600]'
         }`}>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => navigate('/')}
-                className="font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity"
-              >
-                HN
-                <span className="animate-pulse">
-                  <span className={`inline-block w-2 h-2 rounded-full ${
-                    isRunning 
-                      ? theme === 'green'
-                        ? 'bg-green-500'
-                        : 'bg-red-500'
-                      : 'bg-gray-500'
-                  }`}></span>
+            {/* First row for mobile - HN LIVE / FRONT PAGE HISTORY and RANDOM button */}
+            <div className="flex items-center justify-between w-full sm:w-auto">
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => navigate('/')}
+                  className="font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity"
+                >
+                  HN
+                  <span className="animate-pulse">
+                    <span className={`inline-block w-2 h-2 rounded-full ${
+                      isRunning 
+                        ? theme === 'green'
+                          ? 'bg-green-500'
+                          : 'bg-red-500'
+                        : 'bg-gray-500'
+                    }`}></span>
+                  </span>
+                  LIVE
+                </button>
+                <span className="font-bold">
+                  /
                 </span>
-                LIVE
+                <span className="font-bold">
+                  FRONT PAGE HISTORY
+                </span>
+              </div>
+              
+              {/* Random button for mobile */}
+              <button
+                onClick={goToRandomDate}
+                className="sm:hidden opacity-75 hover:opacity-100 font-bold"
+              >
+                [RANDOM]
               </button>
-              <span className="font-bold">
-                /
-              </span>
-              <span className="font-bold">
-                FRONT PAGE HISTORY
-              </span>
             </div>
             
             {/* Date display - below header on mobile, right-aligned on desktop */}
@@ -515,6 +582,13 @@ const HistoricalFrontPage = ({
               <div className="opacity-75">
                 {formatDisplayDate(tempDate || selectedDate)}
               </div>
+              {/* Random button - desktop only */}
+              <button
+                onClick={goToRandomDate}
+                className="hidden sm:block opacity-75 hover:opacity-100 font-bold"
+              >
+                [RANDOM]
+              </button>
               <button
                 onClick={() => navigate(-1)}
                 className="opacity-75 hover:opacity-100 ml-auto sm:ml-0"
