@@ -1775,7 +1775,7 @@ export function StoryView({
       >
         <div 
           ref={containerRef}
-          className="h-full overflow-y-auto pt-14 sm:pt-16 scroll-smooth"
+          className="h-full overflow-y-auto pt-12 sm:pt-14 scroll-smooth"
           onScroll={(e) => {
             const container = e.currentTarget;
             const currentScrollY = container.scrollTop;
@@ -1797,7 +1797,7 @@ export function StoryView({
             }
           }}
         >
-          <div className={`flex items-center justify-between py-3 px-6 fixed top-0 left-0 right-0 z-10 transition-transform duration-300 ${
+          <div className={`flex items-center justify-between py-2 px-4 sm:px-6 fixed top-0 left-0 right-0 z-10 transition-transform duration-300 ${
             !headerVisible && isDesktop ? '-translate-y-full' : 'translate-y-0'
           } ${
             theme === 'green'

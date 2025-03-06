@@ -477,7 +477,7 @@ const HistoricalFrontPage = ({
         ${swipeAnimation}
       `}>
         {/* Header */}
-        <div className={`py-3 px-6 fixed top-0 left-0 right-0 z-10 ${
+        <div className={`py-2 px-4 sm:px-6 fixed top-0 left-0 right-0 z-10 ${
           theme === 'green'
             ? 'bg-black text-green-400'
             : theme === 'og'
@@ -526,7 +526,7 @@ const HistoricalFrontPage = ({
         </div>
 
         {/* Scrollable Content Area */}
-        <div className="overflow-y-auto h-full pb-[240px] sm:pb-52 pt-24 sm:pt-16">
+        <div className="overflow-y-auto h-full pb-[240px] sm:pb-52 pt-20 sm:pt-14">
           <div className="px-4">
             {loading ? (
               <div className="flex items-center justify-center h-32">

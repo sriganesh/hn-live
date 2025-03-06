@@ -61,7 +61,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   return (
     <>
       {/* Desktop view */}
-      <div className={`hidden sm:flex items-center justify-between py-3 px-6 ${headerBg} ${headerTextColor} fixed top-0 left-0 right-0 z-10`}>
+      <div className={`hidden sm:flex items-center justify-between py-2 px-6 ${headerBg} ${headerTextColor} fixed top-0 left-0 right-0 z-10`}>
         <div className="flex items-center">
           <button 
             onClick={() => navigate('/')}

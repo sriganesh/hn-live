@@ -440,7 +440,7 @@ export function UserDashboardPage() {
           : settings.theme === 'og'
           ? 'bg-[#ff6600]/90 text-white'
           : 'bg-[#1a1a1a] text-[#ff6600]'
-      } py-3 px-6`}>
+      } py-2 px-4 sm:px-6`}>
         <div className="flex justify-between items-center max-w-4xl mx-auto">
           <h1 className="font-bold tracking-wider flex items-center gap-2">
             HN
@@ -488,7 +488,7 @@ export function UserDashboardPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto p-2 pt-20">
+      <div className="max-w-4xl mx-auto p-2 pt-16">
         {/* Tabs */}
         <div className={`flex flex-wrap gap-2 mb-6 border-b ${themeStyles.border} pb-2`}>
           <TabButton

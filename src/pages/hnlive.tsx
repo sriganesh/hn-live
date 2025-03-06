@@ -1249,9 +1249,7 @@ export default function HNLiveTerminal() {
           fixed top-0 left-0 right-0 z-50 
           ${themeHeaderBg} ${theme === 'og' ? headerTextColor : themeColors}
           px-4 sm:px-6
-          pt-[max(16px,env(safe-area-inset-top))]
-          pb-1
-          sm:py-3
+          py-2
         `}>
           {/* Mobile Layout - Top Bar */}
           <div className="sm:hidden">
@@ -1572,7 +1570,7 @@ export default function HNLiveTerminal() {
         <div 
           ref={containerRef}
           className={`
-            fixed top-[52px] bottom-0 left-0 right-0 
+            fixed top-[44px] bottom-0 left-0 right-0 
             overflow-y-auto overflow-x-hidden 
             px-3 sm:px-4 pb-20 sm:pb-4
             ${options.font === 'mono' ? 'font-mono' : 
