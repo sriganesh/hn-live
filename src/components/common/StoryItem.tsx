@@ -52,7 +52,7 @@ export const StoryItem: React.FC<StoryItemProps> = ({
                   }
                 }}
                 className={`
-                  group-hover:opacity-75
+                  group-hover:opacity-75 break-words
                   ${story.url && theme === 'green' && 'visited:text-green-600/30'}
                   ${story.url && theme === 'og' && 'visited:text-[#999999]'}
                   ${story.url && theme === 'dog' && 'visited:text-[#666666]'}
@@ -63,7 +63,7 @@ export const StoryItem: React.FC<StoryItemProps> = ({
                 {story.title}
               </a>
               {story.url && (
-                <span className="ml-2 opacity-50 text-sm">
+                <span className="ml-2 opacity-50 text-sm truncate inline-block max-w-[150px] align-bottom">
                   ({truncateUrl(new URL(story.url).hostname, 30)})
                 </span>
               )}
@@ -120,7 +120,7 @@ export const StoryItem: React.FC<StoryItemProps> = ({
                 </span>
               </div>
             )}
-            <div className="pr-4">
+            <div className="pr-4 break-words">
               <a
                 href={story.url || `https://news.ycombinator.com/item?id=${story.id}`}
                 onClick={(e) => {
@@ -130,7 +130,7 @@ export const StoryItem: React.FC<StoryItemProps> = ({
                   }
                 }}
                 className={`
-                  group-hover:opacity-75
+                  group-hover:opacity-75 break-words
                   ${story.url && theme === 'green' && 'visited:text-green-600/30'}
                   ${story.url && theme === 'og' && 'visited:text-[#999999]'}
                   ${story.url && theme === 'dog' && 'visited:text-[#666666]'}
