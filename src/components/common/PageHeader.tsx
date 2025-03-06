@@ -37,6 +37,18 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
     ? 'text-[#828282]'
     : 'text-[#828282]';
 
+  const headerBg = theme === 'green'
+    ? 'bg-black'
+    : theme === 'og'
+    ? 'bg-[#ff6600]'
+    : 'bg-[#1a1a1a]';
+
+  const headerTextColor = theme === 'og' 
+    ? 'text-white' 
+    : theme === 'dog'
+    ? 'text-[#ff6600]'
+    : '';
+
   const pages = [
     { id: 'front', label: 'FRONT PAGE', path: '/front' },
     { id: 'trending', label: 'TRENDING', path: '/trending' },
@@ -49,36 +61,34 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   return (
     <>
       {/* Desktop view */}
-      <div className="hidden sm:flex items-center justify-between mb-4">
+      <div className={`hidden sm:flex items-center justify-between py-2 px-6 ${headerBg} ${headerTextColor} fixed top-0 left-0 right-0 z-10`}>
         <div className="flex items-center">
           <button 
             onClick={() => navigate('/')}
-            className={`${
-              theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
-            } font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
+            className={`font-bold tracking-wider flex items-center gap-2 relative cursor-pointer hover:opacity-75 transition-opacity`}
           >
-            <span>HN</span>
+            HN
             <span className="animate-pulse">
               <span className={`inline-block w-2 h-2 rounded-full ${
                 isRunning 
                   ? theme === 'green'
                     ? 'bg-green-500'
-                    : 'bg-[#ff6600]'
+                    : 'bg-red-500'
                   : 'bg-gray-500'
               }`}></span>
             </span>
-            <span>LIVE</span>
+            LIVE
           </button>
-          <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
+          <span className={`font-bold ml-2`}>
             /
           </span>
-          <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
+          <span className={`font-bold ml-2`}>
             {title}
           </span>
           {title === 'FRONT PAGE' && (
             <button
               onClick={() => navigate('/frontpage-history')}
-              className={`ml-4 ${themeColors} hover:opacity-75`}
+              className={`ml-4 hover:opacity-75`}
             >
               [VIEW HISTORY]
             </button>
@@ -86,19 +96,18 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         </div>
 
         {/* Desktop controls */}
-        <div className="hidden sm:flex items-center gap-4">
+        <div className="hidden sm:flex items-center gap-3">
           {pages.map(page => (
             <button 
               key={page.id}
               onClick={() => navigate(page.path)}
-              className={`${themeColors} ${currentPage === page.id ? 'opacity-30 hover:opacity-50' : ''}`}
+              className={`${currentPage === page.id ? 'opacity-30 hover:opacity-50' : ''}`}
             >
               [{page.label}]
             </button>
           ))}
           <button 
             onClick={onShowSearch}
-            className={themeColors}
             title="Ctrl/Cmd + K"
           >
             [SEARCH]
@@ -110,7 +119,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                 type="text"
                 value={grepFilter}
                 onChange={(e) => onGrepFilterChange(e.target.value)}
-                className={`bg-transparent border-b border-current outline-none w-32 px-1 ${themeColors}`}
+                className={`bg-transparent border-b border-current outline-none w-32 px-1`}
                 placeholder="filter..."
                 autoFocus
               />
@@ -118,7 +127,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           ) : (
             <button
               onClick={onShowGrep}
-              className={themeColors}
               title="Ctrl/Cmd + F"
             >
               [GREP]
@@ -126,14 +134,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           )}
           <button 
             onClick={() => navigate('/dashboard')}
-            className={`${themeColors} relative`}
+            className={`relative`}
           >
             [DASHBOARD]
             {unreadCount > 0 && (
               <span className={`absolute -top-2 -right-2 w-5 h-5 text-xs rounded-full inline-flex items-center justify-center ${
                 theme === 'green' 
                   ? 'bg-green-500 text-black' 
-                  : 'bg-[#ff6600] text-white'
+                  : 'bg-white text-[#ff6600]'
               }`}>
                 {unreadCount}
               </span>
@@ -141,7 +149,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           </button>
           <button
             onClick={onShowSettings}
-            className={themeColors}
           >
             [SETTINGS]
           </button>
@@ -155,34 +162,32 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       </div>
 
       {/* Mobile view */}
-      <div className="sm:hidden mb-4">
+      <div className={`sm:hidden py-2 px-4 ${headerBg} ${headerTextColor} fixed top-0 left-0 right-0 z-10`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <button 
               onClick={() => navigate('/')}
-              className={`${
-                theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
-              } font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
+              className={`font-bold tracking-wider flex items-center gap-2 relative cursor-pointer hover:opacity-75 transition-opacity`}
             >
-              <span>HN</span>
+              HN
               <span className="animate-pulse">
                 <span className={`inline-block w-2 h-2 rounded-full ${
                   isRunning 
                     ? theme === 'green'
                       ? 'bg-green-500'
-                      : 'bg-[#ff6600]'
+                      : 'bg-red-500'
                     : 'bg-gray-500'
                 }`}></span>
               </span>
-              <span>LIVE</span>
+              LIVE
             </button>
-            <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold ml-2`}>
+            <span className={`font-bold ml-2`}>
               / {title}
             </span>
             {title === 'FRONT PAGE' && (
               <button
                 onClick={() => navigate('/frontpage-history')}
-                className={`ml-2 text-sm ${themeColors} hover:opacity-75`}
+                className={`ml-2 text-sm hover:opacity-75`}
               >
                 [HISTORY]
               </button>

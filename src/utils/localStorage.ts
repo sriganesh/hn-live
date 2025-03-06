@@ -136,6 +136,12 @@ export function setTheme(theme: 'green' | 'og' | 'dog'): void {
   setStringValue(STORAGE_KEYS.THEME, theme);
   // Also update the document element's data-theme attribute
   document.documentElement.setAttribute('data-theme', theme);
+  
+  // Dispatch a custom event to notify components about the theme change
+  const themeChangeEvent = new CustomEvent('themeChange', { 
+    detail: { theme } 
+  });
+  window.dispatchEvent(themeChangeEvent);
 }
 
 /**

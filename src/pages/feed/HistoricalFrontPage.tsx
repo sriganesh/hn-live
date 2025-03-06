@@ -472,53 +472,61 @@ const HistoricalFrontPage = ({
           ? 'bg-black text-green-400'
           : theme === 'og'
           ? 'bg-[#f6f6ef] text-[#828282]'
-          : 'bg-[#1a1a1a] text-[#828282]'}
+          : 'bg-[#1a1a1a] text-[#ff6600]'}
         text-${fontSize}
         ${swipeAnimation}
       `}>
         {/* Header */}
-        <div className="p-2">
-          <div className="space-y-2">
-            {/* First line - update to include ESC button */}
+        <div className={`py-2 px-4 sm:px-6 fixed top-0 left-0 right-0 z-10 ${
+          theme === 'green'
+            ? 'bg-black text-green-400'
+            : theme === 'og'
+            ? 'bg-[#ff6600] text-white'
+            : 'bg-[#1a1a1a] text-[#ff6600]'
+        }`}>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => navigate('/')}
-                className={`${
-                  theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'
-                } font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity`}
+                className="font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity"
               >
                 HN
                 <span className="animate-pulse">
                   <span className={`inline-block w-2 h-2 rounded-full ${
-                    isRunning ? 'bg-current' : 'bg-gray-500'
-                  } opacity-50`}></span>
+                    isRunning 
+                      ? theme === 'green'
+                        ? 'bg-green-500'
+                        : 'bg-red-500'
+                      : 'bg-gray-500'
+                  }`}></span>
                 </span>
                 LIVE
               </button>
-              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
+              <span className="font-bold">
                 /
               </span>
-              <span className={`${theme === 'green' ? 'text-green-500' : 'text-[#ff6600]'} font-bold`}>
+              <span className="font-bold">
                 FRONT PAGE HISTORY
               </span>
-              <div className="flex-1" />
+            </div>
+            
+            {/* Date display - below header on mobile, right-aligned on desktop */}
+            <div className="sm:ml-auto flex items-center gap-4">
+              <div className="opacity-75">
+                {formatDisplayDate(tempDate || selectedDate)}
+              </div>
               <button
                 onClick={() => navigate(-1)}
-                className="opacity-50 hover:opacity-100"
+                className="opacity-75 hover:opacity-100 ml-auto sm:ml-0"
               >
                 [ESC]
               </button>
-            </div>
-
-            {/* Second line */}
-            <div className={`${theme === 'green' ? 'text-green-400' : 'text-[#828282]'} opacity-75`}>
-              {formatDisplayDate(tempDate || selectedDate)}
             </div>
           </div>
         </div>
 
         {/* Scrollable Content Area */}
-        <div className="overflow-y-auto h-full pb-[240px] sm:pb-52">
+        <div className="overflow-y-auto h-full pb-[240px] sm:pb-52 pt-20 sm:pt-14">
           <div className="px-4">
             {loading ? (
               <div className="flex items-center justify-center h-32">

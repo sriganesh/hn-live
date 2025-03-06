@@ -35,6 +35,9 @@ export function UserDashboardPage() {
   const [showSettings, setShowSettings] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [colorizeUsernames, setColorizeUsernames] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.COLORIZE_USERNAMES);
     return saved ? JSON.parse(saved) : false;
@@ -389,19 +392,104 @@ export function UserDashboardPage() {
     };
   }, [unreadCount]);
 
+  // Check if we're on desktop on mount and when window resizes
+  useEffect(() => {
+    const checkIfDesktop = () => {
+      setIsDesktop(window.innerWidth >= 640);
+    };
+    
+    // Initial check
+    checkIfDesktop();
+    
+    // Add resize listener
+    window.addEventListener('resize', checkIfDesktop);
+    return () => window.removeEventListener('resize', checkIfDesktop);
+  }, []);
+
+  // Add scroll handler for header visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      // Handle header visibility (only on desktop)
+      if (isDesktop) {
+        const currentScrollY = window.scrollY;
+        
+        if (currentScrollY > lastScrollY && currentScrollY > 100) {
+          // Scrolling down & past threshold - hide header
+          setHeaderVisible(false);
+        } else if (currentScrollY < lastScrollY || currentScrollY <= 100) {
+          // Scrolling up or at top - show header
+          setHeaderVisible(true);
+        }
+        
+        setLastScrollY(currentScrollY);
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY, isDesktop]);
+
+  // Remove the polling interval and replace with a custom event listener
+  useEffect(() => {
+    // This function will be called when the theme changes
+    const handleThemeChangeEvent = (event: CustomEvent<{ theme: 'green' | 'og' | 'dog' }>) => {
+      const newTheme = event.detail.theme;
+      if (newTheme && newTheme !== settings.theme) {
+        // Update the settings with the new theme
+        updateSetting('theme', newTheme);
+      }
+    };
+
+    // Add event listener for theme changes
+    window.addEventListener('themeChange', handleThemeChangeEvent as EventListener);
+    
+    // Clean up the event listener when the component unmounts
+    return () => {
+      window.removeEventListener('themeChange', handleThemeChangeEvent as EventListener);
+    };
+  }, [settings.theme, updateSetting]);
+
   return (
     <div className={`min-h-screen ${themeStyles.background} ${themeStyles.text} relative z-40`}>
-      <div className="max-w-4xl mx-auto p-2">
-        <div className="mb-6 flex justify-between items-center">
-          <h1 className={`text-lg font-bold ${themeStyles.accent} flex items-center`}>
-            HN
-            <span className={`mx-1 animate-pulse ${!isRunning ? 'text-gray-500' : ''}`}>•</span>
-            Live Dashboard
+      {/* Fixed Header */}
+      <div className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${
+        !headerVisible && isDesktop ? '-translate-y-full' : 'translate-y-0'
+      } ${
+        settings.theme === 'green'
+          ? 'bg-black text-green-400'
+          : settings.theme === 'og'
+          ? 'bg-[#ff6600] text-white'
+          : 'bg-[#1a1a1a] text-[#ff6600]'
+      } py-2 px-4 sm:px-6`}>
+        <div className="flex justify-between items-center max-w-4xl mx-auto">
+          <h1 className="font-bold tracking-wider flex items-center gap-2">
+            <button 
+              onClick={() => navigate('/')}
+              className="font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity"
+            >
+              HN
+              <span className="animate-pulse">
+                <span className={`inline-block w-2 h-2 rounded-full ${
+                  isRunning 
+                    ? settings.theme === 'green'
+                      ? 'bg-green-500'
+                      : 'bg-red-500'
+                    : 'bg-gray-500'
+                }`}></span>
+              </span>
+              LIVE
+            </button>
+            <span className="font-bold ml-2">
+              /
+            </span>
+            <span className="font-bold ml-2">
+              DASHBOARD
+            </span>
             {unreadCount > 0 && (
               <span className={`ml-2 w-6 h-6 text-sm rounded-full inline-flex items-center justify-center ${
                 settings.theme === 'green' 
                   ? 'bg-green-500 text-black' 
-                  : 'bg-[#ff6600] text-white'
+                  : 'bg-white text-[#ff6600]'
               }`}>
                 {unreadCount}
               </span>
@@ -410,19 +498,22 @@ export function UserDashboardPage() {
           <div className="flex items-center space-x-4">
             <button 
               onClick={() => setShowSettings(true)}
-              className={`hidden sm:inline-block ${themeStyles.tabInactive}`}
+              className="opacity-75 hover:opacity-100 hidden sm:inline-block"
             >
               [SETTINGS]
             </button>
             <button 
               onClick={() => navigate(-1)}
-              className={themeStyles.tabInactive}
+              className="opacity-75 hover:opacity-100"
             >
               [ESC]
             </button>
           </div>
         </div>
+      </div>
 
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto p-2 pt-16">
         {/* Tabs */}
         <div className={`flex flex-wrap gap-2 mb-6 border-b ${themeStyles.border} pb-2`}>
           <TabButton
