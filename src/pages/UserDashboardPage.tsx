@@ -429,6 +429,26 @@ export function UserDashboardPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY, isDesktop]);
 
+  // Remove the polling interval and replace with a custom event listener
+  useEffect(() => {
+    // This function will be called when the theme changes
+    const handleThemeChangeEvent = (event: CustomEvent<{ theme: 'green' | 'og' | 'dog' }>) => {
+      const newTheme = event.detail.theme;
+      if (newTheme && newTheme !== settings.theme) {
+        // Update the settings with the new theme
+        updateSetting('theme', newTheme);
+      }
+    };
+
+    // Add event listener for theme changes
+    window.addEventListener('themeChange', handleThemeChangeEvent as EventListener);
+    
+    // Clean up the event listener when the component unmounts
+    return () => {
+      window.removeEventListener('themeChange', handleThemeChangeEvent as EventListener);
+    };
+  }, [settings.theme, updateSetting]);
+
   return (
     <div className={`min-h-screen ${themeStyles.background} ${themeStyles.text} relative z-40`}>
       {/* Fixed Header */}

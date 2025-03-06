@@ -272,6 +272,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     
     // Update theme using the utility function
     setTheme(newTheme);
+    
+    // Dispatch a custom event to notify other components about the theme change
+    const themeChangeEvent = new CustomEvent('themeChange', { 
+      detail: { theme: newTheme } 
+    });
+    window.dispatchEvent(themeChangeEvent);
   };
 
   // Update the validateAndSaveUsername function
