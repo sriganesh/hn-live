@@ -1197,6 +1197,20 @@ export default function HNLiveTerminal() {
         </script>
         <style>{themeStyles}</style>
         <style>{mobileNavStyles}</style>
+        <style>
+          {`
+            .terminal-container::before {
+              content: '';
+              position: absolute;
+              top: -1px;
+              left: 0;
+              right: 0;
+              height: 2px;
+              background-color: ${theme === 'og' ? 'rgba(255, 102, 0, 0.9)' : 'transparent'};
+              z-index: 10;
+            }
+          `}
+        </style>
       </Helmet>
       <div {...swipeHandlers} className={`
         min-h-screen flex flex-col
@@ -1250,6 +1264,7 @@ export default function HNLiveTerminal() {
           ${themeHeaderBg} ${theme === 'og' ? headerTextColor : themeColors}
           px-4 sm:px-6
           py-2
+          border-b-0
         `}>
           {/* Mobile Layout - Top Bar */}
           <div className="sm:hidden">
@@ -1570,9 +1585,12 @@ export default function HNLiveTerminal() {
         <div 
           ref={containerRef}
           className={`
-            fixed top-[44px] bottom-0 left-0 right-0 
+            terminal-container
+            fixed top-[40px] bottom-0 left-0 right-0 
+            -mt-[1px]
             overflow-y-auto overflow-x-hidden 
             px-3 sm:px-4 pb-20 sm:pb-4
+            ${options.theme === 'og' ? 'border-t border-[#ff6600]/90' : ''}
             ${options.font === 'mono' ? 'font-mono' : 
               options.font === 'jetbrains' ? 'font-jetbrains' :
               options.font === 'fira' ? 'font-fira' :
