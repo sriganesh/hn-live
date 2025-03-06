@@ -83,7 +83,7 @@ export const BasePage: React.FC<BasePageComponentProps> = ({
       unreadCount={unreadCount}
       containerRef={containerRef}
     >
-      <div className="h-full overflow-y-auto p-2 pt-12 sm:pt-14" ref={containerRef}>
+      <div className="h-full overflow-y-auto overflow-x-hidden p-2 pt-12 sm:pt-14" ref={containerRef}>
         <PageHeader
           theme={theme}
           title={title}

@@ -184,15 +184,16 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             <span className={`font-bold ml-2`}>
               / {title}
             </span>
-            {title === 'FRONT PAGE' && (
-              <button
-                onClick={() => navigate('/frontpage-history')}
-                className={`ml-2 text-sm hover:opacity-75`}
-              >
-                [HISTORY]
-              </button>
-            )}
           </div>
+          
+          {title === 'FRONT PAGE' && (
+            <button
+              onClick={() => navigate('/frontpage-history')}
+              className={`text-sm hover:opacity-75`}
+            >
+              [HISTORY]
+            </button>
+          )}
         </div>
       </div>
     </>
