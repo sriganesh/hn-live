@@ -40,7 +40,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   const headerBg = theme === 'green'
     ? 'bg-black'
     : theme === 'og'
-    ? 'bg-[#ff6600]/90'
+    ? 'bg-[#ff6600]'
     : 'bg-[#1a1a1a]';
 
   const headerTextColor = theme === 'og' 

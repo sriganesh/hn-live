@@ -438,7 +438,7 @@ export function UserDashboardPage() {
         settings.theme === 'green'
           ? 'bg-black text-green-400'
           : settings.theme === 'og'
-          ? 'bg-[#ff6600]/90 text-white'
+          ? 'bg-[#ff6600] text-white'
           : 'bg-[#1a1a1a] text-[#ff6600]'
       } py-2 px-4 sm:px-6`}>
         <div className="flex justify-between items-center max-w-4xl mx-auto">

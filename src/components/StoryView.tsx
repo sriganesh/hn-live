@@ -1803,7 +1803,7 @@ export function StoryView({
             theme === 'green'
               ? 'bg-black text-green-400'
               : theme === 'og'
-              ? 'bg-[#ff6600]/90 text-white'
+              ? 'bg-[#ff6600] text-white'
               : 'bg-[#1a1a1a] text-[#ff6600]'
           }`}>
             <button 

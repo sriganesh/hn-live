@@ -472,7 +472,7 @@ const HistoricalFrontPage = ({
           ? 'bg-black text-green-400'
           : theme === 'og'
           ? 'bg-[#f6f6ef] text-[#828282]'
-          : 'bg-[#1a1a1a] text-[#828282]'}
+          : 'bg-[#1a1a1a] text-[#ff6600]'}
         text-${fontSize}
         ${swipeAnimation}
       `}>
@@ -481,7 +481,7 @@ const HistoricalFrontPage = ({
           theme === 'green'
             ? 'bg-black text-green-400'
             : theme === 'og'
-            ? 'bg-[#ff6600]/90 text-white'
+            ? 'bg-[#ff6600] text-white'
             : 'bg-[#1a1a1a] text-[#ff6600]'
         }`}>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">

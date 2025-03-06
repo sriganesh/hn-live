@@ -566,7 +566,7 @@ export default function HNLiveTerminal() {
   const themeHeaderBg = theme === 'green'
     ? 'bg-black/90'
     : theme === 'og'
-    ? 'bg-[#ff6600]/90'
+    ? 'bg-[#ff6600]'
     : 'bg-[#1a1a1a]/90';
 
   // New variable for header text color when using orange background
