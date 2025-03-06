@@ -443,17 +443,22 @@ export function UserDashboardPage() {
       } py-2 px-4 sm:px-6`}>
         <div className="flex justify-between items-center max-w-4xl mx-auto">
           <h1 className="font-bold tracking-wider flex items-center gap-2">
-            HN
-            <span className="animate-pulse">
-              <span className={`inline-block w-2 h-2 rounded-full ${
-                isRunning 
-                  ? settings.theme === 'green'
-                    ? 'bg-green-500'
-                    : 'bg-red-500'
-                  : 'bg-gray-500'
-              }`}></span>
-            </span>
-            LIVE
+            <button 
+              onClick={() => navigate('/')}
+              className="font-bold tracking-wider flex items-center gap-2 hover:opacity-75 transition-opacity"
+            >
+              HN
+              <span className="animate-pulse">
+                <span className={`inline-block w-2 h-2 rounded-full ${
+                  isRunning 
+                    ? settings.theme === 'green'
+                      ? 'bg-green-500'
+                      : 'bg-red-500'
+                    : 'bg-gray-500'
+                }`}></span>
+              </span>
+              LIVE
+            </button>
             <span className="font-bold ml-2">
               /
             </span>
