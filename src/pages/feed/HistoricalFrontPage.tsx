@@ -566,6 +566,9 @@ const HistoricalFrontPage = ({
                 <span className="font-bold">
                   FRONT PAGE HISTORY
                 </span>
+                <span className="hidden sm:inline opacity-75 ml-2">
+                  {formatDisplayDate(tempDate || selectedDate)}
+                </span>
               </div>
               
               {/* Random button for mobile */}
@@ -577,9 +580,10 @@ const HistoricalFrontPage = ({
               </button>
             </div>
             
-            {/* Date display - below header on mobile, right-aligned on desktop */}
+            {/* Controls - right-aligned on desktop */}
             <div className="sm:ml-auto flex items-center gap-4">
-              <div className="opacity-75">
+              {/* Date display for mobile only */}
+              <div className="sm:hidden opacity-75">
                 {formatDisplayDate(tempDate || selectedDate)}
               </div>
               {/* Random button - desktop only */}
