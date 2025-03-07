@@ -63,6 +63,7 @@ const HistoricalFrontPage = ({
   const [allStoryIds, setAllStoryIds] = useState<string[]>([]);
   const [swipeAnimation, setSwipeAnimation] = useState<string>('');
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isSliderCollapsed, setIsSliderCollapsed] = useState(false);
 
   // Constants for date range - use local dates instead of UTC
   const START_DATE = new Date(2007, 1, 19); // February 19, 2007 in local time
@@ -528,7 +529,7 @@ const HistoricalFrontPage = ({
           ? 'bg-black text-green-400'
           : theme === 'og'
           ? 'bg-[#f6f6ef] text-[#828282]'
-          : 'bg-[#1a1a1a] text-[#ff6600]'}
+          : 'bg-[#1a1a1a] text-[#828282]'}
         text-${fontSize}
         ${swipeAnimation}
       `}>
@@ -566,6 +567,9 @@ const HistoricalFrontPage = ({
                 <span className="font-bold">
                   FRONT PAGE HISTORY
                 </span>
+                <span className="hidden sm:inline opacity-75 ml-2">
+                  {formatDisplayDate(tempDate || selectedDate)}
+                </span>
               </div>
               
               {/* Random button for mobile */}
@@ -577,9 +581,10 @@ const HistoricalFrontPage = ({
               </button>
             </div>
             
-            {/* Date display - below header on mobile, right-aligned on desktop */}
+            {/* Controls - right-aligned on desktop */}
             <div className="sm:ml-auto flex items-center gap-4">
-              <div className="opacity-75">
+              {/* Date display for mobile only */}
+              <div className="sm:hidden opacity-75">
                 {formatDisplayDate(tempDate || selectedDate)}
               </div>
               {/* Random button - desktop only */}
@@ -600,7 +605,11 @@ const HistoricalFrontPage = ({
         </div>
 
         {/* Scrollable Content Area */}
-        <div className="overflow-y-auto h-full pb-[240px] sm:pb-52 pt-20 sm:pt-14">
+        <div className={`
+          overflow-y-auto h-full 
+          pt-20 sm:pt-14
+          ${isSliderCollapsed ? 'pb-[120px]' : 'pb-[240px]'} sm:pb-52
+        `}>
           <div className="px-4">
             {loading ? (
               <div className="flex items-center justify-center h-32">
@@ -769,10 +778,44 @@ const HistoricalFrontPage = ({
           }
           px-4 py-6
           bottom-[calc(env(safe-area-inset-bottom,_0px)_+_3.5rem)]
+          transition-transform duration-300 ease-in-out
+          ${isSliderCollapsed ? 'sm:translate-y-0 translate-y-[calc(100%-2rem)]' : ''}
         `}>
+          {/* Collapse/Expand toggle button - only visible on mobile */}
+          <div 
+            className="sm:hidden absolute top-0 left-0 right-0 flex justify-center -translate-y-3 cursor-pointer"
+            onClick={() => setIsSliderCollapsed(!isSliderCollapsed)}
+          >
+            <div className={`
+              w-10 h-5 rounded-t-lg flex items-center justify-center
+              ${theme === 'green'
+                ? 'bg-black border-t border-l border-r border-green-500/30'
+                : theme === 'og'
+                ? 'bg-[#f6f6ef] border-t border-l border-r border-[#ff6600]/30'
+                : 'bg-[#1a1a1a] border-t border-l border-r border-[#828282]/30'
+              }
+            `}>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                className={`w-4 h-4 transition-transform duration-300 ${isSliderCollapsed ? 'rotate-180' : ''}`}
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <polyline points={isSliderCollapsed ? "6 9 12 15 18 9" : "6 15 12 9 18 15"}></polyline>
+              </svg>
+            </div>
+          </div>
+
           <div className="max-w-3xl mx-auto space-y-4">
-            {/* Date display */}
-            <div className="relative flex justify-between items-center text-sm">
+            {/* Current date display - always visible even when collapsed */}
+            <div className={`
+              relative flex justify-between items-center
+              ${isSliderCollapsed ? 'sm:opacity-100 opacity-0 h-0 overflow-hidden' : 'text-sm'}
+            `}>
               <span className="opacity-50">
                 {formatStartDate(new Date('2007-02-19'))}
               </span>
@@ -784,50 +827,59 @@ const HistoricalFrontPage = ({
               <span className="opacity-50">Today</span>
             </div>
             
+            {/* Current date display when collapsed - only on mobile */}
+            {isSliderCollapsed && (
+              <div className="sm:hidden text-center font-medium">
+                {formatDisplayDate(tempDate || selectedDate)}
+              </div>
+            )}
+            
             {/* Slider */}
-            <input
-              type="range"
-              min="0"
-              max={getTotalDays()}
-              step="1"
-              value={dateToSliderValue(tempDate || selectedDate)}
-              onChange={(e) => {
-                const value = Math.max(0, parseInt(e.target.value));
-                const newDate = sliderValueToDate(value);
-                setTempDate(newDate); // Only update temp date while dragging
-              }}
-              onMouseDown={() => setIsDragging(true)}
-              onMouseUp={() => {
-                if (tempDate) {
-                  setSelectedDate(tempDate); // This will trigger URL update and data fetch
-                  setTempDate(null);
-                }
-                setIsDragging(false);
-              }}
-              onTouchStart={() => setIsDragging(true)}
-              onTouchEnd={() => {
-                if (tempDate) {
-                  setSelectedDate(tempDate); // This will trigger URL update and data fetch
-                  setTempDate(null);
-                }
-                setIsDragging(false);
-              }}
-              // Add touch-action to improve touch handling
-              style={{ touchAction: 'none' }}
-              // Add aria attributes for accessibility
-              aria-label="Date slider"
-              aria-valuemin={0}
-              aria-valuemax={getTotalDays()}
-              aria-valuenow={dateToSliderValue(tempDate || selectedDate)}
-              className={`
-                w-full rounded-lg appearance-none cursor-pointer
-                ${theme === 'green'
-                  ? 'range-slider-green'
-                  : 'range-slider-orange'
-                }
-                range-slider
-              `}
-            />
+            <div className={isSliderCollapsed ? 'sm:block hidden' : ''}>
+              <input
+                type="range"
+                min="0"
+                max={getTotalDays()}
+                step="1"
+                value={dateToSliderValue(tempDate || selectedDate)}
+                onChange={(e) => {
+                  const value = Math.max(0, parseInt(e.target.value));
+                  const newDate = sliderValueToDate(value);
+                  setTempDate(newDate); // Only update temp date while dragging
+                }}
+                onMouseDown={() => setIsDragging(true)}
+                onMouseUp={() => {
+                  if (tempDate) {
+                    setSelectedDate(tempDate); // This will trigger URL update and data fetch
+                    setTempDate(null);
+                  }
+                  setIsDragging(false);
+                }}
+                onTouchStart={() => setIsDragging(true)}
+                onTouchEnd={() => {
+                  if (tempDate) {
+                    setSelectedDate(tempDate); // This will trigger URL update and data fetch
+                    setTempDate(null);
+                  }
+                  setIsDragging(false);
+                }}
+                // Add touch-action to improve touch handling
+                style={{ touchAction: 'none' }}
+                // Add aria attributes for accessibility
+                aria-label="Date slider"
+                aria-valuemin={0}
+                aria-valuemax={getTotalDays()}
+                aria-valuenow={dateToSliderValue(tempDate || selectedDate)}
+                className={`
+                  w-full rounded-lg appearance-none cursor-pointer
+                  ${theme === 'green'
+                    ? 'range-slider-green'
+                    : 'range-slider-orange'
+                  }
+                  range-slider
+                `}
+              />
+            </div>
           </div>
         </div>
 
